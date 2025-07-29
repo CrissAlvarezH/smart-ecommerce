@@ -4,8 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Package } from "lucide-react";
 import Link from "next/link";
 import * as productsRepo from "@/repositories/admin/products";
+import * as categoriesRepo from "@/repositories/admin/categories";
+import * as collectionsRepo from "@/repositories/admin/collections";
 import { Paginator } from "@/components/pagination";
 import { ProductSearch } from "@/components/admin/product-search";
+import { ProductFilters } from "@/components/admin/product-filters";
 import { SearchHighlight } from "@/components/admin/search-highlight";
 
 interface ProductsPageProps {
@@ -13,6 +16,7 @@ interface ProductsPageProps {
     page?: string;
     search?: string;
     categoryId?: string;
+    collectionId?: string;
   }>;
 }
 
@@ -21,14 +25,17 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
   const page = parseInt(params.page || '1', 10);
   const search = params.search;
   const categoryId = params.categoryId;
+  const collectionId = params.collectionId;
   
   const limit = 10; // Products per page
   const offset = (page - 1) * limit;
   
-  // Fetch products and total count in parallel
-  const [products, totalCount] = await Promise.all([
-    productsRepo.getProducts(limit, offset, search, categoryId),
-    productsRepo.getProductsCount(search, categoryId)
+  // Fetch products, count, categories, and collections in parallel
+  const [products, totalCount, categories, collections] = await Promise.all([
+    productsRepo.getProducts(limit, offset, search, categoryId, collectionId),
+    productsRepo.getProductsCount(search, categoryId, collectionId),
+    categoriesRepo.getActiveCategories(),
+    collectionsRepo.getActiveCollections()
   ]);
   
   const totalPages = Math.ceil(totalCount / limit);
@@ -50,22 +57,18 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </Link>
       </div>
 
-      {/* Search Bar */}
+      {/* Search and Filters */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 flex-1">
               <ProductSearch />
-              {search && (
-                <div className="text-sm text-gray-500">
-                  Searching for: <span className="font-medium">"{search}"</span>
-                </div>
-              )}
+              <ProductFilters categories={categories} collections={collections} />
             </div>
-            {search && (
+            {(search || categoryId || collectionId) && (
               <Button variant="outline" size="sm" asChild>
                 <Link href="/admin/products">
-                  Clear Search
+                  Clear All
                 </Link>
               </Button>
             )}
@@ -88,15 +91,16 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           {totalCount === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Package className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-              {search ? (
+              {(search || categoryId || collectionId) ? (
                 <>
-                  <p>No products found for "{search}"</p>
+                  <p>No products found</p>
                   <p className="text-sm mt-2">
-                    Try searching for something else or check your spelling.
+                    {search && `No results for ${search}. `}
+                    Try adjusting your search or filters.
                   </p>
                   <Button variant="outline" className="mt-4" asChild>
                     <Link href="/admin/products">
-                      Clear Search
+                      Clear Filters
                     </Link>
                   </Button>
                 </>

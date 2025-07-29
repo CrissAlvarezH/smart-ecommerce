@@ -71,7 +71,7 @@ export async function deleteProduct(id: string) {
     .where(eq(products.id, id));
 }
 
-export async function getProducts(limit = 50, offset = 0, search?: string, categoryId?: string) {
+export async function getProducts(limit = 50, offset = 0, search?: string, categoryId?: string, collectionId?: string) {
   let query = db
     .select({
       id: products.id,
@@ -90,10 +90,17 @@ export async function getProducts(limit = 50, offset = 0, search?: string, categ
       updatedAt: products.updatedAt,
     })
     .from(products)
-    .leftJoin(categories, eq(products.categoryId, categories.id))
+    .leftJoin(categories, eq(products.categoryId, categories.id));
+
+  // Add collection join if filtering by collection
+  if (collectionId) {
+    query = query.leftJoin(productCollections, eq(products.id, productCollections.productId)) as any;
+  }
+
+  query = query
     .orderBy(desc(products.createdAt))
     .limit(limit)
-    .offset(offset);
+    .offset(offset) as any;
 
   const conditions = [];
 
@@ -103,6 +110,10 @@ export async function getProducts(limit = 50, offset = 0, search?: string, categ
 
   if (categoryId) {
     conditions.push(eq(products.categoryId, categoryId));
+  }
+
+  if (collectionId) {
+    conditions.push(eq(productCollections.collectionId, collectionId));
   }
 
   if (conditions.length > 0) {
@@ -112,11 +123,16 @@ export async function getProducts(limit = 50, offset = 0, search?: string, categ
   return query;
 }
 
-export async function getProductsCount(search?: string, categoryId?: string) {
+export async function getProductsCount(search?: string, categoryId?: string, collectionId?: string) {
   let query = db
     .select({ count: sql<number>`count(*)` })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id));
+
+  // Add collection join if filtering by collection
+  if (collectionId) {
+    query = query.leftJoin(productCollections, eq(products.id, productCollections.productId)) as any;
+  }
 
   const conditions = [];
 
@@ -126,6 +142,10 @@ export async function getProductsCount(search?: string, categoryId?: string) {
 
   if (categoryId) {
     conditions.push(eq(products.categoryId, categoryId));
+  }
+
+  if (collectionId) {
+    conditions.push(eq(productCollections.collectionId, collectionId));
   }
 
   if (conditions.length > 0) {

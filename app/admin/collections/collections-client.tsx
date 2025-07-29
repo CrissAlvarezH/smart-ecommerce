@@ -150,7 +150,7 @@ export function CollectionsClient({ initialCollections }: CollectionsClientProps
                         <DialogHeader>
                           <DialogTitle>Delete Collection</DialogTitle>
                           <DialogDescription>
-                            Are you sure you want to delete "{collection.name}"? This action cannot be undone.
+                            Are you sure you want to delete &ldquo;{collection.name}&rdquo;? This action cannot be undone.
                             Products will be removed from this collection.
                           </DialogDescription>
                         </DialogHeader>

@@ -34,7 +34,7 @@ export default async function EditCollectionPage({ params }: EditCollectionPageP
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Edit Collection</h2>
           <p className="text-gray-600 mt-2">
-            Update collection information for "{collection.name}"
+            Update collection information for &ldquo;{collection.name}&rdquo;
           </p>
         </div>
       </div>
