@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { categories } from "@/db/schemas";
-import { eq, desc, ilike, and } from "drizzle-orm";
+import { eq, desc, ilike, and, sql } from "drizzle-orm";
 
 export interface CreateCategoryData {
   name: string;
@@ -63,6 +63,21 @@ export async function getCategories(limit = 50, offset = 0, search?: string) {
   }
 
   return query;
+}
+
+export async function getCategoriesCount(search?: string) {
+  let query = db
+    .select({ count: sql<number>`count(*)` })
+    .from(categories);
+
+  if (search) {
+    query = query.where(
+      ilike(categories.name, `%${search}%`)
+    ) as any;
+  }
+
+  const result = await query;
+  return result[0]?.count || 0;
 }
 
 export async function getCategoryById(id: string) {
