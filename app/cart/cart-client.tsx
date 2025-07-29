@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { updateCartItemAction, removeFromCartAction, clearCartAction } from "./actions";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "@/hooks/use-toast";
-import { useState, useOptimistic } from "react";
+import { useState, useOptimistic, startTransition } from "react";
 
 interface CartItemType {
   id: string;
@@ -112,19 +112,25 @@ export function CartPageClient({ initialCartItems }: CartPageClientProps) {
 
   const handleUpdateQuantity = async (itemId: string, quantity: number) => {
     console.log("🔄 Updating quantity:", { itemId, quantity });
-    setOptimisticCartItems({ type: 'update', itemId, quantity });
+    startTransition(() => {
+      setOptimisticCartItems({ type: 'update', itemId, quantity });
+    });
     updateQuantity({ cartItemId: itemId, quantity });
   };
 
   const handleRemoveItem = async (itemId: string) => {
     console.log("🗑️ Removing item:", itemId);
-    setOptimisticCartItems({ type: 'remove', itemId });
+    startTransition(() => {
+      setOptimisticCartItems({ type: 'remove', itemId });
+    });
     removeItem({ cartItemId: itemId });
   };
 
   const handleClearCart = async () => {
     console.log("🧹 Clearing cart");
-    setOptimisticCartItems({ type: 'clear' });
+    startTransition(() => {
+      setOptimisticCartItems({ type: 'clear' });
+    });
     clearCart();
   };
 
