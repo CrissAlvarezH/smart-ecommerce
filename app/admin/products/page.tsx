@@ -5,6 +5,8 @@ import { Plus, Edit, Trash2, Package } from "lucide-react";
 import Link from "next/link";
 import * as productsRepo from "@/repositories/admin/products";
 import { Paginator } from "@/components/pagination";
+import { ProductSearch } from "@/components/admin/product-search";
+import { SearchHighlight } from "@/components/admin/search-highlight";
 
 interface ProductsPageProps {
   searchParams: Promise<{
@@ -48,10 +50,33 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </Link>
       </div>
 
+      {/* Search Bar */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4 flex-1">
+              <ProductSearch />
+              {search && (
+                <div className="text-sm text-gray-500">
+                  Searching for: <span className="font-medium">"{search}"</span>
+                </div>
+              )}
+            </div>
+            {search && (
+              <Button variant="outline" size="sm" asChild>
+                <Link href="/admin/products">
+                  Clear Search
+                </Link>
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle>
-            Products ({totalCount} total)
+            {search ? `Search Results (${totalCount} found)` : `Products (${totalCount} total)`}
             {totalPages > 1 && (
               <span className="text-sm font-normal text-gray-500 ml-2">
                 • Page {page} of {totalPages}
@@ -63,17 +88,31 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           {totalCount === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Package className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-              <p>No products found.</p>
-              <p className="text-sm mt-2">
-                {search || categoryId ? "Try adjusting your search or filters." : "Create your first product to get started."}
-              </p>
-              {!search && !categoryId && (
-                <Link href="/admin/products/new">
-                  <Button className="mt-4">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add Your First Product
+              {search ? (
+                <>
+                  <p>No products found for "{search}"</p>
+                  <p className="text-sm mt-2">
+                    Try searching for something else or check your spelling.
+                  </p>
+                  <Button variant="outline" className="mt-4" asChild>
+                    <Link href="/admin/products">
+                      Clear Search
+                    </Link>
                   </Button>
-                </Link>
+                </>
+              ) : (
+                <>
+                  <p>No products found.</p>
+                  <p className="text-sm mt-2">
+                    Create your first product to get started.
+                  </p>
+                  <Link href="/admin/products/new">
+                    <Button className="mt-4">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Your First Product
+                    </Button>
+                  </Link>
+                </>
               )}
             </div>
           ) : (
@@ -85,7 +124,9 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
                 >
                   <div className="space-y-1">
                     <div className="flex items-center gap-3">
-                      <h3 className="font-semibold">{product.name}</h3>
+                      <h3 className="font-semibold">
+                        <SearchHighlight text={product.name} searchTerm={search} />
+                      </h3>
                       <Badge variant={product.isActive ? "default" : "secondary"}>
                         {product.isActive ? "Active" : "Inactive"}
                       </Badge>
