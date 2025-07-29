@@ -1,0 +1,224 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { ArrowLeft, Edit, Package } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import * as productsRepo from "@/repositories/admin/products";
+import { ProductDeleteButton } from "@/components/admin/product-delete-button";
+
+interface ProductDetailsPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
+  const { id } = await params;
+  
+  const product = await productsRepo.getProductById(id);
+  
+  if (!product) {
+    notFound();
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <Link href="/admin/products">
+            <Button variant="outline" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Products
+            </Button>
+          </Link>
+          <div>
+            <h2 className="text-3xl font-bold text-gray-900">Product Details</h2>
+            <p className="text-gray-600 mt-2">
+              View and manage product information
+            </p>
+          </div>
+        </div>
+        
+        {/* Action Buttons */}
+        <div className="flex items-center gap-2">
+          <Link href={`/admin/products/${product.id}/edit`}>
+            <Button>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Product
+            </Button>
+          </Link>
+          <ProductDeleteButton product={product} />
+        </div>
+      </div>
+
+      {/* Product Information */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Basic Information */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Package className="h-5 w-5" />
+              Basic Information
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-500">Product Name</label>
+              <p className="text-lg font-semibold">{product.name}</p>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-500">Slug</label>
+              <p className="text-sm text-gray-700 font-mono bg-gray-50 px-2 py-1 rounded">
+                {product.slug}
+              </p>
+            </div>
+            
+            {product.shortDescription && (
+              <div>
+                <label className="text-sm font-medium text-gray-500">Short Description</label>
+                <p className="text-sm text-gray-700">{product.shortDescription}</p>
+              </div>
+            )}
+            
+            {product.description && (
+              <div>
+                <label className="text-sm font-medium text-gray-500">Description</label>
+                <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
+                  {product.description}
+                </div>
+              </div>
+            )}
+            
+            <div className="flex items-center gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500">Status</label>
+                <div className="mt-1">
+                  <Badge variant={product.isActive ? "default" : "secondary"}>
+                    {product.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </div>
+              </div>
+              
+              {product.isFeatured && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Featured</label>
+                  <div className="mt-1">
+                    <Badge variant="outline">Featured Product</Badge>
+                  </div>
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pricing & Inventory */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Pricing & Inventory</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-sm font-medium text-gray-500">Price</label>
+                <p className="text-2xl font-bold text-green-600">
+                  ${parseFloat(product.price).toFixed(2)}
+                </p>
+              </div>
+              
+              {product.compareAtPrice && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Compare Price</label>
+                  <p className="text-lg text-gray-500 line-through">
+                    ${parseFloat(product.compareAtPrice).toFixed(2)}
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium text-gray-500">Inventory</label>
+              <p className="text-xl font-semibold">
+                {product.inventory} units
+                <span className={`ml-2 text-sm ${
+                  product.inventory > 10 ? 'text-green-600' : 
+                  product.inventory > 0 ? 'text-yellow-600' : 'text-red-600'
+                }`}>
+                  {product.inventory > 10 ? '(In Stock)' : 
+                   product.inventory > 0 ? '(Low Stock)' : '(Out of Stock)'}
+                </span>
+              </p>
+            </div>
+            
+            {product.sku && (
+              <div>
+                <label className="text-sm font-medium text-gray-500">SKU</label>
+                <p className="text-sm font-mono bg-gray-50 px-2 py-1 rounded w-fit">
+                  {product.sku}
+                </p>
+              </div>
+            )}
+            
+            {product.weight && (
+              <div>
+                <label className="text-sm font-medium text-gray-500">Weight</label>
+                <p className="text-sm text-gray-700">{product.weight}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Category Information */}
+      {product.categoryName && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Category</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-sm">
+                {product.categoryName}
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Metadata */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Metadata</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <div>
+              <label className="font-medium text-gray-500">Created</label>
+              <p className="text-gray-700">
+                {new Date(product.createdAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            </div>
+            <div>
+              <label className="font-medium text-gray-500">Last Updated</label>
+              <p className="text-gray-700">
+                {new Date(product.updatedAt).toLocaleDateString('en-US', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}

@@ -78,7 +78,12 @@ export function ProductsClient({ products, searchTerm }: ProductsClientProps) {
           <div className="space-y-1">
             <div className="flex items-center gap-3">
               <h3 className="font-semibold">
-                <SearchHighlight text={product.name} searchTerm={searchTerm} />
+                <Link 
+                  href={`/admin/products/${product.id}`}
+                  className="hover:text-blue-600 transition-colors"
+                >
+                  <SearchHighlight text={product.name} searchTerm={searchTerm} />
+                </Link>
               </h3>
               <Badge variant={product.isActive ? "default" : "secondary"}>
                 {product.isActive ? "Active" : "Inactive"}
