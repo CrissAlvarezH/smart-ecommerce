@@ -7,7 +7,9 @@ import {
   clearCart,
   getCartTotal,
   getCartItemCount,
-  mergeGuestCartToUser
+  mergeGuestCartToUser,
+  isProductInCart,
+  getCartBySession
 } from "@/repositories/cart";
 
 export const cartService = {
@@ -20,4 +22,6 @@ export const cartService = {
   getCartTotal,
   getCartItemCount,
   mergeGuestCartToUser,
+  isProductInCart,
+  getCartBySession,
 };

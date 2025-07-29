@@ -20,6 +20,10 @@ const removeFromCartSchema = z.object({
   cartItemId: z.string().min(1, "Cart item ID is required"),
 });
 
+const checkCartStatusSchema = z.object({
+  productId: z.string().min(1, "Product ID is required"),
+});
+
 export const addToCartAction = actionClient
   .schema(addToCartSchema)
   .action(async ({ parsedInput }: { parsedInput: z.infer<typeof addToCartSchema> }) => {
@@ -132,3 +136,46 @@ export const clearCartAction = actionClient.action(async () => {
     throw new Error(`Failed to clear cart: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 });
+
+export const checkCartStatusAction = actionClient
+  .schema(checkCartStatusSchema)
+  .action(async ({ parsedInput }: { parsedInput: z.infer<typeof checkCartStatusSchema> }) => {
+    try {
+      const { productId } = parsedInput;
+      console.log("🔍 Check cart status action called:", { productId });
+      
+      const cookieStore = await cookies();
+      const sessionId = cookieStore.get("cart_session_id")?.value;
+      
+      if (!sessionId) {
+        console.log("📭 No cart session found");
+        return { inCart: false, cartItem: null };
+      }
+
+      console.log("🔍 Finding cart for session:", sessionId);
+      const cart = await cartService.getCartBySession(sessionId);
+      
+      if (!cart) {
+        console.log("📭 No cart found for session");
+        return { inCart: false, cartItem: null };
+      }
+
+      console.log("🔍 Checking if product is in cart:", { cartId: cart.id, productId });
+      const cartItem = await cartService.isProductInCart(cart.id, productId);
+      
+      const inCart = cartItem !== null;
+      console.log("✅ Cart status checked:", { inCart, cartItemId: cartItem?.id });
+      
+      return { 
+        inCart, 
+        cartItem: cartItem ? { 
+          id: cartItem.id, 
+          quantity: cartItem.quantity 
+        } : null 
+      };
+    } catch (error) {
+      console.error("❌ Error checking cart status:", error);
+      console.error("Stack trace:", error instanceof Error ? error.stack : 'No stack trace');
+      return { inCart: false, cartItem: null };
+    }
+  });

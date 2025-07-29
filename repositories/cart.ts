@@ -162,6 +162,26 @@ export async function getCartItemCount(cartId: string) {
   return items.reduce((total, item) => total + item.quantity, 0);
 }
 
+export async function isProductInCart(cartId: string, productId: string) {
+  const existingItem = await db
+    .select()
+    .from(cartItems)
+    .where(and(eq(cartItems.cartId, cartId), eq(cartItems.productId, productId)))
+    .limit(1);
+
+  return existingItem.length > 0 ? existingItem[0] : null;
+}
+
+export async function getCartBySession(sessionId: string) {
+  const cart = await db
+    .select()
+    .from(carts)
+    .where(eq(carts.sessionId, sessionId))
+    .limit(1);
+
+  return cart.length > 0 ? cart[0] : null;
+}
+
 export async function mergeGuestCartToUser(guestSessionId: string, userId: string) {
   // Get or create user cart
   const userCart = await getOrCreateCart(userId);
