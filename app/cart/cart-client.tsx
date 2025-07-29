@@ -4,11 +4,12 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CartItem } from "@/components/cart/cart-item";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { updateCartItemAction, removeFromCartAction, clearCartAction } from "./actions";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "@/hooks/use-toast";
 import { useState, useOptimistic, startTransition } from "react";
+import { useCart } from "@/hooks/use-cart";
 
 interface CartItemType {
   id: string;
@@ -36,6 +37,7 @@ type OptimisticAction =
   | { type: 'clear' };
 
 export function CartPageClient({ initialCartItems }: CartPageClientProps) {
+  const { refreshCartCount, updateCartCount } = useCart();
   const [cartItems, setOptimisticCartItems] = useOptimistic(
     initialCartItems,
     (state: CartItemType[], action: OptimisticAction) => {
@@ -61,6 +63,7 @@ export function CartPageClient({ initialCartItems }: CartPageClientProps) {
 
   const { execute: updateQuantity, isExecuting: isUpdating } = useAction(updateCartItemAction, {
     onSuccess: () => {
+      refreshCartCount(); // Update global cart count
       toast({
         title: "Cart updated",
         description: "Item quantity has been updated.",
@@ -78,6 +81,7 @@ export function CartPageClient({ initialCartItems }: CartPageClientProps) {
 
   const { execute: removeItem, isExecuting: isRemoving } = useAction(removeFromCartAction, {
     onSuccess: () => {
+      refreshCartCount(); // Update global cart count
       toast({
         title: "Item removed",
         description: "Item has been removed from your cart.",
@@ -95,6 +99,7 @@ export function CartPageClient({ initialCartItems }: CartPageClientProps) {
 
   const { execute: clearCart, isExecuting: isClearing } = useAction(clearCartAction, {
     onSuccess: () => {
+      refreshCartCount(); // Update global cart count
       toast({
         title: "Cart cleared",
         description: "All items have been removed from your cart.",
@@ -112,6 +117,21 @@ export function CartPageClient({ initialCartItems }: CartPageClientProps) {
 
   const handleUpdateQuantity = async (itemId: string, quantity: number) => {
     console.log("🔄 Updating quantity:", { itemId, quantity });
+    
+    // Find the current item to calculate the difference
+    const currentItem = cartItems.find(item => item.id === itemId);
+    if (currentItem) {
+      const quantityDiff = quantity - currentItem.quantity;
+      
+      // Update global cart count immediately (optimistic)
+      if (quantityDiff !== 0) {
+        const newCount = Math.max(0, cartItems.reduce((total, item) => 
+          total + (item.id === itemId ? quantity : item.quantity), 0
+        ));
+        updateCartCount(newCount);
+      }
+    }
+    
     startTransition(() => {
       setOptimisticCartItems({ type: 'update', itemId, quantity });
     });
@@ -120,6 +140,13 @@ export function CartPageClient({ initialCartItems }: CartPageClientProps) {
 
   const handleRemoveItem = async (itemId: string) => {
     console.log("🗑️ Removing item:", itemId);
+    
+    // Calculate new count immediately
+    const newCount = cartItems.reduce((total, item) => 
+      total + (item.id === itemId ? 0 : item.quantity), 0
+    );
+    updateCartCount(newCount);
+    
     startTransition(() => {
       setOptimisticCartItems({ type: 'remove', itemId });
     });
@@ -128,6 +155,10 @@ export function CartPageClient({ initialCartItems }: CartPageClientProps) {
 
   const handleClearCart = async () => {
     console.log("🧹 Clearing cart");
+    
+    // Set count to 0 immediately
+    updateCartCount(0);
+    
     startTransition(() => {
       setOptimisticCartItems({ type: 'clear' });
     });
@@ -143,6 +174,24 @@ export function CartPageClient({ initialCartItems }: CartPageClientProps) {
   const total = subtotal + shipping + tax;
 
   const isLoading = isUpdating || isRemoving || isClearing;
+
+  // Show empty cart message when no items remain
+  if (cartItems.length === 0) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-16">
+          <ShoppingBag className="mx-auto h-24 w-24 text-gray-300 mb-4" />
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
+          <p className="text-gray-600 mb-8">Looks like you haven&apos;t added anything to your cart yet.</p>
+          <Link href="/products">
+            <Button size="lg">
+              Continue Shopping
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

@@ -1,12 +1,14 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { ShoppingCart, Eye } from "lucide-react";
 import { addToCartAction, checkCartStatusAction } from "@/app/cart/actions";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useCart } from "@/hooks/use-cart";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -24,6 +26,7 @@ export function AddToCartButton({
   className = ""
 }: AddToCartButtonProps) {
   const router = useRouter();
+  const { incrementCartCount } = useCart();
   const [isInCart, setIsInCart] = useState(false);
   const [cartItem, setCartItem] = useState<{ id: string; quantity: number } | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
@@ -32,6 +35,8 @@ export function AddToCartButton({
     onSuccess: (result) => {
       console.log("Add to cart success:", result);
       setIsInCart(true);
+      // Update global cart count immediately
+      incrementCartCount(1);
       toast({
         title: "Added to cart",
         description: `${productName} has been added to your cart.`,
@@ -84,7 +89,6 @@ export function AddToCartButton({
   };
 
   const buttonText = () => {
-    if (isCheckingStatus) return 'Loading...';
     if (isAdding) return 'Adding...';
     if (!inStock) return 'Out of Stock';
     if (isInCart) {
@@ -100,7 +104,16 @@ export function AddToCartButton({
     return <ShoppingCart className={size === 'sm' ? "h-4 w-4 mr-2" : "h-5 w-5 mr-2"} />;
   };
 
-  const isLoading = isCheckingStatus || isAdding;
+  // Show skeleton while checking cart status
+  if (isCheckingStatus) {
+    return (
+      <Skeleton 
+        className={`${size === 'sm' ? 'h-9 w-16' : 'h-10 w-28'} ${className}`} 
+      />
+    );
+  }
+
+  const isLoading = isAdding;
 
   return (
     <Button 
