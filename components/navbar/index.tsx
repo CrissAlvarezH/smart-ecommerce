@@ -19,6 +19,9 @@ export default async function Navbar() {
           <Link href="/blog">
             <Button variant="link">Blog</Button>
           </Link>
+          <Link href="/admin">
+            <Button variant="link">Admin</Button>
+          </Link>
         </div>
 
         <div className="flex items-center gap-2">
