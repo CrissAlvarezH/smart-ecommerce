@@ -10,7 +10,7 @@ import * as Sentry from "@sentry/nextjs";
 
 import { createSafeActionClient } from "next-safe-action";
 
-const actionClient = createSafeActionClient({
+export const actionClient = createSafeActionClient({
   handleServerError(e, utils) {
     const { clientInput, bindArgsClientInputs, metadata, ctx } = utils;
     console.error(

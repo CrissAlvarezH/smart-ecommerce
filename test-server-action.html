@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Add to Cart</title>
+</head>
+<body>
+    <h1>Test Add to Cart Action</h1>
+    <button onclick="testAddToCart()">Add Headphones to Cart</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAddToCart() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Adding to cart...';
+            
+            try {
+                // Get the first product ID from the products page
+                const response = await fetch('/api/test-cart', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        productId: '864890b5-c2cb-4095-9493-fffdeaa00c9b', // Headphones ID from test
+                        quantity: 1
+                    })
+                });
+                
+                const result = await response.json();
+                resultDiv.innerHTML = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = 'Error: ' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>

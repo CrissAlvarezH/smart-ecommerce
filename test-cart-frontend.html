@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Add to Cart Frontend</title>
+</head>
+<body>
+    <h1>Test Add to Cart Frontend</h1>
+    <button onclick="testAddToCart()">Test Add Headphones to Cart</button>
+    <div id="result"></div>
+
+    <script>
+        async function testAddToCart() {
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = 'Testing add to cart...';
+            
+            try {
+                // Test using server action endpoint directly
+                const formData = new FormData();
+                formData.append('productId', '864890b5-c2cb-4095-9493-fffdeaa00c9b');
+                formData.append('quantity', '1');
+                
+                const response = await fetch('/cart/actions', {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const result = await response.text();
+                resultDiv.innerHTML = '<pre>Server action response: ' + result + '</pre>';
+            } catch (error) {
+                resultDiv.innerHTML = 'Error: ' + error.message;
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
