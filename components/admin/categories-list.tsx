@@ -19,6 +19,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { SearchHighlight } from "@/components/admin/search-highlight";
 
 interface Category {
   id: string;
@@ -78,17 +79,21 @@ export function CategoriesList({ categories, searchTerm }: CategoriesListProps) 
         >
           <div className="space-y-1">
             <div className="flex items-center gap-3">
-              <h3 className="font-semibold">{category.name}</h3>
+              <h3 className="font-semibold">
+                <SearchHighlight text={category.name} searchTerm={searchTerm} />
+              </h3>
               <Badge variant={category.isActive ? "default" : "secondary"}>
                 {category.isActive ? "Active" : "Inactive"}
               </Badge>
             </div>
             <p className="text-sm text-gray-600">
-              Slug: <span className="font-mono">{category.slug}</span>
+              Slug: <span className="font-mono">
+                <SearchHighlight text={category.slug} searchTerm={searchTerm} />
+              </span>
             </p>
             {category.description && (
               <p className="text-sm text-gray-500 line-clamp-2">
-                {category.description}
+                <SearchHighlight text={category.description} searchTerm={searchTerm} />
               </p>
             )}
             <p className="text-xs text-gray-400">

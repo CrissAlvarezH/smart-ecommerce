@@ -53,11 +53,6 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
           <div className="flex items-center justify-between gap-4">
             <CategorySearch />
             {search && (
-              <div className="text-sm text-gray-500">
-                Searching for: <span className="font-medium">&ldquo;{search}&rdquo;</span>
-              </div>
-            )}
-            {search && (
               <Button variant="outline" size="sm" asChild>
                 <Link href="/admin/categories">
                   Clear Search
