@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { products, productImages, categories, productCollections } from "@/db/schemas";
-import { eq, desc, ilike, and } from "drizzle-orm";
+import { eq, desc, ilike, and, sql } from "drizzle-orm";
 
 export interface CreateProductData {
   name: string;
@@ -110,6 +110,30 @@ export async function getProducts(limit = 50, offset = 0, search?: string, categ
   }
 
   return query;
+}
+
+export async function getProductsCount(search?: string, categoryId?: string) {
+  let query = db
+    .select({ count: sql<number>`count(*)` })
+    .from(products)
+    .leftJoin(categories, eq(products.categoryId, categories.id));
+
+  const conditions = [];
+
+  if (search) {
+    conditions.push(ilike(products.name, `%${search}%`));
+  }
+
+  if (categoryId) {
+    conditions.push(eq(products.categoryId, categoryId));
+  }
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+
+  const result = await query;
+  return result[0]?.count || 0;
 }
 
 export async function getProductById(id: string) {

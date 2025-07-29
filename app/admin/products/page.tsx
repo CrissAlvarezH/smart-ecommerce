@@ -4,9 +4,32 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, Package } from "lucide-react";
 import Link from "next/link";
 import * as productsRepo from "@/repositories/admin/products";
+import { Paginator } from "@/components/pagination";
 
-export default async function ProductsPage() {
-  const products = await productsRepo.getProducts();
+interface ProductsPageProps {
+  searchParams: Promise<{
+    page?: string;
+    search?: string;
+    categoryId?: string;
+  }>;
+}
+
+export default async function ProductsPage({ searchParams }: ProductsPageProps) {
+  const params = await searchParams;
+  const page = parseInt(params.page || '1', 10);
+  const search = params.search;
+  const categoryId = params.categoryId;
+  
+  const limit = 10; // Products per page
+  const offset = (page - 1) * limit;
+  
+  // Fetch products and total count in parallel
+  const [products, totalCount] = await Promise.all([
+    productsRepo.getProducts(limit, offset, search, categoryId),
+    productsRepo.getProductsCount(search, categoryId)
+  ]);
+  
+  const totalPages = Math.ceil(totalCount / limit);
 
   return (
     <div className="space-y-6">
@@ -27,22 +50,31 @@ export default async function ProductsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Products ({products.length})</CardTitle>
+          <CardTitle>
+            Products ({totalCount} total)
+            {totalPages > 1 && (
+              <span className="text-sm font-normal text-gray-500 ml-2">
+                • Page {page} of {totalPages}
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          {products.length === 0 ? (
+          {totalCount === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Package className="mx-auto h-12 w-12 text-gray-300 mb-4" />
               <p>No products found.</p>
               <p className="text-sm mt-2">
-                Create your first product to get started.
+                {search || categoryId ? "Try adjusting your search or filters." : "Create your first product to get started."}
               </p>
-              <Link href="/admin/products/new">
-                <Button className="mt-4">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Product
-                </Button>
-              </Link>
+              {!search && !categoryId && (
+                <Link href="/admin/products/new">
+                  <Button className="mt-4">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Your First Product
+                  </Button>
+                </Link>
+              )}
             </div>
           ) : (
             <div className="space-y-4">
@@ -89,6 +121,12 @@ export default async function ProductsPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+          
+          {totalPages > 1 && (
+            <div className="mt-6">
+              <Paginator totalPages={totalPages} />
             </div>
           )}
         </CardContent>

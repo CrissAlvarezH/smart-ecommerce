@@ -2,6 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, Tag, FolderOpen, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { SeedProductsButton } from "@/components/admin/seed-products-button";
 
 export default async function AdminDashboard() {
   // In a real app, you'd fetch these stats from the database
@@ -82,7 +83,7 @@ export default async function AdminDashboard() {
           <CardTitle>Quick Actions</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <Link href="/admin/products/new">
               <Button className="w-full" size="lg">
                 <Package className="h-4 w-4 mr-2" />
@@ -103,6 +104,8 @@ export default async function AdminDashboard() {
                 Add Collection
               </Button>
             </Link>
+
+            <SeedProductsButton />
           </div>
         </CardContent>
       </Card>
