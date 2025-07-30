@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { products, productImages, categories, productCollections } from "@/db/schemas";
 import { eq, desc, ilike, and, sql } from "drizzle-orm";
+import { getFileUrl } from "@/lib/files";
 
 export interface CreateProductData {
   name: string;
@@ -195,6 +196,8 @@ export async function getProductBySlug(slug: string) {
 }
 
 export async function addProductImage(productId: string, imageData: ProductImageData) {
+  console.log("💾 Inserting image to DB:", { productId, ...imageData });
+  
   const image = await db
     .insert(productImages)
     .values({
@@ -203,6 +206,7 @@ export async function addProductImage(productId: string, imageData: ProductImage
     })
     .returning();
 
+  console.log("✅ Image inserted with ID:", image[0].id);
   return image[0];
 }
 
@@ -223,11 +227,38 @@ export async function deleteProductImage(id: string) {
 }
 
 export async function getProductImages(productId: string) {
-  return db
+  console.log("🔍 Fetching images for product:", productId);
+  
+  const images = await db
     .select()
     .from(productImages)
     .where(eq(productImages.productId, productId))
     .orderBy(productImages.position);
+
+  console.log("📄 Raw images from DB:", images.length, images.map(img => ({ id: img.id, url: img.url })));
+
+  // Convert S3 paths to signed URLs
+  const imagesWithUrls = await Promise.all(
+    images.map(async (image) => {
+      try {
+        const signedUrl = await getFileUrl(image.url);
+        console.log("🔗 Generated signed URL for", image.url, "->", signedUrl);
+        return {
+          ...image,
+          url: signedUrl, // Convert S3 path to signed URL
+        };
+      } catch (error) {
+        console.error("❌ Error generating signed URL for", image.url, error);
+        return {
+          ...image,
+          url: image.url, // Fallback to original URL
+        };
+      }
+    })
+  );
+
+  console.log("✅ Final images with URLs:", imagesWithUrls.length);
+  return imagesWithUrls;
 }
 
 export async function getProductCollections(productId: string) {

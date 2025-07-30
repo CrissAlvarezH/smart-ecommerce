@@ -140,7 +140,26 @@ Admin repositories (`/repositories/admin/`) provide specialized queries for mana
 
 - AWS S3 integration via `@aws-sdk/client-s3`
 - Image compression and thumbhash generation
-- Upload endpoint at `/api/images`
+- Upload endpoints: `/api/images` (blog), `/api/upload/image` (products)
+
+### File Management Pattern
+All file uploads must use the utilities in `/lib/files.ts`:
+- `uploadFileToBucket(fileStream, path)` - Upload files to S3
+- `deleteFileFromBucket(path)` - Delete files from S3
+- `getFileUrl(path)` - Get signed URLs for file access
+
+Pattern used in services:
+```typescript
+// Generate unique path with timestamp
+const timestamp = Date.now();
+const path = `domain/subdomain_${timestamp}`;
+await uploadFileToBucket(file.stream(), path);
+// Store path in database for later reference
+```
+
+Examples:
+- Blog posts: `posts/post_{id}_{timestamp}`
+- Product images: `products/images/{timestamp}_{filename}`
 
 ## Email System
 

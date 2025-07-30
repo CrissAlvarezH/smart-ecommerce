@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAction } from "next-safe-action/hooks";
 import { createProductAction, updateProductAction } from "@/app/admin/products/actions";
 import { toast } from "@/hooks/use-toast";
+import { ProductImageManager } from "@/components/admin/product-image-manager";
 
 interface Category {
   id: string;
@@ -130,6 +131,11 @@ export function ProductForm({ categories, product, isEditing = false }: ProductF
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Product Images - Show at top when editing existing product */}
+      {isEditing && product?.id && (
+        <ProductImageManager productId={product.id} />
+      )}
+
       {/* Basic Information */}
       <Card>
         <CardHeader>

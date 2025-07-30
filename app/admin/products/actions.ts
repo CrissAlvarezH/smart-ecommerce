@@ -101,3 +101,97 @@ export const getProductsPageDataAction = authenticatedAction
       currentPage: parseInt(parsedInput.page),
     };
   });
+
+// Product Image Management Schemas
+const addProductImageSchema = z.object({
+  productId: z.string().min(1, "Product ID is required"),
+  url: z.string().min(1, "Image URL is required"),
+  altText: z.string().optional(),
+  position: z.number().int().min(0).default(0),
+});
+
+const updateProductImageSchema = z.object({
+  id: z.string().min(1, "Image ID is required"),
+  url: z.string().optional(),
+  altText: z.string().optional(),
+  position: z.number().int().min(0).optional(),
+});
+
+const deleteProductImageSchema = z.object({
+  id: z.string().min(1, "Image ID is required"),
+});
+
+const getProductImagesSchema = z.object({
+  productId: z.string().min(1, "Product ID is required"),
+});
+
+const reorderProductImagesSchema = z.object({
+  productId: z.string().min(1, "Product ID is required"),
+  imageIds: z.array(z.string()).min(1, "At least one image ID is required"),
+});
+
+// Product Image Management Actions
+export const addProductImageAction = authenticatedAction
+  .inputSchema(addProductImageSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("🖼️ Adding product image:", parsedInput);
+    const image = await productsRepo.addProductImage(parsedInput.productId, {
+      url: parsedInput.url,
+      altText: parsedInput.altText,
+      position: parsedInput.position,
+    });
+    console.log("✅ Product image added:", image.id);
+    
+    revalidatePath(`/admin/products/${parsedInput.productId}/edit`);
+    return image;
+  });
+
+export const updateProductImageAction = authenticatedAction
+  .inputSchema(updateProductImageSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("📝 Updating product image:", parsedInput.id);
+    const { id, ...updateData } = parsedInput;
+    const image = await productsRepo.updateProductImage(id, updateData);
+    console.log("✅ Product image updated:", image.id);
+    
+    revalidatePath(`/admin/products/*/edit`);
+    return image;
+  });
+
+export const deleteProductImageAction = authenticatedAction
+  .inputSchema(deleteProductImageSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("🗑️ Deleting product image:", parsedInput.id);
+    await productsRepo.deleteProductImage(parsedInput.id);
+    console.log("✅ Product image deleted");
+    
+    revalidatePath(`/admin/products/*/edit`);
+    return { success: true };
+  });
+
+export const getProductImagesAction = authenticatedAction
+  .inputSchema(getProductImagesSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("📷 Fetching product images:", parsedInput.productId);
+    const images = await productsRepo.getProductImages(parsedInput.productId);
+    console.log(`✅ Fetched ${images.length} images for product`);
+    
+    return images;
+  });
+
+export const reorderProductImagesAction = authenticatedAction
+  .inputSchema(reorderProductImagesSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("🔄 Reordering product images:", parsedInput);
+    
+    // Update position for each image
+    const updatePromises = parsedInput.imageIds.map((imageId, index) =>
+      productsRepo.updateProductImage(imageId, { position: index })
+    );
+    
+    await Promise.all(updatePromises);
+    console.log("✅ Product images reordered");
+    
+    revalidatePath(`/admin/products/${parsedInput.productId}/edit`);
+    return { success: true };
+  });
