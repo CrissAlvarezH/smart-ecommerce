@@ -221,9 +221,26 @@ export function ProductImageManager({ productId }: ProductImageManagerProps) {
 
   const handleSetMainImage = (imageId: string) => {
     setMainImageId(imageId);
+    
+    // Find the selected image and move it to position 0
+    const selectedImageIndex = images.findIndex(img => img.id === imageId);
+    if (selectedImageIndex > 0) {
+      // Create new array with the selected image moved to first position
+      const reorderedImages = Array.from(images);
+      const [selectedImage] = reorderedImages.splice(selectedImageIndex, 1);
+      reorderedImages.unshift(selectedImage);
+      
+      // Update local state immediately for better UX
+      setImages(reorderedImages);
+      
+      // Send the new order to the server
+      const imageIds = reorderedImages.map(img => img.id);
+      reorderImages({ productId, imageIds });
+    }
+    
     toast({
       title: "Main image set",
-      description: "This image is now the main product image.",
+      description: "This image is now the main product image and moved to first position.",
     });
   };
 
@@ -248,6 +265,15 @@ export function ProductImageManager({ productId }: ProductImageManagerProps) {
     const [movedImage] = reorderedImages.splice(index, 1);
     reorderedImages.splice(index - 1, 0, movedImage);
     
+    // If image moved to first position, set it as main image
+    if (index - 1 === 0) {
+      setMainImageId(movedImage.id);
+      toast({
+        title: "Main image updated",
+        description: "Image moved to first position and set as main image.",
+      });
+    }
+    
     setImages(reorderedImages);
     const imageIds = reorderedImages.map(img => img.id);
     reorderImages({ productId, imageIds });
@@ -259,6 +285,15 @@ export function ProductImageManager({ productId }: ProductImageManagerProps) {
     const reorderedImages = Array.from(images);
     const [movedImage] = reorderedImages.splice(index, 1);
     reorderedImages.splice(index + 1, 0, movedImage);
+    
+    // If the image that was in first position moved down, update main image to new first image
+    if (index === 0 && reorderedImages.length > 0) {
+      setMainImageId(reorderedImages[0].id);
+      toast({
+        title: "Main image updated",
+        description: "New first image is now the main image.",
+      });
+    }
     
     setImages(reorderedImages);
     const imageIds = reorderedImages.map(img => img.id);
@@ -311,7 +346,13 @@ export function ProductImageManager({ productId }: ProductImageManagerProps) {
         </div>
 
         {/* Images Grid */}
-        {images.length === 0 ? (
+        {isFetching ? (
+          <div className="text-center py-8 text-gray-500">
+            <Loader2 className="mx-auto h-12 w-12 text-gray-300 mb-4 animate-spin" />
+            <p>Loading images...</p>
+            <p className="text-sm mt-2">Please wait while we fetch your product images.</p>
+          </div>
+        ) : images.length === 0 ? (
           <div className="text-center py-8 text-gray-500">
             <ImageIcon className="mx-auto h-12 w-12 text-gray-300 mb-4" />
             <p>No images added yet.</p>
