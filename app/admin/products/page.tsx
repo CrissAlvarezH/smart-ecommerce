@@ -2,9 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, Package } from "lucide-react";
 import Link from "next/link";
-import * as productsRepo from "@/repositories/admin/products";
-import * as categoriesRepo from "@/repositories/admin/categories";
-import * as collectionsRepo from "@/repositories/admin/collections";
+import { getProductsPageDataAction } from "./actions";
 import { Paginator } from "@/components/pagination";
 import { ProductSearch } from "@/components/admin/product-search";
 import { ProductFilters } from "@/components/admin/product-filters";
@@ -21,23 +19,25 @@ interface ProductsPageProps {
 
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const params = await searchParams;
-  const page = parseInt(params.page || '1', 10);
-  const search = params.search;
-  const categoryId = params.categoryId;
-  const collectionId = params.collectionId;
   
-  const limit = 10; // Products per page
-  const offset = (page - 1) * limit;
+  // Fetch all page data through server action
+  const { data: pageData, serverError } = await getProductsPageDataAction({
+    page: params.page || "1",
+    search: params.search,
+    categoryId: params.categoryId,
+    collectionId: params.collectionId,
+  });
   
-  // Fetch products, count, categories, and collections in parallel
-  const [products, totalCount, categories, collections] = await Promise.all([
-    productsRepo.getProducts(limit, offset, search, categoryId, collectionId),
-    productsRepo.getProductsCount(search, categoryId, collectionId),
-    categoriesRepo.getActiveCategories(),
-    collectionsRepo.getActiveCollections()
-  ]);
+  if (serverError) {
+    return <div>Error loading products: {serverError}</div>;
+  }
   
-  const totalPages = Math.ceil(totalCount / limit);
+  if (!pageData) {
+    return <div>No data available</div>;
+  }
+  
+  const { products, totalCount, totalPages, categories, collections, currentPage } = pageData;
+  const { search, categoryId, collectionId } = params;
 
   return (
     <div className="space-y-6">
@@ -81,7 +81,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
             {search ? `Search Results (${totalCount} found)` : `Products (${totalCount} total)`}
             {totalPages > 1 && (
               <span className="text-sm font-normal text-gray-500 ml-2">
-                • Page {page} of {totalPages}
+                • Page {currentPage} of {totalPages}
               </span>
             )}
           </CardTitle>

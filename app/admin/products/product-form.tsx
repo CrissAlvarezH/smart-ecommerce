@@ -10,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAction } from "next-safe-action/hooks";
-import { createProductAction, updateProductAction } from "../actions";
+import { createProductAction, updateProductAction } from "@/app/admin/products/actions";
 import { toast } from "@/hooks/use-toast";
 
 interface Category {

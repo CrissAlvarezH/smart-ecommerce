@@ -1,11 +1,10 @@
 "use server";
 
-import { actionClient } from "@/lib/server-actions";
+import { authenticatedAction } from "@/lib/server-actions";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import * as categoriesRepo from "@/repositories/admin/categories";
 import * as collectionsRepo from "@/repositories/admin/collections";
-import * as productsRepo from "@/repositories/admin/products";
 
 // Category Schemas
 const createCategorySchema = z.object({
@@ -42,223 +41,75 @@ const deleteCollectionSchema = z.object({
   id: z.string().min(1, "ID is required"),
 });
 
-// Product Schemas
-const createProductSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  slug: z.string().min(1, "Slug is required"),
-  description: z.string().optional().transform((val) => val === "" ? undefined : val),
-  shortDescription: z.string().optional().transform((val) => val === "" ? undefined : val),
-  price: z.string().min(1, "Price is required"),
-  compareAtPrice: z.string().optional().transform((val) => val === "" ? undefined : val),
-  sku: z.string().optional().transform((val) => val === "" ? undefined : val),
-  inventory: z.number().int().min(0, "Inventory must be non-negative"),
-  weight: z.string().optional().transform((val) => val === "" ? undefined : val),
-  categoryId: z.string().optional().transform((val) => val === "" ? undefined : val),
-  isActive: z.boolean().default(true),
-  isFeatured: z.boolean().default(false),
-});
 
-const updateProductSchema = createProductSchema.extend({
-  id: z.string().min(1, "ID is required"),
-});
-
-const deleteProductSchema = z.object({
-  id: z.string().min(1, "ID is required"),
-});
-
-// Collection Product Management Schemas
-const addProductToCollectionSchema = z.object({
-  productId: z.string().min(1, "Product ID is required"),
-  collectionId: z.string().min(1, "Collection ID is required"),
-});
-
-const removeProductFromCollectionSchema = z.object({
-  productId: z.string().min(1, "Product ID is required"),
-  collectionId: z.string().min(1, "Collection ID is required"),
-});
 
 // Category Actions
-export const createCategoryAction = actionClient
-  .schema(createCategorySchema)
+export const createCategoryAction = authenticatedAction
+  .inputSchema(createCategorySchema)
   .action(async ({ parsedInput }) => {
-    try {
-      console.log("🏷️ Creating category:", parsedInput);
-      const category = await categoriesRepo.createCategory(parsedInput);
-      console.log("✅ Category created:", category.id);
-      
-      revalidatePath("/admin/categories");
-      return { success: true, data: category };
-    } catch (error) {
-      console.error("❌ Error creating category:", error);
-      throw new Error(`Failed to create category: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    console.log("🏷️ Creating category:", parsedInput);
+    const category = await categoriesRepo.createCategory(parsedInput);
+    console.log("✅ Category created:", category.id);
+    
+    revalidatePath("/admin/categories");
+    return category;
   });
 
-export const updateCategoryAction = actionClient
-  .schema(updateCategorySchema)
+export const updateCategoryAction = authenticatedAction
+  .inputSchema(updateCategorySchema)
   .action(async ({ parsedInput }) => {
-    try {
-      console.log("📝 Updating category:", parsedInput.id);
-      const category = await categoriesRepo.updateCategory(parsedInput);
-      console.log("✅ Category updated:", category.id);
-      
-      revalidatePath("/admin/categories");
-      return { success: true, data: category };
-    } catch (error) {
-      console.error("❌ Error updating category:", error);
-      throw new Error(`Failed to update category: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    console.log("📝 Updating category:", parsedInput.id);
+    const category = await categoriesRepo.updateCategory(parsedInput);
+    console.log("✅ Category updated:", category.id);
+    
+    revalidatePath("/admin/categories");
+    return category;
   });
 
-export const deleteCategoryAction = actionClient
-  .schema(deleteCategorySchema)
+export const deleteCategoryAction = authenticatedAction
+  .inputSchema(deleteCategorySchema)
   .action(async ({ parsedInput }) => {
-    try {
-      console.log("🗑️ Deleting category:", parsedInput.id);
-      await categoriesRepo.deleteCategory(parsedInput.id);
-      console.log("✅ Category deleted");
-      
-      revalidatePath("/admin/categories");
-      return { success: true };
-    } catch (error) {
-      console.error("❌ Error deleting category:", error);
-      throw new Error(`Failed to delete category: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    console.log("🗑️ Deleting category:", parsedInput.id);
+    await categoriesRepo.deleteCategory(parsedInput.id);
+    console.log("✅ Category deleted");
+    
+    revalidatePath("/admin/categories");
+    return { success: true };
   });
 
 // Collection Actions
-export const createCollectionAction = actionClient
-  .schema(createCollectionSchema)
+export const createCollectionAction = authenticatedAction
+  .inputSchema(createCollectionSchema)
   .action(async ({ parsedInput }) => {
-    try {
-      console.log("📂 Creating collection:", parsedInput);
-      const collection = await collectionsRepo.createCollection(parsedInput);
-      console.log("✅ Collection created:", collection.id);
-      
-      revalidatePath("/admin/collections");
-      return { success: true, data: collection };
-    } catch (error) {
-      console.error("❌ Error creating collection:", error);
-      throw new Error(`Failed to create collection: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    console.log("📂 Creating collection:", parsedInput);
+    const collection = await collectionsRepo.createCollection(parsedInput);
+    console.log("✅ Collection created:", collection.id);
+    
+    revalidatePath("/admin/collections");
+    return collection;
   });
 
-export const updateCollectionAction = actionClient
-  .schema(updateCollectionSchema)
+export const updateCollectionAction = authenticatedAction
+  .inputSchema(updateCollectionSchema)
   .action(async ({ parsedInput }) => {
-    try {
-      console.log("📝 Updating collection:", parsedInput.id);
-      const collection = await collectionsRepo.updateCollection(parsedInput);
-      console.log("✅ Collection updated:", collection.id);
-      
-      revalidatePath("/admin/collections");
-      return { success: true, data: collection };
-    } catch (error) {
-      console.error("❌ Error updating collection:", error);
-      throw new Error(`Failed to update collection: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    console.log("📝 Updating collection:", parsedInput.id);
+    const collection = await collectionsRepo.updateCollection(parsedInput);
+    console.log("✅ Collection updated:", collection.id);
+    
+    revalidatePath("/admin/collections");
+    return collection;
   });
 
-export const deleteCollectionAction = actionClient
-  .schema(deleteCollectionSchema)
+export const deleteCollectionAction = authenticatedAction
+  .inputSchema(deleteCollectionSchema)
   .action(async ({ parsedInput }) => {
-    try {
-      console.log("🗑️ Deleting collection:", parsedInput.id);
-      await collectionsRepo.deleteCollection(parsedInput.id);
-      console.log("✅ Collection deleted");
-      
-      revalidatePath("/admin/collections");
-      return { success: true };
-    } catch (error) {
-      console.error("❌ Error deleting collection:", error);
-      throw new Error(`Failed to delete collection: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
+    console.log("🗑️ Deleting collection:", parsedInput.id);
+    await collectionsRepo.deleteCollection(parsedInput.id);
+    console.log("✅ Collection deleted");
+    
+    revalidatePath("/admin/collections");
+    return { success: true };
   });
 
-// Product Actions
-export const createProductAction = actionClient
-  .schema(createProductSchema)
-  .action(async ({ parsedInput }) => {
-    try {
-      console.log("📦 Creating product:", parsedInput);
-      const product = await productsRepo.createProduct(parsedInput);
-      console.log("✅ Product created:", product.id);
-      
-      revalidatePath("/admin/products");
-      return { success: true, data: product };
-    } catch (error) {
-      console.error("❌ Error creating product:", error);
-      throw new Error(`Failed to create product: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  });
 
-export const updateProductAction = actionClient
-  .schema(updateProductSchema)
-  .action(async ({ parsedInput }) => {
-    try {
-      console.log("📝 Updating product:", parsedInput.id);
-      const product = await productsRepo.updateProduct(parsedInput);
-      console.log("✅ Product updated:", product.id);
-      
-      revalidatePath("/admin/products");
-      return { success: true, data: product };
-    } catch (error) {
-      console.error("❌ Error updating product:", error);
-      throw new Error(`Failed to update product: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  });
 
-export const deleteProductAction = actionClient
-  .schema(deleteProductSchema)
-  .action(async ({ parsedInput }) => {
-    try {
-      console.log("🗑️ Deleting product:", parsedInput.id);
-      await productsRepo.deleteProduct(parsedInput.id);
-      console.log("✅ Product deleted");
-      
-      revalidatePath("/admin/products");
-      return { success: true };
-    } catch (error) {
-      console.error("❌ Error deleting product:", error);
-      throw new Error(`Failed to delete product: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  });
-
-// Collection Product Management Actions
-export const addProductToCollectionAction = actionClient
-  .schema(addProductToCollectionSchema)
-  .action(async ({ parsedInput }) => {
-    try {
-      console.log("➕ Adding product to collection:", parsedInput);
-      const relationship = await collectionsRepo.addProductToCollection(
-        parsedInput.productId, 
-        parsedInput.collectionId
-      );
-      console.log("✅ Product added to collection");
-      
-      revalidatePath(`/admin/collections/${parsedInput.collectionId}/products`);
-      return { success: true, data: relationship };
-    } catch (error) {
-      console.error("❌ Error adding product to collection:", error);
-      throw new Error(`Failed to add product to collection: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  });
-
-export const removeProductFromCollectionAction = actionClient
-  .schema(removeProductFromCollectionSchema)
-  .action(async ({ parsedInput }) => {
-    try {
-      console.log("➖ Removing product from collection:", parsedInput);
-      await collectionsRepo.removeProductFromCollection(
-        parsedInput.productId, 
-        parsedInput.collectionId
-      );
-      console.log("✅ Product removed from collection");
-      
-      revalidatePath(`/admin/collections/${parsedInput.collectionId}/products`);
-      return { success: true };
-    } catch (error) {
-      console.error("❌ Error removing product from collection:", error);
-      throw new Error(`Failed to remove product from collection: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  });

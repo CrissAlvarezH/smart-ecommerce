@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useAction } from "next-safe-action/hooks";
-import { deleteProductAction } from "@/app/admin/actions";
+import { deleteProductAction } from "@/app/admin/products/actions";
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog,

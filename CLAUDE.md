@@ -42,7 +42,7 @@ This is a Next.js 15 ecommerce application following a 4-layer architecture patt
 - Handles domain-specific logic and validation
 
 ### 4. Interface Layer (`/app` and `/components`)
-- **Server Actions**: Located in `actions.ts` files within each route folder
+- **Server Actions**: Located in `actions.ts` files organized by domain context
 - **Components**: Server and client components using Next.js App Router
 - **API Routes**: REST endpoints in `/app/api/`
 
@@ -71,21 +71,47 @@ This is a Next.js 15 ecommerce application following a 4-layer architecture patt
 - Separate validation schemas in `validations.ts` files
 
 ### Server Actions Pattern
+
+**IMPORTANT**: Always use `authenticatedAction` or `unauthenticatedAction` instead of `actionClient` directly.
+
 ```typescript
-// In actions.ts files
-export const actionName = actionClient
-  .schema(zodSchema)
+// In actions.ts files - Import the proper action creators
+import { authenticatedAction, unauthenticatedAction } from "@/lib/server-actions";
+
+// For actions requiring authentication (admin, user-specific operations)
+export const actionName = authenticatedAction
+  .inputSchema(zodSchema)
+  .action(async ({ parsedInput, ctx: { user } }) => {
+    // Business logic via services
+    // user object is available in ctx
+    // Return data directly (no need to wrap in success object)
+    return data;
+  });
+
+// For public actions (no authentication required)
+export const publicActionName = unauthenticatedAction
+  .inputSchema(zodSchema)
   .action(async ({ parsedInput }) => {
     // Business logic via services
-    // Return data or throw errors
+    // Return data directly
+    return data;
   });
 
 // In components
 const { execute, isExecuting } = useAction(actionName, {
-  onSuccess: (result) => { /* handle success */ },
+  onSuccess: (result) => { 
+    // result contains the returned data directly
+    // If action returned { data: products }, access via result.data
+  },
   onError: (error) => { /* handle error */ }
 });
 ```
+
+**Key Differences from `actionClient`**:
+- No need for manual try/catch blocks - error handling is automatic
+- Authentication is handled automatically by `authenticatedAction`
+- Return data directly instead of wrapping in success objects
+- Use `.inputSchema()` instead of `.schema()`
 
 ### Error Handling
 - Custom error types in `lib/errors.ts`
@@ -130,9 +156,90 @@ Admin repositories (`/repositories/admin/`) provide specialized queries for mana
 - Client components should be lean wrappers around server data
 
 ### Data Fetching
-- Server Components: Direct service/repository calls
-- Client Components: Server Actions via `useAction`
-- No client-side data fetching libraries (SWR, React Query)
+
+**CRITICAL RULE**: Components must NEVER import or call repositories or services directly. Always use server actions.
+
+#### Server Components:
+- **MUST** call server actions directly for data fetching
+- **NEVER** import repositories or services directly
+- Example: `const result = await getProductsAction({ page: "1" })`
+
+#### Client Components: 
+- **MUST** use Server Actions via `useAction` for ALL data operations
+- **NEVER** import repositories or services directly
+- Example: `const { execute: fetchData } = useAction(getDataAction)`
+
+#### Proper Data Flow Architecture:
+```
+Server Component → Server Action → Service → Repository → Database
+Client Component → useAction(Server Action) → Service → Repository → Database
+```
+
+#### Repository Access Rules:
+- ✅ **Server Actions** can import services (preferred) or repositories
+- ✅ **Services** can import repositories  
+- ✅ **Server Components** can call server actions directly
+- ✅ **Client Components** can call server actions via `useAction`
+- ❌ **ALL Components** cannot import repositories directly
+- ❌ **ALL Components** cannot import services directly
+- ❌ **Components** should never skip the server action layer
+
+#### Server Action Examples:
+```typescript
+// Server action for data fetching
+export const getProductsAction = authenticatedAction
+  .inputSchema(z.object({ page: z.string(), search: z.string().optional() }))
+  .action(async ({ parsedInput }) => {
+    return await adminProductService.getProducts(parsedInput);
+  });
+
+// Server component usage
+const result = await getProductsAction({ page: "1" });
+
+// Client component usage  
+const { execute: fetchProducts } = useAction(getProductsAction, {
+  onSuccess: (result) => setProducts(result),
+});
+```
+
+**Why**: This ensures consistent data flow, proper error handling, authentication, and prevents server-only code from being bundled into client components.
+
+### Server Action Organization
+
+**IMPORTANT**: Organize server actions by domain context, not in a single global actions file.
+
+#### Folder Structure Pattern:
+```
+/app/
+  admin/
+    products/
+      actions.ts          ← Product-related actions
+      page.tsx
+      new/
+        actions.ts        ← Product creation actions  
+        page.tsx
+    categories/
+      actions.ts          ← Category-related actions
+      page.tsx
+    collections/
+      actions.ts          ← Collection-related actions
+      page.tsx
+  blog/
+    actions.ts            ← Blog listing actions
+    [id]/
+      actions.ts          ← Individual blog post actions
+```
+
+#### Action Naming Convention:
+- Use descriptive names that include the domain context
+- Examples: `getProductsPageDataAction`, `createProductAction`, `deleteProductAction`
+- Import from context-specific files: `import { getProductsPageDataAction } from "./actions"`
+
+#### Benefits:
+- **Better organization** - Related actions are grouped together
+- **Easier maintenance** - Changes to product logic stay in product folder
+- **Clearer imports** - `./actions` vs long relative paths
+- **Domain separation** - Each area of the app has its own action file
 
 ### Styling
 - Tailwind CSS with shadcn/ui components

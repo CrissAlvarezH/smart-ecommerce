@@ -5,8 +5,7 @@ import { Edit, Package } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as collectionsRepo from "@/repositories/admin/collections";
-import * as productsRepo from "@/repositories/admin/products";
-import { CollectionProductsManager } from "@/components/admin/collection-products-manager";
+import { CollectionProductsManager } from "./collection-products-manager";
 import { BackButton } from "@/components/ui/back-button";
 
 interface CollectionProductsPageProps {
@@ -19,32 +18,13 @@ interface CollectionProductsPageProps {
   }>;
 }
 
-export default async function CollectionProductsPage({ params, searchParams }: CollectionProductsPageProps) {
+export default async function CollectionProductsPage({ params }: CollectionProductsPageProps) {
   const { id } = await params;
-  const { page, availablePage, search, availableSearch } = await searchParams;
-  
   const collection = await collectionsRepo.getCollectionById(id);
-  
+
   if (!collection) {
     notFound();
   }
-
-  const currentPage = parseInt(page || '1', 10);
-  const availableCurrentPage = parseInt(availablePage || '1', 10);
-  const limit = 10; // Products per page
-  const offset = (currentPage - 1) * limit;
-  const availableOffset = (availableCurrentPage - 1) * limit;
-  
-  // Fetch products in this collection and available products with pagination
-  const [productsInCollection, totalInCollection, allProducts, totalAvailableProducts] = await Promise.all([
-    productsRepo.getProducts(limit, offset, search, undefined, collection.id),
-    productsRepo.getProductsCount(search, undefined, collection.id),
-    productsRepo.getProducts(limit, availableOffset, availableSearch),
-    productsRepo.getProductsCount(availableSearch)
-  ]);
-  
-  const totalPages = Math.ceil(totalInCollection / limit);
-  const totalAvailablePages = Math.ceil(totalAvailableProducts / limit);
 
   return (
     <div className="space-y-6">
@@ -59,7 +39,7 @@ export default async function CollectionProductsPage({ params, searchParams }: C
             </p>
           </div>
         </div>
-        
+
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
           <Link href={`/admin/collections/${collection.id}/edit`}>
@@ -85,7 +65,7 @@ export default async function CollectionProductsPage({ params, searchParams }: C
               <label className="text-sm font-medium text-gray-500">Collection Name</label>
               <p className="text-lg font-semibold">{collection.name}</p>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium text-gray-500">Status</label>
               <div className="mt-1">
@@ -94,29 +74,13 @@ export default async function CollectionProductsPage({ params, searchParams }: C
                 </Badge>
               </div>
             </div>
-            
-            <div>
-              <label className="text-sm font-medium text-gray-500">Products in Collection</label>
-              <p className="text-2xl font-bold text-blue-600">
-                {totalInCollection} {totalInCollection === 1 ? 'product' : 'products'}
-              </p>
-            </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Products Management */}
-      <CollectionProductsManager 
+      <CollectionProductsManager
         collection={collection}
-        productsInCollection={productsInCollection}
-        allProducts={allProducts}
-        totalInCollection={totalInCollection}
-        totalPages={totalPages}
-        currentPage={currentPage}
-        searchTerm={search}
-        availableCurrentPage={availableCurrentPage}
-        totalAvailablePages={totalAvailablePages}
-        availableSearchTerm={availableSearch}
       />
     </div>
   );

@@ -1,0 +1,26 @@
+import { CollectionProductsList } from "@/app/admin/collections/[id]/products/collection-products-list";
+
+interface Collection {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+  imageUrl: string | null;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface CollectionProductsManagerProps {
+  collection: Collection;
+}
+
+export function CollectionProductsManager({
+  collection,
+}: CollectionProductsManagerProps) {
+  return (
+    <div className="w-full">
+      <CollectionProductsList collection={collection} />
+    </div>
+  );
+}
