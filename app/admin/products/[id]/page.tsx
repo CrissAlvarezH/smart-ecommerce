@@ -1,11 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit, Package } from "lucide-react";
+import { Edit, Package } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as productsRepo from "@/repositories/admin/products";
 import { ProductDeleteButton } from "@/components/admin/product-delete-button";
+import { BackButton } from "@/components/ui/back-button";
 
 interface ProductDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -25,12 +26,7 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/admin/products">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Products
-            </Button>
-          </Link>
+          <BackButton></BackButton>
           <div>
             <h2 className="text-3xl font-bold text-gray-900">Product Details</h2>
             <p className="text-gray-600 mt-2">

@@ -9,6 +9,7 @@ import * as productsRepo from "@/repositories/admin/products";
 import { ProductsClient } from "@/components/admin/products-client";
 import { Paginator } from "@/components/pagination";
 import { CategoryDeleteButton } from "@/components/admin/category-delete-button";
+import { BackButton } from "@/components/ui/back-button";
 
 interface CategoryDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -20,9 +21,9 @@ interface CategoryDetailsPageProps {
 export default async function CategoryDetailsPage({ params, searchParams }: CategoryDetailsPageProps) {
   const { id } = await params;
   const { page } = await searchParams;
-  
+
   const category = await categoriesRepo.getCategoryById(id);
-  
+
   if (!category) {
     notFound();
   }
@@ -30,13 +31,13 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
   const currentPage = parseInt(page || '1', 10);
   const limit = 10; // Products per page
   const offset = (currentPage - 1) * limit;
-  
+
   // Fetch products in this category and count in parallel
   const [products, totalCount] = await Promise.all([
     productsRepo.getProducts(limit, offset, undefined, category.id),
     productsRepo.getProductsCount(undefined, category.id)
   ]);
-  
+
   const totalPages = Math.ceil(totalCount / limit);
 
   return (
@@ -44,12 +45,7 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/admin/categories">
-            <Button variant="outline" size="sm">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Categories
-            </Button>
-          </Link>
+          <BackButton></BackButton>
           <div>
             <h2 className="text-3xl font-bold text-gray-900">Category Details</h2>
             <p className="text-gray-600 mt-2">
@@ -57,7 +53,7 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
             </p>
           </div>
         </div>
-        
+
         {/* Action Buttons */}
         <div className="flex items-center gap-2">
           <Link href={`/admin/categories/${category.id}/edit`}>
@@ -85,14 +81,14 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
                 <label className="text-sm font-medium text-gray-500">Category Name</label>
                 <p className="text-lg font-semibold">{category.name}</p>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium text-gray-500">Slug</label>
                 <p className="text-sm text-gray-700 font-mono bg-gray-50 px-2 py-1 rounded">
                   {category.slug}
                 </p>
               </div>
-              
+
               <div>
                 <label className="text-sm font-medium text-gray-500">Status</label>
                 <div className="mt-1">
@@ -102,7 +98,7 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
                 </div>
               </div>
             </div>
-            
+
             <div className="space-y-4">
               {category.description && (
                 <div>
@@ -112,7 +108,7 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
                   </div>
                 </div>
               )}
-              
+
               <div>
                 <label className="text-sm font-medium text-gray-500">Products in Category</label>
                 <p className="text-2xl font-bold text-blue-600">
@@ -155,7 +151,7 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
           ) : (
             <>
               <ProductsClient products={products} />
-              
+
               {totalPages > 1 && (
                 <div className="mt-6">
                   <Paginator totalPages={totalPages} />
