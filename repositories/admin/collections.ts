@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { collections, productCollections, products } from "@/db/schemas";
-import { eq, desc, ilike } from "drizzle-orm";
+import { eq, desc, ilike, and } from "drizzle-orm";
 
 export interface CreateCollectionData {
   name: string;
@@ -114,8 +114,10 @@ export async function removeProductFromCollection(productId: string, collectionI
   await db
     .delete(productCollections)
     .where(
-      eq(productCollections.productId, productId) &&
-      eq(productCollections.collectionId, collectionId)
+      and(
+        eq(productCollections.productId, productId),
+        eq(productCollections.collectionId, collectionId)
+      )
     );
 }
 

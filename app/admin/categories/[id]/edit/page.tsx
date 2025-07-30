@@ -36,7 +36,7 @@ export default async function EditCategoryPage({ params }: EditCategoryPageProps
       </div>
 
       <CategoryForm 
-        category={category}
+        category={category as any}
         isEditing={true}
       />
     </div>

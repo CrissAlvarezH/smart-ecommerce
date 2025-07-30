@@ -40,8 +40,8 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
       </div>
 
       <ProductForm 
-        categories={categories} 
-        product={product}
+        categories={categories as any} 
+        product={product as any}
         isEditing={true}
       />
     </div>

@@ -20,7 +20,7 @@ export default async function NewProductPage() {
         </div>
       </div>
 
-      <ProductForm categories={categories} />
+      <ProductForm categories={categories as any} />
     </div>
   );
 }

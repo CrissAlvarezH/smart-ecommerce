@@ -62,7 +62,7 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
               Edit Category
             </Button>
           </Link>
-          <CategoryDeleteButton category={category} />
+          <CategoryDeleteButton category={category as any} />
         </div>
       </div>
 

@@ -13,7 +13,7 @@ export async function getOrCreateCart(userId?: string, sessionId?: string) {
     cart = await db
       .select()
       .from(carts)
-      .where(eq(carts.userId, userId))
+      .where(eq(carts.userId, parseInt(userId)))
       .limit(1);
   } else if (sessionId) {
     cart = await db
@@ -30,7 +30,7 @@ export async function getOrCreateCart(userId?: string, sessionId?: string) {
   const newCart = await db
     .insert(carts)
     .values({
-      userId: userId || null,
+      userId: userId ? parseInt(userId) : null,
       sessionId: sessionId || null,
     })
     .returning();

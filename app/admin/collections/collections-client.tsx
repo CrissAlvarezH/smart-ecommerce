@@ -5,10 +5,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Edit, Trash2, Search, FolderOpen, Plus } from "lucide-react";
+import { Edit, Trash2, Search, FolderOpen, Plus, Package } from "lucide-react";
 import Link from "next/link";
 import { useAction } from "next-safe-action/hooks";
-import { deleteCollectionAction } from "../actions";
+import { deleteCollectionAction } from "@/app/admin/actions";
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -134,6 +134,12 @@ export function CollectionsClient({ initialCollections }: CollectionsClientProps
                   </div>
                   
                   <div className="flex items-center gap-2">
+                    <Link href={`/admin/collections/${collection.id}/products`}>
+                      <Button variant="outline" size="sm">
+                        <Package className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                    
                     <Link href={`/admin/collections/${collection.id}/edit`}>
                       <Button variant="outline" size="sm">
                         <Edit className="h-4 w-4" />

@@ -107,7 +107,7 @@ export default async function CategoriesPage({ searchParams }: CategoriesPagePro
               )}
             </div>
           ) : (
-            <CategoriesList categories={categories} searchTerm={search} />
+            <CategoriesList categories={categories as any} searchTerm={search} />
           )}
           
           {totalPages > 1 && (

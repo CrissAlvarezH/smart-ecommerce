@@ -62,7 +62,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4 flex-1">
               <ProductSearch />
-              <ProductFilters categories={categories} collections={collections} />
+              <ProductFilters categories={categories as any} collections={collections as any} />
             </div>
             {(search || categoryId || collectionId) && (
               <Button variant="outline" size="sm" asChild>

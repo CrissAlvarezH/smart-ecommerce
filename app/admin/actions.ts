@@ -66,6 +66,17 @@ const deleteProductSchema = z.object({
   id: z.string().min(1, "ID is required"),
 });
 
+// Collection Product Management Schemas
+const addProductToCollectionSchema = z.object({
+  productId: z.string().min(1, "Product ID is required"),
+  collectionId: z.string().min(1, "Collection ID is required"),
+});
+
+const removeProductFromCollectionSchema = z.object({
+  productId: z.string().min(1, "Product ID is required"),
+  collectionId: z.string().min(1, "Collection ID is required"),
+});
+
 // Category Actions
 export const createCategoryAction = actionClient
   .schema(createCategorySchema)
@@ -210,5 +221,44 @@ export const deleteProductAction = actionClient
     } catch (error) {
       console.error("❌ Error deleting product:", error);
       throw new Error(`Failed to delete product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+
+// Collection Product Management Actions
+export const addProductToCollectionAction = actionClient
+  .schema(addProductToCollectionSchema)
+  .action(async ({ parsedInput }) => {
+    try {
+      console.log("➕ Adding product to collection:", parsedInput);
+      const relationship = await collectionsRepo.addProductToCollection(
+        parsedInput.productId, 
+        parsedInput.collectionId
+      );
+      console.log("✅ Product added to collection");
+      
+      revalidatePath(`/admin/collections/${parsedInput.collectionId}/products`);
+      return { success: true, data: relationship };
+    } catch (error) {
+      console.error("❌ Error adding product to collection:", error);
+      throw new Error(`Failed to add product to collection: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  });
+
+export const removeProductFromCollectionAction = actionClient
+  .schema(removeProductFromCollectionSchema)
+  .action(async ({ parsedInput }) => {
+    try {
+      console.log("➖ Removing product from collection:", parsedInput);
+      await collectionsRepo.removeProductFromCollection(
+        parsedInput.productId, 
+        parsedInput.collectionId
+      );
+      console.log("✅ Product removed from collection");
+      
+      revalidatePath(`/admin/collections/${parsedInput.collectionId}/products`);
+      return { success: true };
+    } catch (error) {
+      console.error("❌ Error removing product from collection:", error);
+      throw new Error(`Failed to remove product from collection: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
   });

@@ -9,7 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useAction } from "next-safe-action/hooks";
-import { createCategoryAction, updateCategoryAction } from "../actions";
+import { createCategoryAction, updateCategoryAction } from "@/app/admin/actions";
 import { toast } from "@/hooks/use-toast";
 
 interface Category {
@@ -20,6 +20,8 @@ interface Category {
   imageUrl: string | null;
   parentId: string | null;
   isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface CategoryFormProps {
