@@ -73,6 +73,7 @@ export async function deleteProduct(id: string) {
 }
 
 export async function getProducts(limit = 50, offset = 0, search?: string, categoryId?: string, collectionId?: string) {
+  // Build the base query
   let query = db
     .select({
       id: products.id,
@@ -89,20 +90,24 @@ export async function getProducts(limit = 50, offset = 0, search?: string, categ
       isFeatured: products.isFeatured,
       createdAt: products.createdAt,
       updatedAt: products.updatedAt,
+      firstImageUrl: productImages.url,
     })
     .from(products)
-    .leftJoin(categories, eq(products.categoryId, categories.id));
+    .leftJoin(categories, eq(products.categoryId, categories.id))
+    .leftJoin(
+      productImages, 
+      and(
+        eq(products.id, productImages.productId),
+        eq(productImages.position, 0) // Get the first image (main image)
+      )
+    );
 
   // Add collection join if filtering by collection
   if (collectionId) {
     query = query.leftJoin(productCollections, eq(products.id, productCollections.productId)) as any;
   }
 
-  query = query
-    .orderBy(desc(products.createdAt))
-    .limit(limit)
-    .offset(offset) as any;
-
+  // Build conditions array
   const conditions = [];
 
   if (search) {
@@ -117,11 +122,26 @@ export async function getProducts(limit = 50, offset = 0, search?: string, categ
     conditions.push(eq(productCollections.collectionId, collectionId));
   }
 
+  // Apply conditions if any
   if (conditions.length > 0) {
     query = query.where(and(...conditions)) as any;
   }
 
-  return query;
+  // Apply ordering, limit, and offset
+  const productsWithImages = await query
+    .orderBy(desc(products.createdAt))
+    .limit(limit)
+    .offset(offset);
+
+  // Convert S3 paths to signed URLs for images that exist
+  const productsWithSignedUrls = await Promise.all(
+    productsWithImages.map(async (product) => ({
+      ...product,
+      firstImageUrl: product.firstImageUrl ? await getFileUrl(product.firstImageUrl) : null,
+    }))
+  );
+
+  return productsWithSignedUrls;
 }
 
 export async function getProductsCount(search?: string, categoryId?: string, collectionId?: string) {

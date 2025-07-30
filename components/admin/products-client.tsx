@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Package } from "lucide-react";
 import Link from "next/link";
 import { useAction } from "next-safe-action/hooks";
 import { deleteProductAction } from "@/app/admin/products/actions";
@@ -35,6 +35,7 @@ interface Product {
   isFeatured: boolean;
   createdAt: Date;
   updatedAt: Date;
+  firstImageUrl: string | null;
 }
 
 interface ProductsClientProps {
@@ -75,36 +76,54 @@ export function ProductsClient({ products, searchTerm }: ProductsClientProps) {
           key={product.id}
           className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
         >
-          <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <h3 className="font-semibold">
-                <Link 
-                  href={`/admin/products/${product.id}`}
-                  className="hover:text-blue-600 transition-colors"
-                >
-                  <SearchHighlight text={product.name} searchTerm={searchTerm} />
-                </Link>
-              </h3>
-              <Badge variant={product.isActive ? "default" : "secondary"}>
-                {product.isActive ? "Active" : "Inactive"}
-              </Badge>
-              {product.isFeatured && (
-                <Badge variant="outline">Featured</Badge>
+          <div className="flex items-center gap-4">
+            {/* Product Image */}
+            <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+              {product.firstImageUrl ? (
+                <img
+                  src={product.firstImageUrl}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-gray-400">
+                  <Package className="h-6 w-6" />
+                </div>
               )}
             </div>
-            <p className="text-sm text-gray-600">
-              ${parseFloat(product.price).toFixed(2)} • Stock: {product.inventory}
-            </p>
-            {product.categoryName && (
-              <p className="text-sm text-gray-500">
-                Category: {product.categoryName}
+            
+            {/* Product Details */}
+            <div className="space-y-1">
+              <div className="flex items-center gap-3">
+                <h3 className="font-semibold">
+                  <Link 
+                    href={`/admin/products/${product.id}`}
+                    className="hover:text-blue-600 transition-colors"
+                  >
+                    <SearchHighlight text={product.name} searchTerm={searchTerm} />
+                  </Link>
+                </h3>
+                <Badge variant={product.isActive ? "default" : "secondary"}>
+                  {product.isActive ? "Active" : "Inactive"}
+                </Badge>
+                {product.isFeatured && (
+                  <Badge variant="outline">Featured</Badge>
+                )}
+              </div>
+              <p className="text-sm text-gray-600">
+                ${parseFloat(product.price).toFixed(2)} • Stock: {product.inventory}
               </p>
-            )}
-            {product.sku && (
-              <p className="text-xs text-gray-400">
-                SKU: {product.sku}
-              </p>
-            )}
+              {product.categoryName && (
+                <p className="text-sm text-gray-500">
+                  Category: {product.categoryName}
+                </p>
+              )}
+              {product.sku && (
+                <p className="text-xs text-gray-400">
+                  SKU: {product.sku}
+                </p>
+              )}
+            </div>
           </div>
           
           <div className="flex items-center gap-2">
