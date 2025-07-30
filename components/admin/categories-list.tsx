@@ -80,7 +80,12 @@ export function CategoriesList({ categories, searchTerm }: CategoriesListProps) 
           <div className="space-y-1">
             <div className="flex items-center gap-3">
               <h3 className="font-semibold">
-                <SearchHighlight text={category.name} searchTerm={searchTerm} />
+                <Link 
+                  href={`/admin/categories/${category.id}`}
+                  className="hover:text-blue-600 transition-colors"
+                >
+                  <SearchHighlight text={category.name} searchTerm={searchTerm} />
+                </Link>
               </h3>
               <Badge variant={category.isActive ? "default" : "secondary"}>
                 {category.isActive ? "Active" : "Inactive"}
