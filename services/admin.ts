@@ -23,7 +23,6 @@ export const adminCategoryService = {
   getCategoryById: categoriesRepo.getCategoryById,
   getCategoryBySlug: categoriesRepo.getCategoryBySlug,
   getActiveCategories: categoriesRepo.getActiveCategories,
-  getCategoryWithParent: categoriesRepo.getCategoryWithParent,
   createCategory: categoriesRepo.createCategory,
   updateCategory: categoriesRepo.updateCategory,
   deleteCategory: categoriesRepo.deleteCategory,

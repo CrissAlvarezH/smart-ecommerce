@@ -93,11 +93,11 @@ export function CollectionProductsList({
           <div className="text-center py-8 text-gray-500">
             <Package className="mx-auto h-12 w-12 text-gray-300 mb-4" />
             {searchTerm ? (
-              <p>No products found matching "{searchTerm}".</p>
+              <p>No products found matching &quot;{searchTerm}&quot;.</p>
             ) : (
               <>
                 <p>No products in this collection yet.</p>
-                <p className="text-sm mt-2">Use the "Add Product" button above to add products.</p>
+                <p className="text-sm mt-2">Use the &quot;Add Product&quot; button above to add products.</p>
               </>
             )}
           </div>

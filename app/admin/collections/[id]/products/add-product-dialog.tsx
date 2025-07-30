@@ -99,7 +99,7 @@ export function AddProductDialog({ collection, onProductAdded }: { collection: C
               <div className="text-center py-8 text-gray-500">
                 <Package className="mx-auto h-12 w-12 text-gray-300 mb-4" />
                 {searchTerm ? (
-                  <p>No products found matching "{searchTerm}".</p>
+                  <p>No products found matching &quot;{searchTerm}&quot;.</p>
                 ) : (
                   <p>All products are already in this collection.</p>
                 )}
