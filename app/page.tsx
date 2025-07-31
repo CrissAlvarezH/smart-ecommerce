@@ -25,7 +25,7 @@ export default async function Home() {
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           {user ? (
             <>
-              <Link href="/create-store">
+              <Link href="/stores/new">
                 <Button size="lg" className="min-w-40">
                   <Plus className="mr-2 h-5 w-5" />
                   Create Store
@@ -81,7 +81,7 @@ export default async function Home() {
               Be the first to create a store on our platform!
             </p>
             {user ? (
-              <Link href="/create-store">
+              <Link href="/stores/new">
                 <Button>
                   <Plus className="mr-2 h-4 w-4" />
                   Create Your Store

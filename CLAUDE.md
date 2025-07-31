@@ -98,10 +98,10 @@ export const publicActionName = unauthenticatedAction
   });
 
 // In components
-const { execute, isExecuting } = useAction(actionName, {
+const { execute, result, isExecuting, hasSucceeded, hasErrored } = useAction(actionName, {
   onSuccess: (result) => { 
-    // result contains the returned data directly
-    // If action returned { data: products }, access via result.data
+    // result.data contains the action's returned data
+    // Access data via result.data (e.g., result.data.products)
   },
   onError: (error) => { /* handle error */ }
 });
@@ -112,6 +112,43 @@ const { execute, isExecuting } = useAction(actionName, {
 - Authentication is handled automatically by `authenticatedAction`
 - Return data directly instead of wrapping in success objects
 - Use `.inputSchema()` instead of `.schema()`
+
+### useAction Hook Usage
+
+The `useAction()` hook provides full control over server action execution. Here's the correct usage pattern:
+
+```typescript
+const { 
+  execute,        // Call action without return
+  executeAsync,   // Call action with promise return
+  result,         // Action execution result
+  status,         // Current action status
+  reset,          // Reset execution state
+  isIdle,         // Boolean status checks
+  isExecuting,
+  hasSucceeded,
+  hasErrored
+} = useAction(safeActionFn, {
+  onSuccess: (result) => {
+    // result.data contains the successful action return value
+    // Example: if action returns { store: {...} }, access via result.data.store
+  },
+  onError: (result) => {
+    // result.serverError contains server-side errors
+    // result.validationError contains input validation errors
+  }
+});
+
+// Execute the action
+execute({ inputData });
+
+// Access result data
+if (result?.data) {
+  // Use result.data.yourProperty
+}
+```
+
+**Important**: Always access returned data through `result.data`, not directly on `result`.
 
 ### Error Handling
 - Custom error types in `lib/errors.ts`

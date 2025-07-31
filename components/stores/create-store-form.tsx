@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -13,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
 import { createStoreAction } from "@/app/actions";
 
 const createStoreSchema = z.object({
@@ -37,7 +37,6 @@ interface CreateStoreFormProps {
 
 export function CreateStoreForm({ onSuccess }: CreateStoreFormProps) {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm<CreateStoreFormData>({
     resolver: zodResolver(createStoreSchema),
@@ -56,28 +55,18 @@ export function CreateStoreForm({ onSuccess }: CreateStoreFormProps) {
     },
   });
 
-  const { execute } = useAction(createStoreAction, {
+  const { execute, result, isExecuting, hasSucceeded, hasErrored } = useAction(createStoreAction, {
     onSuccess: (result) => {
-      console.log("Create store success result:", result);
       toast.success("Store created successfully!");
-      if (onSuccess && result.store) {
-        onSuccess(result.store.slug);
-      } else if (result.store) {
-        console.log("Redirecting to admin:", `/stores/${result.store.slug}/admin`);
-        router.push(`/stores/${result.store.slug}/admin`);
-      } else {
-        console.error("No store in result:", result);
+      form.reset();
+      if (onSuccess && result.data?.store) {
+        onSuccess(result.data.store.slug);
+      } else if (result.data?.store) {
+        router.push(`/stores/${result.data.store.slug}/admin`);
       }
     },
-    onError: (error) => {
-      console.error("Error creating store:", error);
-      toast.error("Failed to create store. Please try again.");
-    },
-    onExecute: () => {
-      setIsSubmitting(true);
-    },
-    onSettled: () => {
-      setIsSubmitting(false);
+    onError: (result) => {
+      toast.error(result.serverError || "Failed to create store. Please try again.");
     },
   });
 
@@ -212,12 +201,19 @@ export function CreateStoreForm({ onSuccess }: CreateStoreFormProps) {
               type="button"
               variant="outline"
               onClick={() => router.back()}
-              disabled={isSubmitting}
+              disabled={isExecuting}
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Creating..." : "Create Store"}
+            <Button type="submit" disabled={isExecuting}>
+              {isExecuting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                "Create Store"
+              )}
             </Button>
           </div>
         </form>

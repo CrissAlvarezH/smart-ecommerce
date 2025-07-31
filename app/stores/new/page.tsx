@@ -6,7 +6,7 @@ export default async function CreateStorePage() {
   const { user } = await validateRequest();
   
   if (!user) {
-    redirect("/sign-in?redirect=/create-store");
+    redirect("/sign-in?redirect=/stores/new");
   }
 
   return (

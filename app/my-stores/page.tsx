@@ -22,7 +22,7 @@ export default async function MyStoresPage() {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">My Stores</h1>
           <p className="text-gray-600">Manage and monitor your online stores</p>
         </div>
-        <Link href="/create-store">
+        <Link href="/stores/new">
           <Button>
             <Plus className="mr-2 h-4 w-4" />
             Create New Store

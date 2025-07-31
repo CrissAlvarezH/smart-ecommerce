@@ -1,6 +1,6 @@
 import { db } from "@/db";
 import { stores, type InsertStore, type SelectStore } from "@/db/schemas";
-import { eq, and } from "drizzle-orm";
+import { eq, and, ne } from "drizzle-orm";
 
 export const storeRepository = {
   async create(data: InsertStore): Promise<SelectStore> {
@@ -58,7 +58,7 @@ export const storeRepository = {
 
   async checkSlugExists(slug: string, excludeId?: string): Promise<boolean> {
     const conditions = excludeId 
-      ? and(eq(stores.slug, slug), eq(stores.id, excludeId))
+      ? and(eq(stores.slug, slug), ne(stores.id, excludeId))
       : eq(stores.slug, slug);
     
     const [existing] = await db
