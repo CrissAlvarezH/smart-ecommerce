@@ -5,14 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Shuffle, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
-export function SeedProductsButton() {
+interface SeedProductsButtonProps {
+  storeSlug?: string;
+}
+
+export function SeedProductsButton({ storeSlug }: SeedProductsButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSeedProducts = async () => {
     try {
       setIsLoading(true);
       
-      const response = await fetch('/api/seed-products', {
+      const response = await fetch(storeSlug ? `/api/stores/${storeSlug}/seed-products` : '/api/seed-products', {
         method: 'POST',
       });
       

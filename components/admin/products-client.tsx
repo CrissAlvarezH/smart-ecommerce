@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Edit, Trash2, Package } from "lucide-react";
 import Link from "next/link";
 import { useAction } from "next-safe-action/hooks";
-import { deleteProductAction } from "@/app/admin/products/actions";
+// Import moved to prop-based approach
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -41,12 +41,14 @@ interface Product {
 interface ProductsClientProps {
   products: Product[];
   searchTerm?: string;
+  slug?: string;
+  deleteAction?: any;
 }
 
-export function ProductsClient({ products, searchTerm }: ProductsClientProps) {
+export function ProductsClient({ products, searchTerm, slug, deleteAction }: ProductsClientProps) {
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const { execute: deleteProduct, isExecuting: isDeleting } = useAction(deleteProductAction, {
+  const { execute: deleteProduct, isExecuting: isDeleting } = useAction(deleteAction || (() => Promise.resolve()), {
     onSuccess: () => {
       toast({
         title: "Product deleted",
@@ -97,7 +99,7 @@ export function ProductsClient({ products, searchTerm }: ProductsClientProps) {
               <div className="flex items-center gap-3">
                 <h3 className="font-semibold">
                   <Link 
-                    href={`/admin/products/${product.id}`}
+                    href={slug ? `/stores/${slug}/admin/products/${product.id}` : `/admin/products/${product.id}`}
                     className="hover:text-blue-600 transition-colors"
                   >
                     <SearchHighlight text={product.name} searchTerm={searchTerm} />
@@ -127,13 +129,14 @@ export function ProductsClient({ products, searchTerm }: ProductsClientProps) {
           </div>
           
           <div className="flex items-center gap-2">
-            <Link href={`/admin/products/${product.id}/edit`}>
+            <Link href={slug ? `/stores/${slug}/admin/products/${product.id}/edit` : `/admin/products/${product.id}/edit`}>
               <Button variant="outline" size="sm">
                 <Edit className="h-4 w-4" />
               </Button>
             </Link>
             
-            <Dialog>
+            {deleteAction && (
+              <Dialog>
               <DialogTrigger asChild>
                 <Button 
                   variant="outline" 
@@ -164,7 +167,8 @@ export function ProductsClient({ products, searchTerm }: ProductsClientProps) {
                   </Button>
                 </DialogFooter>
               </DialogContent>
-            </Dialog>
+              </Dialog>
+            )}
           </div>
         </div>
       ))}

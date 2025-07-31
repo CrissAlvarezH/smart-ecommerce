@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
-import { deleteProductAction } from "@/app/admin/products/actions";
+// Delete action passed as prop
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -37,19 +37,21 @@ interface Product {
 
 interface ProductDeleteButtonProps {
   product: Product;
+  deleteAction: any;
+  redirectPath?: string;
 }
 
-export function ProductDeleteButton({ product }: ProductDeleteButtonProps) {
+export function ProductDeleteButton({ product, deleteAction, redirectPath = "/admin/products" }: ProductDeleteButtonProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
-  const { execute: deleteProduct, isExecuting: isDeleting } = useAction(deleteProductAction, {
+  const { execute: deleteProduct, isExecuting: isDeleting } = useAction(deleteAction, {
     onSuccess: () => {
       toast({
         title: "Product deleted",
         description: "The product has been successfully deleted.",
       });
-      router.push("/admin/products");
+      router.push(redirectPath);
     },
     onError: ({ error }) => {
       toast({

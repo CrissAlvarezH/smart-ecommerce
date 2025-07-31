@@ -2,7 +2,7 @@ import { db } from "@/db";
 import { categories, collections, products, productImages, productCollections, carts, cartItems } from "@/db/schemas";
 import { eq, desc, and, ilike } from "drizzle-orm";
 
-export async function getProducts(limit = 20, offset = 0) {
+export async function getProducts(limit = 20, offset = 0, storeId?: string) {
   const productsData = await db
     .select({
       id: products.id,
@@ -22,7 +22,10 @@ export async function getProducts(limit = 20, offset = 0) {
     })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
-    .where(eq(products.isActive, true))
+    .where(storeId 
+      ? and(eq(products.isActive, true), eq(products.storeId, storeId))
+      : eq(products.isActive, true)
+    )
     .orderBy(desc(products.createdAt))
     .limit(limit)
     .offset(offset);
@@ -47,7 +50,7 @@ export async function getProducts(limit = 20, offset = 0) {
   return productsWithImages;
 }
 
-export async function getProductBySlug(slug: string) {
+export async function getProductBySlug(slug: string, storeId?: string) {
   const product = await db
     .select({
       id: products.id,
@@ -68,7 +71,10 @@ export async function getProductBySlug(slug: string) {
     })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
-    .where(and(eq(products.slug, slug), eq(products.isActive, true)))
+    .where(storeId 
+      ? and(eq(products.slug, slug), eq(products.isActive, true), eq(products.storeId, storeId))
+      : and(eq(products.slug, slug), eq(products.isActive, true))
+    )
     .limit(1);
 
   if (product.length === 0) return null;
@@ -105,7 +111,7 @@ export async function getProductCollections(productId: string) {
     .where(eq(productCollections.productId, productId));
 }
 
-export async function getFeaturedProducts(limit = 8) {
+export async function getFeaturedProducts(limit = 8, storeId?: string) {
   const featuredData = await db
     .select({
       id: products.id,
@@ -118,7 +124,10 @@ export async function getFeaturedProducts(limit = 8) {
     })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
-    .where(and(eq(products.isActive, true), eq(products.isFeatured, true)))
+    .where(storeId 
+      ? and(eq(products.isActive, true), eq(products.isFeatured, true), eq(products.storeId, storeId))
+      : and(eq(products.isActive, true), eq(products.isFeatured, true))
+    )
     .limit(limit);
 
   // Get the first image for each product
@@ -141,23 +150,29 @@ export async function getFeaturedProducts(limit = 8) {
   return productsWithImages;
 }
 
-export async function getCategories() {
+export async function getCategories(storeId?: string) {
   return await db
     .select()
     .from(categories)
-    .where(eq(categories.isActive, true))
+    .where(storeId 
+      ? and(eq(categories.isActive, true), eq(categories.storeId, storeId))
+      : eq(categories.isActive, true)
+    )
     .orderBy(categories.name);
 }
 
-export async function getCollections() {
+export async function getCollections(storeId?: string) {
   return await db
     .select()
     .from(collections)
-    .where(eq(collections.isActive, true))
+    .where(storeId 
+      ? and(eq(collections.isActive, true), eq(collections.storeId, storeId))
+      : eq(collections.isActive, true)
+    )
     .orderBy(collections.name);
 }
 
-export async function getProductsByCategory(categoryId: string, limit = 20, offset = 0) {
+export async function getProductsByCategory(categoryId: string, limit = 20, offset = 0, storeId?: string) {
   return await db
     .select({
       id: products.id,
@@ -170,13 +185,16 @@ export async function getProductsByCategory(categoryId: string, limit = 20, offs
     })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
-    .where(and(eq(products.categoryId, categoryId), eq(products.isActive, true)))
+    .where(storeId 
+      ? and(eq(products.categoryId, categoryId), eq(products.isActive, true), eq(products.storeId, storeId))
+      : and(eq(products.categoryId, categoryId), eq(products.isActive, true))
+    )
     .orderBy(desc(products.createdAt))
     .limit(limit)
     .offset(offset);
 }
 
-export async function getProductsByCollection(collectionId: string, limit = 20, offset = 0) {
+export async function getProductsByCollection(collectionId: string, limit = 20, offset = 0, storeId?: string) {
   return await db
     .select({
       id: products.id,
@@ -190,13 +208,16 @@ export async function getProductsByCollection(collectionId: string, limit = 20, 
     .from(products)
     .innerJoin(productCollections, eq(products.id, productCollections.productId))
     .leftJoin(categories, eq(products.categoryId, categories.id))
-    .where(and(eq(productCollections.collectionId, collectionId), eq(products.isActive, true)))
+    .where(storeId 
+      ? and(eq(productCollections.collectionId, collectionId), eq(products.isActive, true), eq(products.storeId, storeId))
+      : and(eq(productCollections.collectionId, collectionId), eq(products.isActive, true))
+    )
     .orderBy(desc(products.createdAt))
     .limit(limit)
     .offset(offset);
 }
 
-export async function searchProducts(query: string, limit = 20, offset = 0) {
+export async function searchProducts(query: string, limit = 20, offset = 0, storeId?: string) {
   return await db
     .select({
       id: products.id,
@@ -209,11 +230,16 @@ export async function searchProducts(query: string, limit = 20, offset = 0) {
     })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
-    .where(
-      and(
-        eq(products.isActive, true),
-        ilike(products.name, `%${query}%`)
-      )
+    .where(storeId 
+      ? and(
+          eq(products.isActive, true),
+          ilike(products.name, `%${query}%`),
+          eq(products.storeId, storeId)
+        )
+      : and(
+          eq(products.isActive, true),
+          ilike(products.name, `%${query}%`)
+        )
     )
     .orderBy(desc(products.createdAt))
     .limit(limit)

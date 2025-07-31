@@ -19,9 +19,10 @@ interface ProductCardProps {
       altText?: string;
     };
   };
+  storeSlug?: string;
 }
 
-export function ProductCard({ product }: ProductCardProps) {
+export function ProductCard({ product, storeSlug }: ProductCardProps) {
   const price = parseFloat(product.price);
   const comparePrice = product.compareAtPrice ? parseFloat(product.compareAtPrice) : null;
   const discount = comparePrice ? Math.round(((comparePrice - price) / comparePrice) * 100) : 0;
@@ -29,7 +30,7 @@ export function ProductCard({ product }: ProductCardProps) {
   return (
     <Card className="group overflow-hidden hover:shadow-lg transition-shadow">
       <div className="aspect-square overflow-hidden bg-gray-100">
-        <Link href={`/products/${product.slug}`}>
+        <Link href={storeSlug ? `/stores/${storeSlug}/products/${product.slug}` : `/products/${product.slug}`}>
           {product.image ? (
             <Image
               src={product.image.url}
@@ -51,7 +52,7 @@ export function ProductCard({ product }: ProductCardProps) {
           <p className="text-sm text-gray-500 mb-1">{product.categoryName}</p>
         )}
         
-        <Link href={`/products/${product.slug}`}>
+        <Link href={storeSlug ? `/stores/${storeSlug}/products/${product.slug}` : `/products/${product.slug}`}>
           <h3 className="font-semibold text-lg mb-2 hover:text-blue-600 transition-colors">
             {product.name}
           </h3>
@@ -86,6 +87,7 @@ export function ProductCard({ product }: ProductCardProps) {
             inStock={true}
             size="sm"
             className="flex items-center gap-2"
+            storeSlug={storeSlug}
           />
         </div>
       </CardContent>

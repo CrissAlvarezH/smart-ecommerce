@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
-import { deleteCategoryAction } from "@/app/admin/actions";
+// Delete action passed as prop
 import { toast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -32,19 +32,21 @@ interface Category {
 
 interface CategoryDeleteButtonProps {
   category: Category;
+  deleteAction: any;
+  redirectPath?: string;
 }
 
-export function CategoryDeleteButton({ category }: CategoryDeleteButtonProps) {
+export function CategoryDeleteButton({ category, deleteAction, redirectPath = "/admin/categories" }: CategoryDeleteButtonProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
 
-  const { execute: deleteCategory, isExecuting: isDeleting } = useAction(deleteCategoryAction, {
+  const { execute: deleteCategory, isExecuting: isDeleting } = useAction(deleteAction, {
     onSuccess: () => {
       toast({
         title: "Category deleted",
         description: "The category has been successfully deleted.",
       });
-      router.push("/admin/categories");
+      router.push(redirectPath);
     },
     onError: ({ error }) => {
       toast({

@@ -20,13 +20,6 @@ import {
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "@/hooks/use-toast";
 import {
-  addProductImageAction,
-  deleteProductImageAction,
-  getProductImagesAction,
-  updateProductImageAction,
-  reorderProductImagesAction
-} from "@/app/admin/products/actions";
-import {
   Dialog,
   DialogClose,
   DialogContent,
@@ -49,9 +42,23 @@ interface ProductImage {
 
 interface ProductImageManagerProps {
   productId: string;
+  actions: {
+    addProductImageAction: any;
+    deleteProductImageAction: any;
+    getProductImagesAction: any;
+    updateProductImageAction: any;
+    reorderProductImagesAction: any;
+  };
 }
 
-export function ProductImageManager({ productId }: ProductImageManagerProps) {
+export function ProductImageManager({ productId, actions }: ProductImageManagerProps) {
+  const {
+    addProductImageAction,
+    deleteProductImageAction,
+    getProductImagesAction,
+    updateProductImageAction,
+    reorderProductImagesAction
+  } = actions;
   const [images, setImages] = useState<ProductImage[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [mainImageId, setMainImageId] = useState<string | null>(null);

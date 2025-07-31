@@ -3,12 +3,13 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShoppingCart, Eye } from "lucide-react";
-import { addToCartAction, checkCartStatusAction } from "@/app/cart/actions";
+import { addToCartAction, checkCartStatusAction } from "@/app/stores/[slug]/products/actions";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "@/hooks/use-cart";
+import { useStoreCart } from "@/hooks/use-store-cart";
 
 interface AddToCartButtonProps {
   productId: string;
@@ -16,6 +17,7 @@ interface AddToCartButtonProps {
   inStock: boolean;
   size?: "sm" | "lg";
   className?: string;
+  storeSlug?: string;
 }
 
 export function AddToCartButton({ 
@@ -23,10 +25,13 @@ export function AddToCartButton({
   productName, 
   inStock, 
   size = "lg",
-  className = ""
+  className = "",
+  storeSlug
 }: AddToCartButtonProps) {
   const router = useRouter();
-  const { incrementCartCount } = useCart();
+  const globalCart = useCart();
+  const storeCart = useStoreCart(storeSlug || "");
+  const { incrementCartCount } = storeSlug ? storeCart : globalCart;
   const [isInCart, setIsInCart] = useState(false);
   const [cartItem, setCartItem] = useState<{ id: string; quantity: number } | null>(null);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
@@ -70,22 +75,34 @@ export function AddToCartButton({
   });
 
   const checkCartStatus = () => {
-    setIsCheckingStatus(true);
-    checkStatus({ productId });
+    if (storeSlug) {
+      setIsCheckingStatus(true);
+      checkStatus({ productId, storeSlug });
+    } else {
+      setIsCheckingStatus(false);
+    }
   };
 
   useEffect(() => {
     checkCartStatus();
-  }, [productId]);
+  }, [productId, storeSlug]);
 
   const handleAddToCart = () => {
-    console.log("Add to cart button clicked:", { productId, quantity: 1 });
-    addToCart({ productId, quantity: 1 });
+    console.log("Add to cart button clicked:", { productId, quantity: 1, storeSlug });
+    if (storeSlug) {
+      addToCart({ productId, quantity: 1, storeSlug });
+    } else {
+      toast({
+        title: "Error",
+        description: "Store information is missing",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleSeeInCart = () => {
     console.log("See in cart button clicked:", { productId });
-    router.push('/cart');
+    router.push(storeSlug ? `/stores/${storeSlug}/cart` : '/cart');
   };
 
   const buttonText = () => {

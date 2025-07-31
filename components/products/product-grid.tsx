@@ -18,9 +18,10 @@ interface Product {
 
 interface ProductGridProps {
   products: Product[];
+  storeSlug?: string;
 }
 
-export function ProductGrid({ products }: ProductGridProps) {
+export function ProductGrid({ products, storeSlug }: ProductGridProps) {
   if (products.length === 0) {
     return (
       <div className="text-center py-12">
@@ -35,6 +36,7 @@ export function ProductGrid({ products }: ProductGridProps) {
         <ProductCard
           key={product.id}
           product={product}
+          storeSlug={storeSlug}
         />
       ))}
     </div>

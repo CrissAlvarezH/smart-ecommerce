@@ -10,33 +10,37 @@ import {
   BarChart3 
 } from "lucide-react";
 
-export function AdminNavLinks() {
+interface AdminNavLinksProps {
+  storeSlug: string;
+}
+
+export function AdminNavLinks({ storeSlug }: AdminNavLinksProps) {
   const pathname = usePathname();
 
   const navItems = [
     {
-      href: "/admin",
+      href: `/stores/${storeSlug}/admin`,
       label: "Dashboard",
       icon: BarChart3,
-      isActive: pathname === "/admin"
+      isActive: pathname === `/stores/${storeSlug}/admin`
     },
     {
-      href: "/admin/products",
+      href: `/stores/${storeSlug}/admin/products`,
       label: "Products",
       icon: Package,
-      isActive: pathname.startsWith("/admin/products")
+      isActive: pathname.startsWith(`/stores/${storeSlug}/admin/products`)
     },
     {
-      href: "/admin/categories",
+      href: `/stores/${storeSlug}/admin/categories`,
       label: "Categories",
       icon: Tag,
-      isActive: pathname.startsWith("/admin/categories")
+      isActive: pathname.startsWith(`/stores/${storeSlug}/admin/categories`)
     },
     {
-      href: "/admin/collections",
+      href: `/stores/${storeSlug}/admin/collections`,
       label: "Collections",
       icon: FolderOpen,
-      isActive: pathname.startsWith("/admin/collections")
+      isActive: pathname.startsWith(`/stores/${storeSlug}/admin/collections`)
     }
   ];
 
