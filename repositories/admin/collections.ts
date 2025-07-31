@@ -135,3 +135,19 @@ export async function getCollectionProducts(collectionId: string) {
     .where(eq(productCollections.collectionId, collectionId))
     .orderBy(products.name);
 }
+
+export async function getProductCollections(productId: string) {
+  return db
+    .select({
+      id: collections.id,
+      name: collections.name,
+      slug: collections.slug,
+      description: collections.description,
+      isActive: collections.isActive,
+      createdAt: collections.createdAt,
+    })
+    .from(collections)
+    .innerJoin(productCollections, eq(collections.id, productCollections.collectionId))
+    .where(eq(productCollections.productId, productId))
+    .orderBy(collections.name);
+}

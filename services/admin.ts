@@ -34,6 +34,7 @@ export const adminCollectionService = {
   getCollectionBySlug: collectionsRepo.getCollectionBySlug,
   getActiveCollections: collectionsRepo.getActiveCollections,
   getCollectionProducts: collectionsRepo.getCollectionProducts,
+  getProductCollections: collectionsRepo.getProductCollections,
   createCollection: collectionsRepo.createCollection,
   updateCollection: collectionsRepo.updateCollection,
   deleteCollection: collectionsRepo.deleteCollection,

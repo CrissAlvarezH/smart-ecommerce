@@ -1,10 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Package, Image as ImageIcon } from "lucide-react";
+import { Edit, Package, Image as ImageIcon, Layers } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as productsRepo from "@/repositories/admin/products";
+import * as collectionsRepo from "@/repositories/admin/collections";
 import { ProductDeleteButton } from "@/components/admin/product-delete-button";
 import { BackButton } from "@/components/ui/back-button";
 import Image from "next/image";
@@ -16,10 +17,11 @@ interface ProductDetailsPageProps {
 export default async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
   const { id } = await params;
   
-  // Fetch product and images in parallel
-  const [product, productImages] = await Promise.all([
+  // Fetch product, images, and collections in parallel
+  const [product, productImages, productCollections] = await Promise.all([
     productsRepo.getProductById(id),
-    productsRepo.getProductImages(id)
+    productsRepo.getProductImages(id),
+    collectionsRepo.getProductCollections(id)
   ]);
   
   if (!product) {
@@ -240,6 +242,48 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
           </CardContent>
         </Card>
       )}
+
+      {/* Collections Information */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Layers className="h-5 w-5" />
+            Collections
+            <Badge variant="outline" className="ml-2">
+              {productCollections.length} {productCollections.length === 1 ? 'collection' : 'collections'}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {productCollections.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <Layers className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+              <p>Not in any collections yet.</p>
+              <p className="text-sm mt-2">
+                Collections help organize and group related products.
+              </p>
+            </div>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {productCollections.map((collection) => (
+                <Link
+                  key={collection.id}
+                  href={`/admin/collections/${collection.id}/products`}
+                  className="inline-block"
+                >
+                  <Badge 
+                    variant={collection.isActive ? "default" : "secondary"} 
+                    className="text-sm hover:bg-opacity-80 transition-colors cursor-pointer"
+                  >
+                    {collection.name}
+                    {!collection.isActive && " (Inactive)"}
+                  </Badge>
+                </Link>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Metadata */}
       <Card>
