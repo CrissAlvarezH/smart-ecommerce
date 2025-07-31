@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ShoppingCart, Eye } from "lucide-react";
-import { addToCartAction, checkCartStatusAction } from "@/app/stores/[slug]/products/actions";
+import { addToCartAction, checkCartStatusAction } from "@/app/stores/[slug]/client/products/actions";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "@/hooks/use-toast";
 import { useEffect, useState } from "react";
@@ -102,7 +102,7 @@ export function AddToCartButton({
 
   const handleSeeInCart = () => {
     console.log("See in cart button clicked:", { productId });
-    router.push(storeSlug ? `/stores/${storeSlug}/cart` : '/cart');
+    router.push(storeSlug ? `/stores/${storeSlug}/client/cart` : '/cart');
   };
 
   const buttonText = () => {

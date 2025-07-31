@@ -124,7 +124,7 @@ export default async function StorePage({ params }: StorePageProps) {
               <h2 className="text-3xl font-bold text-gray-900 mb-2">Featured Products</h2>
               <p className="text-gray-600">Discover our best-selling items</p>
             </div>
-            <Link href={`/stores/${slug}/products`}>
+            <Link href={`/stores/${slug}/client/products`}>
               <Button variant="outline">
                 View All Products
                 <ArrowRight className="ml-2 h-4 w-4" />

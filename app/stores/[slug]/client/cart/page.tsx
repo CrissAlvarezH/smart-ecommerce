@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
-import { getStoreBySlugAction, getStoreCartItemsAction } from "../actions";
+import { getStoreBySlugAction, getStoreCartItemsAction } from "../../actions";
 import { StoreCartPageClient } from "./cart-client";
 
 interface StoreCartPageProps {
@@ -45,7 +45,7 @@ export default async function StoreCartPage({ params }: StoreCartPageProps) {
           <ShoppingBag className="mx-auto h-24 w-24 text-gray-300 mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
           <p className="text-gray-600 mb-8">Looks like you haven&apos;t added anything from {store.name} yet.</p>
-          <Link href={`/stores/${slug}/products`}>
+          <Link href={`/stores/${slug}/client/products`}>
             <Button size="lg">
               Continue Shopping
             </Button>

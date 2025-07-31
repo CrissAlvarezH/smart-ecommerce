@@ -38,7 +38,7 @@ export default async function StoreProductPage({ params }: StoreProductPageProps
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Link href={`/stores/${slug}/products`} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6">
+      <Link href={`/stores/${slug}/client/products`} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6">
         <ArrowLeft className="h-4 w-4" />
         Back to Products
       </Link>

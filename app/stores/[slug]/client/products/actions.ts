@@ -50,7 +50,7 @@ export const addToCartAction = unauthenticatedAction
     const result = await cartService.addToCart(cart.id, productId, quantity);
     console.log("🎉 Item added successfully:", result.id);
     
-    revalidatePath(`/stores/${storeSlug}/cart`);
+    revalidatePath(`/stores/${storeSlug}/client/cart`);
     return { success: true, message: "Item added to cart", cartItemId: result.id };
   });
 

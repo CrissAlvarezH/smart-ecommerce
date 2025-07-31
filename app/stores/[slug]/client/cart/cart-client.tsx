@@ -183,7 +183,7 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
           <ShoppingBag className="mx-auto h-24 w-24 text-gray-300 mb-4" />
           <h1 className="text-2xl font-bold text-gray-900 mb-2">Your cart is empty</h1>
           <p className="text-gray-600 mb-8">Looks like you haven&apos;t added anything from {store.name} yet.</p>
-          <Link href={`/stores/${store.slug}/products`}>
+          <Link href={`/stores/${store.slug}/client/products`}>
             <Button size="lg">
               Continue Shopping
             </Button>
@@ -195,7 +195,7 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Link href={`/stores/${store.slug}/products`} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6">
+      <Link href={`/stores/${store.slug}/client/products`} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6">
         <ArrowLeft className="h-4 w-4" />
         Continue Shopping
       </Link>

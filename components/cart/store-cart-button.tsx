@@ -25,7 +25,7 @@ export function StoreCartButton({ storeSlug, itemCount }: StoreCartButtonProps) 
   }
 
   return (
-    <Link href={`/stores/${storeSlug}/cart`}>
+    <Link href={`/stores/${storeSlug}/client/cart`}>
       <Button
         variant="outline"
         size="sm"

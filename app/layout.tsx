@@ -2,9 +2,8 @@ import type { Metadata } from "next";
 import { Work_Sans } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import Navbar from "@/components/navbar";
 import NextTopLoader from "nextjs-toploader";
-import { Toaster } from "@/components/ui/toaster"
+import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -34,7 +33,6 @@ export default function RootLayout({
       >
         <NextTopLoader />
         {modal}
-        <Navbar />
         {children}
         <Toaster />
       </body>

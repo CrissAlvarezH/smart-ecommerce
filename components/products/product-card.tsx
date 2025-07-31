@@ -30,7 +30,7 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
   return (
     <Card className="group overflow-hidden hover:shadow-lg transition-shadow">
       <div className="aspect-square overflow-hidden bg-gray-100">
-        <Link href={storeSlug ? `/stores/${storeSlug}/products/${product.slug}` : `/products/${product.slug}`}>
+        <Link href={storeSlug ? `/stores/${storeSlug}/client/products/${product.slug}` : `/products/${product.slug}`}>
           {product.image ? (
             <Image
               src={product.image.url}
@@ -52,7 +52,7 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
           <p className="text-sm text-gray-500 mb-1">{product.categoryName}</p>
         )}
         
-        <Link href={storeSlug ? `/stores/${storeSlug}/products/${product.slug}` : `/products/${product.slug}`}>
+        <Link href={storeSlug ? `/stores/${storeSlug}/client/products/${product.slug}` : `/products/${product.slug}`}>
           <h3 className="font-semibold text-lg mb-2 hover:text-blue-600 transition-colors">
             {product.name}
           </h3>
