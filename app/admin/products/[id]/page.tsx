@@ -1,12 +1,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Edit, Package } from "lucide-react";
+import { Edit, Package, Image as ImageIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as productsRepo from "@/repositories/admin/products";
 import { ProductDeleteButton } from "@/components/admin/product-delete-button";
 import { BackButton } from "@/components/ui/back-button";
+import Image from "next/image";
 
 interface ProductDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -15,7 +16,11 @@ interface ProductDetailsPageProps {
 export default async function ProductDetailsPage({ params }: ProductDetailsPageProps) {
   const { id } = await params;
   
-  const product = await productsRepo.getProductById(id);
+  // Fetch product and images in parallel
+  const [product, productImages] = await Promise.all([
+    productsRepo.getProductById(id),
+    productsRepo.getProductImages(id)
+  ]);
   
   if (!product) {
     notFound();
@@ -164,6 +169,61 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
           </CardContent>
         </Card>
       </div>
+
+      {/* Product Images */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ImageIcon className="h-5 w-5" />
+            Product Images
+            <Badge variant="outline" className="ml-2">
+              {productImages.length} {productImages.length === 1 ? 'image' : 'images'}
+            </Badge>
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {productImages.length === 0 ? (
+            <div className="text-center py-8 text-gray-500">
+              <ImageIcon className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+              <p>No images uploaded yet.</p>
+              <p className="text-sm mt-2">
+                Images will help customers visualize the product.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              {productImages.map((image, index) => (
+                <div key={image.id} className="relative group">
+                  <div className="aspect-square bg-gray-100 rounded-lg overflow-hidden border">
+                    <Image
+                      src={image.url}
+                      alt={image.altText || `Product image ${index + 1}`}
+                      width={300}
+                      height={300}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                    />
+                  </div>
+                  <div className="mt-2 text-center">
+                    <div className="flex items-center justify-center gap-2 text-xs text-gray-500">
+                      <span>Position: {image.position + 1}</span>
+                      {index === 0 && (
+                        <Badge variant="secondary" className="text-xs">
+                          Main
+                        </Badge>
+                      )}
+                    </div>
+                    {image.altText && (
+                      <p className="text-xs text-gray-600 mt-1 truncate">
+                        {image.altText}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Category Information */}
       {product.categoryName && (
