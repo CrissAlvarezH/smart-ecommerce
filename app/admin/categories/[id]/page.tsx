@@ -6,10 +6,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as categoriesRepo from "@/repositories/admin/categories";
 import * as productsRepo from "@/repositories/admin/products";
-import { ProductsClient } from "@/components/admin/products-client";
-import { Paginator } from "@/components/pagination";
 import { CategoryDeleteButton } from "@/components/admin/category-delete-button";
 import { BackButton } from "@/components/ui/back-button";
+import { CategoryProductsSection } from "./category-products-section";
 
 interface CategoryDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -121,46 +120,13 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
       </Card>
 
       {/* Products in Category */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Package className="h-5 w-5" />
-            Products in &ldquo;{category.name}&rdquo;
-            {totalPages > 1 && (
-              <span className="text-sm font-normal text-gray-500 ml-2">
-                • Page {currentPage} of {totalPages}
-              </span>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          {totalCount == 0 ? (
-            <div className="text-center py-8 text-gray-500">
-              <Package className="mx-auto h-12 w-12 text-gray-300 mb-4" />
-              <p>There aren&apos;t any products yet.</p>
-              <p className="text-sm mt-2">
-                Products assigned to this category will appear here.
-              </p>
-              <Link href="/admin/products/new">
-                <Button className="mt-4">
-                  <Package className="h-4 w-4 mr-2" />
-                  Add Product
-                </Button>
-              </Link>
-            </div>
-          ) : (
-            <>
-              <ProductsClient products={products} />
-
-              {totalPages > 1 && (
-                <div className="mt-6">
-                  <Paginator totalPages={totalPages} />
-                </div>
-              )}
-            </>
-          )}
-        </CardContent>
-      </Card>
+      <CategoryProductsSection 
+        category={{ id: category.id, name: category.name }}
+        products={products}
+        totalCount={totalCount}
+        totalPages={totalPages}
+        currentPage={currentPage}
+      />
 
       {/* Metadata */}
       <Card>
