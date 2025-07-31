@@ -13,6 +13,7 @@ const createCategorySchema = z.object({
   description: z.string().optional(),
   imageUrl: z.string().optional(),
   parentId: z.string().optional(),
+  storeId: z.string().min(1, "Store ID is required"),
   isActive: z.boolean().default(true),
 });
 
@@ -30,6 +31,7 @@ const createCollectionSchema = z.object({
   slug: z.string().min(1, "Slug is required"),
   description: z.string().optional(),
   imageUrl: z.string().optional(),
+  storeId: z.string().min(1, "Store ID is required"),
   isActive: z.boolean().default(true),
 });
 

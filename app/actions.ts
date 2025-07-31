@@ -49,3 +49,25 @@ export const getStoreBySlugAction = unauthenticatedAction
     const store = await storeService.getStoreBySlug(parsedInput.slug);
     return { store };
   });
+
+export const debugStoresAction = authenticatedAction
+  .inputSchema(z.object({}))
+  .action(async ({ ctx: { user } }) => {
+    console.log("=== DEBUG STORES ACTION ===");
+    console.log("User ID:", user.id, "Type:", typeof user.id);
+    
+    // Get all stores from database
+    const allStores = await storeService.getAllStores();
+    console.log("All stores in database:", allStores);
+    
+    // Get user's stores
+    const userStores = await storeService.getStoresByOwner(user.id);
+    console.log("User's stores:", userStores);
+    
+    return { 
+      userId: user.id,
+      allStores,
+      userStores,
+      userStoresCount: userStores.length
+    };
+  });

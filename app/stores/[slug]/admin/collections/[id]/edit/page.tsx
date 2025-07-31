@@ -2,6 +2,7 @@ import { CollectionForm } from "../../collection-form";
 import { notFound } from "next/navigation";
 import * as collectionsRepo from "@/repositories/admin/collections";
 import { BackButton } from "@/components/ui/back-button";
+import { getStoreBySlugAction } from "../../../../actions";
 
 interface EditCollectionPageProps {
   params: Promise<{
@@ -13,8 +14,16 @@ interface EditCollectionPageProps {
 export default async function EditCollectionPage({ params }: EditCollectionPageProps) {
   const { slug, id } = await params;
   
+  // Get store information first
+  const storeResult = await getStoreBySlugAction({ slug });
+  const store = storeResult.data?.store;
+  
+  if (!store) {
+    notFound();
+  }
+  
   // Fetch collection data
-  const collection = await collectionsRepo.getCollectionById(id);
+  const collection = await collectionsRepo.getCollectionById(id, store.id);
 
   // If collection doesn't exist, show 404
   if (!collection) {
@@ -37,6 +46,7 @@ export default async function EditCollectionPage({ params }: EditCollectionPageP
         collection={collection}
         isEditing={true}
         slug={slug}
+        storeId={store.id}
       />
     </div>
   );

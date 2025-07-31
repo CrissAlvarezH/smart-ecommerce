@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { BackButton } from "@/components/ui/back-button";
+import { getStoreBySlugAction } from "../../../actions";
+import { notFound } from "next/navigation";
 
 interface NewCategoryPageProps {
   params: Promise<{ slug: string; }>;
@@ -10,6 +12,15 @@ interface NewCategoryPageProps {
 
 export default async function NewCategoryPage({ params }: NewCategoryPageProps) {
   const { slug } = await params;
+  
+  // Get store information first
+  const storeResult = await getStoreBySlugAction({ slug });
+  const store = storeResult.data?.store;
+  
+  if (!store) {
+    notFound();
+  }
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -22,7 +33,7 @@ export default async function NewCategoryPage({ params }: NewCategoryPageProps) 
         </div>
       </div>
 
-      <CategoryForm slug={slug} />
+      <CategoryForm slug={slug} storeId={store.id} />
     </div>
   );
 }

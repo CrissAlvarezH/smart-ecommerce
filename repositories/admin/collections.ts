@@ -7,6 +7,7 @@ export interface CreateCollectionData {
   slug: string;
   description?: string;
   imageUrl?: string;
+  storeId: string;
   isActive?: boolean;
 }
 
@@ -53,48 +54,64 @@ export async function deleteCollection(id: string) {
     .where(eq(collections.id, id));
 }
 
-export async function getCollections(limit = 50, offset = 0, search?: string) {
+export async function getCollections(limit = 50, offset = 0, search?: string, storeId?: string) {
+  const conditions = [];
+  
+  // Always filter by store if provided
+  if (storeId) {
+    conditions.push(eq(collections.storeId, storeId));
+  }
+  
+  if (search) {
+    conditions.push(ilike(collections.name, `%${search}%`));
+  }
+
   let query = db
     .select()
-    .from(collections)
+    .from(collections);
+
+  if (conditions.length > 0) {
+    query = query.where(and(...conditions)) as any;
+  }
+
+  return query
     .orderBy(desc(collections.createdAt))
     .limit(limit)
     .offset(offset);
+}
 
-  if (search) {
-    query = query.where(
-      ilike(collections.name, `%${search}%`)
-    ) as any;
+export async function getCollectionById(id: string, storeId?: string) {
+  const collection = await db
+    .select()
+    .from(collections)
+    .where(storeId ? and(eq(collections.id, id), eq(collections.storeId, storeId)) : eq(collections.id, id))
+    .limit(1);
+
+  return collection[0] || null;
+}
+
+export async function getCollectionBySlug(slug: string, storeId?: string) {
+  const collection = await db
+    .select()
+    .from(collections)
+    .where(storeId ? and(eq(collections.slug, slug), eq(collections.storeId, storeId)) : eq(collections.slug, slug))
+    .limit(1);
+
+  return collection[0] || null;
+}
+
+export async function getActiveCollections(storeId?: string) {
+  const conditions = [eq(collections.isActive, true)];
+  
+  // Always filter by store if provided
+  if (storeId) {
+    conditions.push(eq(collections.storeId, storeId));
   }
 
-  return query;
-}
-
-export async function getCollectionById(id: string) {
-  const collection = await db
-    .select()
-    .from(collections)
-    .where(eq(collections.id, id))
-    .limit(1);
-
-  return collection[0] || null;
-}
-
-export async function getCollectionBySlug(slug: string) {
-  const collection = await db
-    .select()
-    .from(collections)
-    .where(eq(collections.slug, slug))
-    .limit(1);
-
-  return collection[0] || null;
-}
-
-export async function getActiveCollections() {
   return db
     .select()
     .from(collections)
-    .where(eq(collections.isActive, true))
+    .where(and(...conditions))
     .orderBy(collections.name);
 }
 

@@ -28,9 +28,10 @@ interface CategoryFormProps {
   category?: Category;
   isEditing?: boolean;
   slug: string;
+  storeId: string;
 }
 
-export function CategoryForm({ category, isEditing = false, slug }: CategoryFormProps) {
+export function CategoryForm({ category, isEditing = false, slug, storeId }: CategoryFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: category?.name || "",
@@ -101,7 +102,10 @@ export function CategoryForm({ category, isEditing = false, slug }: CategoryForm
         ...formData,
       });
     } else {
-      createCategory(formData);
+      createCategory({
+        ...formData,
+        storeId,
+      });
     }
   };
 

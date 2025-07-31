@@ -30,7 +30,10 @@ export const storeService = {
   },
 
   async getStoresByOwner(ownerId: number): Promise<SelectStore[]> {
-    return await storeRepository.findByOwnerId(ownerId);
+    console.log("getStoresByOwner called with ownerId:", ownerId);
+    const result = await storeRepository.findByOwnerId(ownerId);
+    console.log("getStoresByOwner result:", result);
+    return result;
   },
 
   async getAllStores(): Promise<SelectStore[]> {

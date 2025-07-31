@@ -1,6 +1,6 @@
 import { ProductGrid } from "@/components/products/product-grid";
 import { notFound } from "next/navigation";
-import { getStoreBySlugAction, getStoreProductsAction } from "../actions";
+import { getStoreBySlugAction, getStoreProductsAction } from "../../actions";
 
 interface StoreProductsPageProps {
   params: Promise<{

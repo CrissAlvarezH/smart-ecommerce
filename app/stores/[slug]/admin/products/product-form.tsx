@@ -48,9 +48,10 @@ interface ProductFormProps {
   product?: Product;
   isEditing?: boolean;
   slug: string;
+  storeId: string;
 }
 
-export function ProductForm({ categories, product, isEditing = false, slug }: ProductFormProps) {
+export function ProductForm({ categories, product, isEditing = false, slug, storeId }: ProductFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: product?.name || "",
@@ -126,6 +127,7 @@ export function ProductForm({ categories, product, isEditing = false, slug }: Pr
       ...formData,
       inventory: Number(formData.inventory),
       categoryId: formData.categoryId || undefined,
+      storeId,
     };
 
     if (isEditing && product) {

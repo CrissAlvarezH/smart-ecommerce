@@ -6,6 +6,7 @@ import { notFound } from "next/navigation";
 import * as categoriesRepo from "@/repositories/admin/categories";
 import * as productsRepo from "@/repositories/admin/products";
 import { BackButton } from "@/components/ui/back-button";
+import { getStoreBySlugAction } from "../../../../actions";
 
 interface EditProductPageProps {
   params: Promise<{
@@ -17,10 +18,18 @@ interface EditProductPageProps {
 export default async function EditProductPage({ params }: EditProductPageProps) {
   const { slug, id } = await params;
   
+  // Get store information first
+  const storeResult = await getStoreBySlugAction({ slug });
+  const store = storeResult.data?.store;
+  
+  if (!store) {
+    notFound();
+  }
+  
   // Fetch product and categories in parallel
   const [product, categories] = await Promise.all([
     productsRepo.getProductById(id),
-    categoriesRepo.getActiveCategories()
+    categoriesRepo.getActiveCategories(store.id)
   ]);
 
   // If product doesn't exist, show 404
@@ -45,6 +54,7 @@ export default async function EditProductPage({ params }: EditProductPageProps) 
         product={product as any}
         isEditing={true}
         slug={slug}
+        storeId={store.id}
       />
     </div>
   );

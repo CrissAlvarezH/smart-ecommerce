@@ -8,6 +8,8 @@ import { ProductSearch } from "@/components/admin/product-search";
 import { ProductFilters } from "@/components/admin/product-filters";
 import { ProductsClient } from "@/components/admin/products-client";
 import { deleteProductAction } from "./actions";
+import { getStoreBySlugAction } from "../../actions";
+import { notFound } from "next/navigation";
 
 interface ProductsPageProps {
   params: Promise<{
@@ -25,12 +27,21 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
   const { slug } = await params;
   const searchParamsData = await searchParams;
   
+  // Get store information first
+  const storeResult = await getStoreBySlugAction({ slug });
+  const store = storeResult.data?.store;
+  
+  if (!store) {
+    notFound();
+  }
+  
   // Fetch all page data through server action
   const { data: pageData, serverError } = await getProductsPageDataAction({
     page: searchParamsData.page || "1",
     search: searchParamsData.search,
     categoryId: searchParamsData.categoryId,
     collectionId: searchParamsData.collectionId,
+    storeId: store.id,
   });
   
   if (serverError) {

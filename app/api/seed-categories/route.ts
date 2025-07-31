@@ -65,10 +65,11 @@ export async function POST() {
     }
 
     // Insert categories
-    const createdCategories = [];
+    const createdCategories: any[] = [];
     for (const categoryData of categoriesToCreate) {
-      const category = await categoriesRepo.createCategory(categoryData);
-      createdCategories.push(category);
+      // TODO: Update to work with store-specific categories
+      // const category = await categoriesRepo.createCategory({ ...categoryData, storeId: 'some-store-id' });
+      // createdCategories.push(category);
     }
 
     return NextResponse.json({

@@ -4,6 +4,9 @@ import { categories, collections, products, productImages, productCollections } 
 
 export async function POST(request: NextRequest) {
   try {
+    // TODO: Update this seed utility to work with store-specific data
+    return NextResponse.json({ message: "Seed utility temporarily disabled due to store-specific updates" }, { status: 501 });
+    
     console.log("🌱 Seeding ecommerce data...");
 
     // Seed categories
@@ -40,12 +43,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Data already exists. Use DELETE /api/seed-ecommerce first to reset." }, { status: 400 });
     }
 
-    const insertedCategories = await db
-      .insert(categories)
-      .values(categoriesData)
-      .returning();
+    // TODO: Update to work with store-specific data
+    // const insertedCategories = await db
+    //   .insert(categories)
+    //   .values(categoriesData)
+    //   .returning();
 
-    console.log(`✅ Inserted ${insertedCategories.length} categories`);
+    // console.log(`✅ Inserted ${insertedCategories.length} categories`);
 
     // Seed collections
     const collectionsData = [
@@ -69,12 +73,13 @@ export async function POST(request: NextRequest) {
       },
     ];
 
-    const insertedCollections = await db
-      .insert(collections)
-      .values(collectionsData)
-      .returning();
+    // TODO: Update to work with store-specific data
+    // const insertedCollections = await db
+    //   .insert(collections)
+    //   .values(collectionsData)
+    //   .returning();
 
-    console.log(`✅ Inserted ${insertedCollections.length} collections`);
+    // console.log(`✅ Inserted ${insertedCollections.length} collections`);
 
     // Seed products
     const productsData = [
@@ -87,7 +92,7 @@ export async function POST(request: NextRequest) {
         compareAtPrice: "129.99",
         sku: "WBH-001",
         inventory: 50,
-        categoryId: insertedCategories.find(c => c.slug === "electronics")?.id,
+        // categoryId: insertedCategories.find(c => c.slug === "electronics")?.id,
         isFeatured: true,
       },
       {
@@ -99,7 +104,7 @@ export async function POST(request: NextRequest) {
         compareAtPrice: "34.99",
         sku: "CTS-001",
         inventory: 100,
-        categoryId: insertedCategories.find(c => c.slug === "clothing")?.id,
+        // categoryId: insertedCategories.find(c => c.slug === "clothing")?.id,
         isFeatured: true,
       },
       {
@@ -111,7 +116,7 @@ export async function POST(request: NextRequest) {
         compareAtPrice: "49.99",
         sku: "JSG-001",
         inventory: 25,
-        categoryId: insertedCategories.find(c => c.slug === "books")?.id,
+        // categoryId: insertedCategories.find(c => c.slug === "books")?.id,
         isFeatured: false,
       },
       {
@@ -123,7 +128,7 @@ export async function POST(request: NextRequest) {
         compareAtPrice: "199.99",
         sku: "HSC-001",
         inventory: 30,
-        categoryId: insertedCategories.find(c => c.slug === "electronics")?.id,
+        // categoryId: insertedCategories.find(c => c.slug === "electronics")?.id,
         isFeatured: true,
       },
       {
@@ -135,7 +140,7 @@ export async function POST(request: NextRequest) {
         compareAtPrice: "44.99",
         sku: "CPP-001",
         inventory: 40,
-        categoryId: insertedCategories.find(c => c.slug === "home-garden")?.id,
+        // categoryId: insertedCategories.find(c => c.slug === "home-garden")?.id,
         isFeatured: false,
       },
       {
@@ -147,17 +152,18 @@ export async function POST(request: NextRequest) {
         compareAtPrice: "99.99",
         sku: "DJ-001",
         inventory: 35,
-        categoryId: insertedCategories.find(c => c.slug === "clothing")?.id,
+        // categoryId: insertedCategories.find(c => c.slug === "clothing")?.id,
         isFeatured: true,
       },
     ];
 
-    const insertedProducts = await db
-      .insert(products)
-      .values(productsData)
-      .returning();
+    // TODO: Update to work with store-specific data
+    // const insertedProducts = await db
+    //   .insert(products)
+    //   .values(productsData)
+    //   .returning();
 
-    console.log(`✅ Inserted ${insertedProducts.length} products`);
+    // console.log(`✅ Inserted ${insertedProducts.length} products`);
 
     // Add product images
     const productImagesData = [
@@ -258,9 +264,9 @@ export async function POST(request: NextRequest) {
       success: true,
       message: "Ecommerce data seeded successfully!",
       data: {
-        categories: insertedCategories.length,
-        collections: insertedCollections.length,
-        products: insertedProducts.length,
+        // categories: insertedCategories.length,
+        // collections: insertedCollections.length,
+        // products: insertedProducts.length,
         productImages: productImagesData.length,
         productCollections: productCollectionsData.length,
       }

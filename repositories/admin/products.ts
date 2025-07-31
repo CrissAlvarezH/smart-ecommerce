@@ -14,6 +14,7 @@ export interface CreateProductData {
   inventory: number;
   weight?: string;
   categoryId?: string;
+  storeId: string;
   isActive?: boolean;
   isFeatured?: boolean;
 }
@@ -72,7 +73,7 @@ export async function deleteProduct(id: string) {
     .where(eq(products.id, id));
 }
 
-export async function getProducts(limit = 50, offset = 0, search?: string, categoryId?: string, collectionId?: string) {
+export async function getProducts(limit = 50, offset = 0, search?: string, categoryId?: string, collectionId?: string, storeId?: string) {
   // Build the base query
   let query = db
     .select({
@@ -110,6 +111,11 @@ export async function getProducts(limit = 50, offset = 0, search?: string, categ
   // Build conditions array
   const conditions = [];
 
+  // Always filter by store if provided
+  if (storeId) {
+    conditions.push(eq(products.storeId, storeId));
+  }
+
   if (search) {
     conditions.push(ilike(products.name, `%${search}%`));
   }
@@ -144,7 +150,7 @@ export async function getProducts(limit = 50, offset = 0, search?: string, categ
   return productsWithSignedUrls;
 }
 
-export async function getProductsCount(search?: string, categoryId?: string, collectionId?: string) {
+export async function getProductsCount(search?: string, categoryId?: string, collectionId?: string, storeId?: string) {
   let query = db
     .select({ count: sql<number>`count(*)` })
     .from(products)
@@ -156,6 +162,11 @@ export async function getProductsCount(search?: string, categoryId?: string, col
   }
 
   const conditions = [];
+
+  // Always filter by store if provided
+  if (storeId) {
+    conditions.push(eq(products.storeId, storeId));
+  }
 
   if (search) {
     conditions.push(ilike(products.name, `%${search}%`));
@@ -177,7 +188,7 @@ export async function getProductsCount(search?: string, categoryId?: string, col
   return result[0]?.count || 0;
 }
 
-export async function getProductById(id: string) {
+export async function getProductById(id: string, storeId?: string) {
   const product = await db
     .select({
       id: products.id,
@@ -199,17 +210,17 @@ export async function getProductById(id: string) {
     })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
-    .where(eq(products.id, id))
+    .where(storeId ? and(eq(products.id, id), eq(products.storeId, storeId)) : eq(products.id, id))
     .limit(1);
 
   return product[0] || null;
 }
 
-export async function getProductBySlug(slug: string) {
+export async function getProductBySlug(slug: string, storeId?: string) {
   const product = await db
     .select()
     .from(products)
-    .where(eq(products.slug, slug))
+    .where(storeId ? and(eq(products.slug, slug), eq(products.storeId, storeId)) : eq(products.slug, slug))
     .limit(1);
 
   return product[0] || null;

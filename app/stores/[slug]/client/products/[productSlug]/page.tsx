@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AddToCartButton } from "@/components/products/add-to-cart-button";
-import { getStoreBySlugAction, getStoreProductBySlugAction } from "../../actions";
+import { getStoreBySlugAction, getStoreProductBySlugAction } from "../../../actions";
 
 interface StoreProductPageProps {
   params: Promise<{

@@ -25,9 +25,10 @@ interface CollectionFormProps {
   collection?: Collection;
   isEditing?: boolean;
   slug: string;
+  storeId: string;
 }
 
-export function CollectionForm({ collection, isEditing = false, slug }: CollectionFormProps) {
+export function CollectionForm({ collection, isEditing = false, slug, storeId }: CollectionFormProps) {
   const router = useRouter();
   const [formData, setFormData] = useState({
     name: collection?.name || "",
@@ -98,7 +99,10 @@ export function CollectionForm({ collection, isEditing = false, slug }: Collecti
         ...formData,
       });
     } else {
-      createCollection(formData);
+      createCollection({
+        ...formData,
+        storeId,
+      });
     }
   };
 

@@ -19,6 +19,7 @@ const createProductSchema = z.object({
   inventory: z.number().int().min(0, "Inventory must be non-negative"),
   weight: z.string().optional().transform((val) => val === "" ? undefined : val),
   categoryId: z.string().optional().transform((val) => val === "" ? undefined : val),
+  storeId: z.string().min(1, "Store ID is required"),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
 });
@@ -29,6 +30,7 @@ const updateProductSchema = createProductSchema.extend({
 
 const deleteProductSchema = z.object({
   id: z.string().min(1, "ID is required"),
+  storeId: z.string().min(1, "Store ID is required"),
 });
 
 const getProductsPageDataSchema = z.object({
@@ -36,6 +38,7 @@ const getProductsPageDataSchema = z.object({
   search: z.string().optional(),
   categoryId: z.string().optional(),
   collectionId: z.string().optional(),
+  storeId: z.string().min(1, "Store ID is required"),
   limit: z.number().int().positive().default(10),
 });
 
@@ -82,10 +85,10 @@ export const getProductsPageDataAction = authenticatedAction
     
     // Fetch all data in parallel
     const [products, totalCount, categories, collections] = await Promise.all([
-      productsRepo.getProducts(parsedInput.limit, offset, parsedInput.search, parsedInput.categoryId, parsedInput.collectionId),
-      productsRepo.getProductsCount(parsedInput.search, parsedInput.categoryId, parsedInput.collectionId),
-      categoriesRepo.getActiveCategories(),
-      collectionsRepo.getActiveCollections()
+      productsRepo.getProducts(parsedInput.limit, offset, parsedInput.search, parsedInput.categoryId, parsedInput.collectionId, parsedInput.storeId),
+      productsRepo.getProductsCount(parsedInput.search, parsedInput.categoryId, parsedInput.collectionId, parsedInput.storeId),
+      categoriesRepo.getActiveCategories(parsedInput.storeId),
+      collectionsRepo.getActiveCollections(parsedInput.storeId)
     ]);
     
     const totalPages = Math.ceil(totalCount / parsedInput.limit);

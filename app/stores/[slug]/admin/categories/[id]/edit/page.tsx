@@ -5,6 +5,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import * as categoriesRepo from "@/repositories/admin/categories";
 import { BackButton } from "@/components/ui/back-button";
+import { getStoreBySlugAction } from "../../../../actions";
 
 interface EditCategoryPageProps {
   params: Promise<{
@@ -16,8 +17,16 @@ interface EditCategoryPageProps {
 export default async function EditCategoryPage({ params }: EditCategoryPageProps) {
   const { slug, id } = await params;
   
+  // Get store information first
+  const storeResult = await getStoreBySlugAction({ slug });
+  const store = storeResult.data?.store;
+  
+  if (!store) {
+    notFound();
+  }
+  
   // Fetch category data
-  const category = await categoriesRepo.getCategoryById(id);
+  const category = await categoriesRepo.getCategoryById(id, store.id);
 
   // If category doesn't exist, show 404
   if (!category) {
@@ -40,6 +49,7 @@ export default async function EditCategoryPage({ params }: EditCategoryPageProps
         category={category as any}
         isEditing={true}
         slug={slug}
+        storeId={store.id}
       />
     </div>
   );

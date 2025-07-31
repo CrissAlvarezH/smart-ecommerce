@@ -4,6 +4,8 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import * as categoriesRepo from "@/repositories/admin/categories";
 import { BackButton } from "@/components/ui/back-button";
+import { getStoreBySlugAction } from "../../../actions";
+import { notFound } from "next/navigation";
 
 interface NewProductPageProps {
   params: Promise<{ slug: string; }>;
@@ -11,7 +13,17 @@ interface NewProductPageProps {
 
 export default async function NewProductPage({ params }: NewProductPageProps) {
   const { slug } = await params;
-  const categories = await categoriesRepo.getActiveCategories();
+  
+  // Get store information first
+  const storeResult = await getStoreBySlugAction({ slug });
+  const store = storeResult.data?.store;
+  
+  if (!store) {
+    notFound();
+  }
+  
+  // Get categories for this store
+  const categories = await categoriesRepo.getActiveCategories(store.id);
 
   return (
     <div className="space-y-6">
@@ -25,7 +37,7 @@ export default async function NewProductPage({ params }: NewProductPageProps) {
         </div>
       </div>
 
-      <ProductForm categories={categories as any} slug={slug} />
+      <ProductForm categories={categories as any} slug={slug} storeId={store.id} />
     </div>
   );
 }
