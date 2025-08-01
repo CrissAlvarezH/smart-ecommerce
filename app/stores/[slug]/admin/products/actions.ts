@@ -34,10 +34,57 @@ const createProductSchema = z.object({
   storeId: z.string().min(1, "Store ID is required"),
   isActive: z.boolean().default(true),
   isFeatured: z.boolean().default(false),
+}).refine((data) => {
+  // Additional validation: compareAtPrice must be greater than price if provided
+  if (data.compareAtPrice) {
+    const price = parseFloat(data.price);
+    const compareAtPrice = parseFloat(data.compareAtPrice);
+    return compareAtPrice > price;
+  }
+  return true;
+}, {
+  message: "Compare at price must be greater than the regular price",
+  path: ["compareAtPrice"], // This will associate the error with the compareAtPrice field
 });
 
-const updateProductSchema = createProductSchema.extend({
+const updateProductSchema = z.object({
   id: z.string().min(1, "ID is required"),
+  name: z.string().min(1, "Name is required"),
+  slug: z.string().min(1, "Slug is required"),
+  description: z.string().optional().transform((val) => val === "" ? undefined : val),
+  shortDescription: z.string().optional().transform((val) => val === "" ? undefined : val),
+  price: z.string()
+    .min(1, "Price is required")
+    .refine((val) => {
+      const numPrice = parseFloat(val);
+      return !isNaN(numPrice) && numPrice > 0;
+    }, "Price must be greater than 0"),
+  compareAtPrice: z.string()
+    .optional()
+    .transform((val) => val === "" ? undefined : val)
+    .refine((val) => {
+      if (!val) return true; // Optional field
+      const numPrice = parseFloat(val);
+      return !isNaN(numPrice) && numPrice > 0;
+    }, "Compare at price must be greater than 0"),
+  sku: z.string().optional().transform((val) => val === "" ? undefined : val),
+  inventory: z.number().int().min(0, "Inventory must be non-negative"),
+  weight: z.string().optional().transform((val) => val === "" ? undefined : val),
+  categoryId: z.string().optional().transform((val) => val === "" ? undefined : val),
+  storeId: z.string().min(1, "Store ID is required"),
+  isActive: z.boolean().default(true),
+  isFeatured: z.boolean().default(false),
+}).refine((data) => {
+  // Additional validation: compareAtPrice must be greater than price if provided
+  if (data.compareAtPrice) {
+    const price = parseFloat(data.price);
+    const compareAtPrice = parseFloat(data.compareAtPrice);
+    return compareAtPrice > price;
+  }
+  return true;
+}, {
+  message: "Compare at price must be greater than the regular price",
+  path: ["compareAtPrice"], // This will associate the error with the compareAtPrice field
 });
 
 const deleteProductSchema = z.object({

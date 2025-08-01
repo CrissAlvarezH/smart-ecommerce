@@ -109,6 +109,7 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
   });
 
   const isLoading = isCreating || isUpdating;
+  const hasErrors = errors.price || errors.compareAtPrice;
 
   const generateSlug = (name: string) => {
     return name
@@ -133,6 +134,15 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
       return false;
     }
 
+    // Additional validation for compareAtPrice
+    if (fieldName === "compareAtPrice" && formData.price) {
+      const price = parseFloat(formData.price);
+      if (!isNaN(price) && numValue <= price) {
+        setErrors(prev => ({ ...prev, compareAtPrice: "Compare at price must be greater than the regular price" }));
+        return false;
+      }
+    }
+
     setErrors(prev => ({ ...prev, [fieldName]: "" }));
     return true;
   };
@@ -149,6 +159,11 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
   const handlePriceChange = (value: string, fieldName: "price" | "compareAtPrice") => {
     setFormData(prev => ({ ...prev, [fieldName]: value }));
     validatePrice(value, fieldName);
+    
+    // If regular price changed, revalidate compare at price if it exists
+    if (fieldName === "price" && formData.compareAtPrice) {
+      validatePrice(formData.compareAtPrice, "compareAtPrice");
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -157,6 +172,16 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
     // Validate all prices and set error states
     const isPriceValid = validatePrice(formData.price, "price");
     const isCompareAtPriceValid = validatePrice(formData.compareAtPrice, "compareAtPrice");
+
+    // Additional validation: check if compareAtPrice > price
+    if (formData.compareAtPrice && formData.price) {
+      const price = parseFloat(formData.price);
+      const compareAtPrice = parseFloat(formData.compareAtPrice);
+      if (!isNaN(price) && !isNaN(compareAtPrice) && compareAtPrice <= price) {
+        setErrors(prev => ({ ...prev, compareAtPrice: "Compare at price must be greater than the regular price" }));
+        return;
+      }
+    }
 
     // Don't submit if there are validation errors
     if (!isPriceValid || !isCompareAtPriceValid) {
@@ -411,7 +436,7 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
       <div className="flex gap-4">
         <Button
           type="submit"
-          disabled={isLoading}
+          disabled={isLoading || hasErrors}
           className="min-w-[100px]"
         >
           {isLoading 
