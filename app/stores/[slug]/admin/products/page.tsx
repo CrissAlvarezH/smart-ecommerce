@@ -103,7 +103,7 @@ export default async function ProductsPage({ params, searchParams }: ProductsPag
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {totalCount === 0 ? (
+          {products.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               <Package className="mx-auto h-12 w-12 text-gray-300 mb-4" />
               {(search || categoryId || collectionId) ? (
