@@ -11,6 +11,7 @@ import { deleteCategoryAction } from "../actions";
 import { BackButton } from "@/components/ui/back-button";
 import { CategoryProductsSection } from "./category-products-section";
 import { storeRepository } from "@/repositories/stores";
+import { formatDateToLocaleString } from "@/lib/dates";
 
 interface CategoryDetailsPageProps {
   params: Promise<{ slug: string; id: string }>;
@@ -152,25 +153,13 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
             <div>
               <label className="font-medium text-gray-500">Created</label>
               <p className="text-gray-700">
-                {new Date(category.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                {formatDateToLocaleString(new Date(category.createdAt))}
               </p>
             </div>
             <div>
               <label className="font-medium text-gray-500">Last Updated</label>
               <p className="text-gray-700">
-                {new Date(category.updatedAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                {formatDateToLocaleString(new Date(category.updatedAt))}
               </p>
             </div>
           </div>

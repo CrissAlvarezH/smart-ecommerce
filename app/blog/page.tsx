@@ -8,6 +8,7 @@ import { listPostsAction } from "@/app/blog/actions";
 import { getImageUrl } from "@/lib/utils";
 import { validateRequest } from "@/lib/auth";
 import { ListBlogPostsType } from "@/repositories/blogs";
+import { formatDateToString } from "@/lib/dates";
 
 
 export default async function BlogPage(props: { searchParams: Promise<{ page: string }> }) {
@@ -83,7 +84,7 @@ function PostCard({ post }: { post: ListBlogPostsType }) {
 
         <div className="mb-2 flex items-center text-sm text-white">
           <CalendarIcon className="mr-2 h-4 w-4" />
-          {new Date(post.date).toLocaleDateString("en-CA")}
+          {formatDateToString(new Date(post.date))}
           <p className="pl-1">/ by {post.author.name.split(" ")[0]}</p>
         </div>
 

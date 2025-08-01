@@ -9,6 +9,7 @@ import * as collectionsRepo from "@/repositories/admin/collections";
 import { ProductDeleteButton } from "@/components/admin/product-delete-button";
 import { deleteProductAction } from "../actions";
 import { BackButton } from "@/components/ui/back-button";
+import { formatDateToLocaleString } from "@/lib/dates";
 import Image from "next/image";
 
 interface ProductDetailsPageProps {
@@ -300,25 +301,13 @@ export default async function ProductDetailsPage({ params }: ProductDetailsPageP
             <div>
               <label className="font-medium text-gray-500">Created</label>
               <p className="text-gray-700">
-                {new Date(product.createdAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                {formatDateToLocaleString(new Date(product.createdAt))}
               </p>
             </div>
             <div>
               <label className="font-medium text-gray-500">Last Updated</label>
               <p className="text-gray-700">
-                {new Date(product.updatedAt).toLocaleDateString('en-US', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
+                {formatDateToLocaleString(new Date(product.updatedAt))}
               </p>
             </div>
           </div>

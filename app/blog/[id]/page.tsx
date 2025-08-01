@@ -7,6 +7,7 @@ import { validateRequest } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { EditIcon } from "lucide-react";
 import Link from "next/link";
+import { formatDateToString } from "@/lib/dates";
 
 
 type BlogPostPageProps = {
@@ -40,7 +41,7 @@ export default async function BlogPostPage(props: BlogPostPageProps) {
               <h1 className="text-4xl font-bold">{post.title}</h1>
 
               <div className="flex items-center pt-2">
-                <p className="text-sm font-semibold text-gray-400">{new Date(post?.date).toLocaleDateString("en-CA")}</p>
+                <p className="text-sm font-semibold text-gray-400">{formatDateToString(new Date(post?.date))}</p>
                 <p className="text-xl px-1.5 font-bold">·</p>
                 <p className="text-sm font-light">{post.author.name}</p>
               </div>

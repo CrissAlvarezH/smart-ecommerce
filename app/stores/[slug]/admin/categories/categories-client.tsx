@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useAction } from "next-safe-action/hooks";
 import { deleteCategoryAction } from "../actions";
 import { toast } from "@/hooks/use-toast";
+import { formatDateToString } from "@/lib/dates";
 import {
   Dialog,
   DialogClose,
@@ -103,7 +104,7 @@ export function CategoriesClient({ initialCategories, slug }: CategoriesClientPr
                       </p>
                     )}
                     <p className="text-xs text-gray-400">
-                      Created: {new Date(category.createdAt).toLocaleDateString()}
+                      Created: {formatDateToString(new Date(category.createdAt))}
                     </p>
                   </div>
                   
