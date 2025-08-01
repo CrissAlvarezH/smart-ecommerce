@@ -49,9 +49,10 @@ export function CategoryDeleteButton({ category, deleteAction, redirectPath = "/
       router.push(redirectPath);
     },
     onError: ({ error }) => {
+      console.log("Delete error:", error); // Debug log
       toast({
         title: "Error",
-        description: error.serverError || "Failed to delete category",
+        description: error.serverError || error.message || "Failed to delete category",
         variant: "destructive",
       });
     },

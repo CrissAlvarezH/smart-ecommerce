@@ -52,7 +52,7 @@ export function CategoriesClient({ initialCategories, slug }: CategoriesClientPr
     onError: (error) => {
       toast({
         title: "Error",
-        description: error.error?.serverError || "Failed to delete category",
+        description: error.error?.serverError || error.error?.message || "Failed to delete category",
         variant: "destructive",
       });
     },

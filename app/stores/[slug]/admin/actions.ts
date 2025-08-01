@@ -5,6 +5,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import * as categoriesRepo from "@/repositories/admin/categories";
 import * as collectionsRepo from "@/repositories/admin/collections";
+import { PublicError } from "@/lib/errors";
 
 // Category Schemas
 const createCategorySchema = z.object({
@@ -71,8 +72,32 @@ export const updateCategoryAction = authenticatedAction
 export const deleteCategoryAction = authenticatedAction
   .inputSchema(deleteCategorySchema)
   .action(async ({ parsedInput }) => {
-    console.log("🗑️ Deleting category:", parsedInput.id);
+    console.log("🗑️ Attempting to delete category:", parsedInput);
+    
+    // First get the category details
+    const category = await categoriesRepo.getCategoryById(parsedInput.id);
+    if (!category) {
+      throw new PublicError("Category not found");
+    }
+    
+    // Check if category has products
+    const [productCount, categoryProducts] = await Promise.all([
+      categoriesRepo.getCategoryProductsCount(parsedInput.id),
+      categoriesRepo.getCategoryProducts(parsedInput.id, 5) // Get first 5 products for display
+    ]);
+    
+    if (productCount > 0) {
+      const productNames = categoryProducts.map(p => p.name).join(", ");
+      const moreText = productCount > 5 ? ` and ${productCount - 5} more` : "";
+      
+      throw new PublicError(
+        `Cannot delete category "${category.name}" because it contains ${productCount} product${productCount > 1 ? 's' : ''}. ` +
+        `Products: ${productNames}${moreText}. Please remove or reassign these products before deleting the category.`
+      );
+    }
+    
     await categoriesRepo.deleteCategory(parsedInput.id);
+    
     console.log("✅ Category deleted");
     
     revalidatePath("/", "layout");

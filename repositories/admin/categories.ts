@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { categories } from "@/db/schemas";
+import { categories, products } from "@/db/schemas";
 import { eq, desc, ilike, and, sql } from "drizzle-orm";
 
 export interface CreateCategoryData {
@@ -132,4 +132,26 @@ export async function getActiveCategories(storeId?: string) {
     .from(categories)
     .where(and(...conditions))
     .orderBy(categories.name);
+}
+
+export async function getCategoryProducts(categoryId: string, limit = 5) {
+  return db
+    .select({
+      id: products.id,
+      name: products.name,
+      slug: products.slug,
+      isActive: products.isActive,
+    })
+    .from(products)
+    .where(eq(products.categoryId, categoryId))
+    .limit(limit);
+}
+
+export async function getCategoryProductsCount(categoryId: string) {
+  const result = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(products)
+    .where(eq(products.categoryId, categoryId));
+
+  return result[0]?.count || 0;
 }
