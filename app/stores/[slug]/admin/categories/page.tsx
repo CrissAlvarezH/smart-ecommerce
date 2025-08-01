@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plus, Package } from "lucide-react";
+import { Plus, Tag } from "lucide-react";
 import Link from "next/link";
 import * as categoriesRepo from "@/repositories/admin/categories";
 import { CategoriesClient } from "./categories-client";
@@ -88,9 +88,9 @@ export default async function CategoriesPage({ params, searchParams }: Categorie
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {totalCount === 0 ? (
+          {categories.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
-              <Package className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+              <Tag className="mx-auto h-12 w-12 text-gray-300 mb-4" />
               {search ? (
                 <>
                   <p>No categories found</p>
