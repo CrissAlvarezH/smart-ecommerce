@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Store, ExternalLink, Settings } from "lucide-react";
+import { formatDateToString } from "@/lib/dates";
 
 interface StoreListProps {
   stores: SelectStore[];
@@ -57,7 +58,7 @@ export function StoreList({ stores, showAdminLinks = false }: StoreListProps) {
               {store.city && store.country && (
                 <div>Location: {store.city}, {store.country}</div>
               )}
-              <div>Created: {new Date(store.createdAt).toLocaleDateString()}</div>
+              <div>Created: {formatDateToString(new Date(store.createdAt))}</div>
             </div>
 
             <div className="flex gap-2">
