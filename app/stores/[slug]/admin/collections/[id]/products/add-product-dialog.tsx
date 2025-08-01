@@ -41,12 +41,13 @@ export function AddProductDialog({ collection, onProductAdded }: { collection: C
     if (isOpen) {
       fetchAvailableProducts({
         collectionId: collection.id,
+        storeId: collection.storeId,
         search: searchTerm,
         limit: PRODUCTS_PER_PAGE,
         offset: (page - 1) * PRODUCTS_PER_PAGE
       });
     }
-  }, [collection.id, searchTerm, page, isOpen, fetchAvailableProducts]);
+  }, [collection.id, collection.storeId, searchTerm, page, isOpen, fetchAvailableProducts]);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -116,6 +117,7 @@ export function AddProductDialog({ collection, onProductAdded }: { collection: C
                     onProductAdded={() => {
                       fetchAvailableProducts({
                         collectionId: collection.id,
+                        storeId: collection.storeId,
                         search: searchTerm,
                         limit: PRODUCTS_PER_PAGE,
                         offset: (page - 1) * PRODUCTS_PER_PAGE

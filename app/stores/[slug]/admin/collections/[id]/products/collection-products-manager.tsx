@@ -7,6 +7,7 @@ interface Collection {
   description: string | null;
   imageUrl: string | null;
   isActive: boolean;
+  storeId: string;
   createdAt: Date;
   updatedAt: Date;
 }

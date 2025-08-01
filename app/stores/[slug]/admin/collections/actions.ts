@@ -35,6 +35,7 @@ const removeProductFromCollectionSchema = z.object({
 
 const getCollectionProductsSchema = z.object({
   collectionId: z.string().min(1, "Collection ID is required"),
+  storeId: z.string().min(1, "Store ID is required"),
   search: z.string().optional(),
   limit: z.number().int().positive().default(100),
   offset: z.number().int().min(0).default(0),
@@ -42,6 +43,7 @@ const getCollectionProductsSchema = z.object({
 
 const getAvailableProductsSchema = z.object({
   collectionId: z.string().min(1, "Collection ID is required"),
+  storeId: z.string().min(1, "Store ID is required"),
   search: z.string().optional(),
   limit: z.number().int().positive().default(100),
   offset: z.number().int().min(0).default(0),
@@ -122,12 +124,14 @@ export const getCollectionProductsAction = authenticatedAction
         parsedInput.offset,
         parsedInput.search,
         undefined,
-        parsedInput.collectionId
+        parsedInput.collectionId,
+        parsedInput.storeId
       ),
       productsRepo.getProductsCount(
         parsedInput.search,
         undefined,
-        parsedInput.collectionId
+        parsedInput.collectionId,
+        parsedInput.storeId
       )
     ]);
     
@@ -147,11 +151,12 @@ export const getAvailableProductsAction = authenticatedAction
     
     // Get all products and collection products counts
     const [allProductsCount, collectionProductsCount] = await Promise.all([
-      productsRepo.getProductsCount(parsedInput.search),
+      productsRepo.getProductsCount(parsedInput.search, undefined, undefined, parsedInput.storeId),
       productsRepo.getProductsCount(
         undefined,
         undefined,
-        parsedInput.collectionId
+        parsedInput.collectionId,
+        parsedInput.storeId
       )
     ]);
     
@@ -159,7 +164,10 @@ export const getAvailableProductsAction = authenticatedAction
     const allProducts = await productsRepo.getProducts(
       parsedInput.limit + collectionProductsCount, // Get more to account for filtering
       parsedInput.offset,
-      parsedInput.search
+      parsedInput.search,
+      undefined,
+      undefined,
+      parsedInput.storeId
     );
     
     // Get products already in collection
@@ -168,7 +176,8 @@ export const getAvailableProductsAction = authenticatedAction
       0,
       undefined,
       undefined,
-      parsedInput.collectionId
+      parsedInput.collectionId,
+      parsedInput.storeId
     );
     
     // Filter out products that are already in the collection

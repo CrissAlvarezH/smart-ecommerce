@@ -12,6 +12,7 @@ export interface Product {
 export interface Collection {
     id: string;
     name: string;
+    storeId: string;
 }
 
 export const PRODUCTS_PER_PAGE = 10;

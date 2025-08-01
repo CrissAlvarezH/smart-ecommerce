@@ -38,11 +38,12 @@ export function CollectionProductsList({
   useEffect(() => {
     fetchProducts({
       collectionId: collection.id,
+      storeId: collection.storeId,
       search: searchTerm,
       limit: PRODUCTS_PER_PAGE,
       offset: (page - 1) * PRODUCTS_PER_PAGE
     });
-  }, [collection.id, searchTerm, page, fetchProducts]);
+  }, [collection.id, collection.storeId, searchTerm, page, fetchProducts]);
 
   // Reset to page 1 when search term changes
   useEffect(() => {
@@ -70,6 +71,7 @@ export function CollectionProductsList({
             onProductAdded={() => {
               fetchProducts({
                 collectionId: collection.id,
+                storeId: collection.storeId,
                 search: searchTerm,
                 limit: PRODUCTS_PER_PAGE,
                 offset: (page - 1) * PRODUCTS_PER_PAGE
