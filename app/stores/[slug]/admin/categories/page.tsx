@@ -6,6 +6,8 @@ import * as categoriesRepo from "@/repositories/admin/categories";
 import { CategoriesClient } from "./categories-client";
 import { CategorySearch } from "@/components/admin/category-search";
 import { Paginator } from "@/components/pagination";
+import { storeRepository } from "@/repositories/stores";
+import { notFound } from "next/navigation";
 
 interface CategoriesPageProps {
   params: Promise<{
@@ -23,13 +25,19 @@ export default async function CategoriesPage({ params, searchParams }: Categorie
   const page = parseInt(searchParamsData.page || '1', 10);
   const search = searchParamsData.search;
   
+  // Get store by slug
+  const store = await storeRepository.findBySlug(slug);
+  if (!store) {
+    notFound();
+  }
+  
   const limit = 10; // Categories per page
   const offset = (page - 1) * limit;
   
-  // Fetch categories and count in parallel
+  // Fetch categories and count in parallel, filtered by store ID
   const [categories, totalCount] = await Promise.all([
-    categoriesRepo.getCategories(limit, offset, search),
-    categoriesRepo.getCategoriesCount(search)
+    categoriesRepo.getCategories(limit, offset, search, store.id),
+    categoriesRepo.getCategoriesCount(search, store.id)
   ]);
   
   const totalPages = Math.ceil(totalCount / limit);

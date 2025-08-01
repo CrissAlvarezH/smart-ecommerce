@@ -31,6 +31,7 @@ interface Product {
 interface Category {
   id: string;
   name: string;
+  storeId: string;
 }
 
 interface CategoryProductsSectionProps {

@@ -8,6 +8,7 @@ import * as categoriesRepo from "@/repositories/admin/categories";
 
 const getAvailableProductsForCategorySchema = z.object({
   categoryId: z.string().min(1, "Category ID is required"),
+  storeId: z.string().min(1, "Store ID is required"),
   search: z.string().optional(),
   limit: z.number().int().positive().default(100),
   offset: z.number().int().min(0).default(0),
@@ -27,28 +28,35 @@ export const getAvailableProductsForCategoryAction = authenticatedAction
   .action(async ({ parsedInput }) => {
     console.log("🛍️ Fetching available products for category:", parsedInput);
     
-    // Get all products and category products counts
+    // Get all products and category products counts (filtered by store)
     const [allProductsCount, categoryProductsCount] = await Promise.all([
-      productsRepo.getProductsCount(parsedInput.search),
+      productsRepo.getProductsCount(parsedInput.search, undefined, undefined, parsedInput.storeId),
       productsRepo.getProductsCount(
         undefined,
-        parsedInput.categoryId
+        parsedInput.categoryId,
+        undefined,
+        parsedInput.storeId
       )
     ]);
     
-    // Get all products
+    // Get all products (filtered by store)
     const allProducts = await productsRepo.getProducts(
       parsedInput.limit + categoryProductsCount, // Get more to account for filtering
       parsedInput.offset,
-      parsedInput.search
+      parsedInput.search,
+      undefined,
+      undefined,
+      parsedInput.storeId
     );
     
-    // Get products already in category
+    // Get products already in category (filtered by store)
     const categoryProducts = await productsRepo.getProducts(
       1000, // Get all products in category
       0,
       undefined,
-      parsedInput.categoryId
+      parsedInput.categoryId,
+      undefined,
+      parsedInput.storeId
     );
     
     // Filter out products that are already in the category

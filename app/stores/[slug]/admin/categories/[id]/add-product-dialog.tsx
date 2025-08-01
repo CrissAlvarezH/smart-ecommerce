@@ -35,6 +35,7 @@ interface Product {
 interface Category {
   id: string;
   name: string;
+  storeId: string;
 }
 
 export function AddProductDialog({ category, onProductAdded }: { category: Category, onProductAdded: () => void }) {
@@ -64,6 +65,7 @@ export function AddProductDialog({ category, onProductAdded }: { category: Categ
     if (isOpen) {
       fetchAvailableProducts({
         categoryId: category.id,
+        storeId: category.storeId,
         search: searchTerm,
         limit: PRODUCTS_PER_PAGE,
         offset: (page - 1) * PRODUCTS_PER_PAGE

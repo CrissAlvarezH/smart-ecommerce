@@ -10,6 +10,7 @@ import { CategoryDeleteButton } from "@/components/admin/category-delete-button"
 import { deleteCategoryAction } from "../actions";
 import { BackButton } from "@/components/ui/back-button";
 import { CategoryProductsSection } from "./category-products-section";
+import { storeRepository } from "@/repositories/stores";
 
 interface CategoryDetailsPageProps {
   params: Promise<{ slug: string; id: string }>;
@@ -22,7 +23,14 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
   const { slug, id } = await params;
   const { page } = await searchParams;
 
-  const category = await categoriesRepo.getCategoryById(id);
+  // Get store by slug
+  const store = await storeRepository.findBySlug(slug);
+  if (!store) {
+    notFound();
+  }
+
+  // Get category by ID and store ID to ensure it belongs to this store
+  const category = await categoriesRepo.getCategoryById(id, store.id);
 
   if (!category) {
     notFound();
@@ -32,10 +40,10 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
   const limit = 10; // Products per page
   const offset = (currentPage - 1) * limit;
 
-  // Fetch products in this category and count in parallel
+  // Fetch products in this category and count in parallel, filtered by store ID
   const [products, totalCount] = await Promise.all([
-    productsRepo.getProducts(limit, offset, undefined, category.id),
-    productsRepo.getProductsCount(undefined, category.id)
+    productsRepo.getProducts(limit, offset, undefined, category.id, undefined, store.id),
+    productsRepo.getProductsCount(undefined, category.id, undefined, store.id)
   ]);
 
   const totalPages = Math.ceil(totalCount / limit);
@@ -126,7 +134,7 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
 
       {/* Products in Category */}
       <CategoryProductsSection 
-        category={{ id: category.id, name: category.name }}
+        category={{ id: category.id, name: category.name, storeId: store.id }}
         products={products}
         totalCount={totalCount}
         totalPages={totalPages}
