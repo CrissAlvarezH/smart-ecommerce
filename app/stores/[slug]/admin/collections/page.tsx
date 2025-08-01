@@ -3,7 +3,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Trash2, FolderOpen } from "lucide-react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
 import * as collectionsRepo from "@/repositories/admin/collections";
+import { storeRepository } from "@/repositories/stores";
 import { CollectionsClient } from "./collections-client";
 
 interface CollectionsPageProps {
@@ -14,7 +16,15 @@ interface CollectionsPageProps {
 
 export default async function CollectionsPage({ params }: CollectionsPageProps) {
   const { slug } = await params;
-  const collections = await collectionsRepo.getCollections();
+  
+  // Get store by slug
+  const store = await storeRepository.findBySlug(slug);
+  if (!store) {
+    notFound();
+  }
+  
+  // Get collections filtered by store ID
+  const collections = await collectionsRepo.getCollections(50, 0, undefined, store.id);
 
   return (
     <div className="space-y-6">
