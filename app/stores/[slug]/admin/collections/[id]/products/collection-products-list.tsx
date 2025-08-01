@@ -26,10 +26,12 @@ import { Collection, Product, PRODUCTS_PER_PAGE } from "../../interfaces";
 
 export interface CollectionProductsListProps {
     collection: Collection;
+    storeSlug: string;
 }
 
 export function CollectionProductsList({
   collection,
+  storeSlug,
 }: CollectionProductsListProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
@@ -68,6 +70,7 @@ export function CollectionProductsList({
           </CardTitle>
           <AddProductDialog
             collection={collection}
+            storeSlug={storeSlug}
             onProductAdded={() => {
               fetchProducts({
                 collectionId: collection.id,

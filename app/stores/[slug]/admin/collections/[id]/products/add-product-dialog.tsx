@@ -12,9 +12,10 @@ import { ClientPagination } from "@/components/client-pagination";
 import { SearchHighlight } from "@/components/admin/search-highlight";
 import { Badge } from "@/components/ui/badge";
 import { Collection, Product, PRODUCTS_PER_PAGE } from "../../interfaces";
+import Link from "next/link";
 
 
-export function AddProductDialog({ collection, onProductAdded }: { collection: Collection, onProductAdded: () => void }) {
+export function AddProductDialog({ collection, storeSlug, onProductAdded }: { collection: Collection, storeSlug: string, onProductAdded: () => void }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [isOpen, setIsOpen] = useState(false);
@@ -65,6 +66,7 @@ export function AddProductDialog({ collection, onProductAdded }: { collection: C
   const data = result?.data;
   const products = data?.data || [];
   const totalCount = data?.total || 0;
+  const totalProductsInStore = data?.totalProductsInStore || 0;
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
@@ -101,8 +103,28 @@ export function AddProductDialog({ collection, onProductAdded }: { collection: C
                 <Package className="mx-auto h-12 w-12 text-gray-300 mb-4" />
                 {searchTerm ? (
                   <p>No products found matching &quot;{searchTerm}&quot;.</p>
+                ) : totalProductsInStore === 0 ? (
+                  <>
+                    <p>No products in this store yet.</p>
+                    <p className="text-sm mt-2">Create some products first to add them to collections.</p>
+                    <Link href={`/stores/${storeSlug}/admin/products/new`}>
+                      <Button className="mt-4" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Product
+                      </Button>
+                    </Link>
+                  </>
                 ) : (
-                  <p>All products are already in this collection.</p>
+                  <>
+                    <p>No available products to add to this collection.</p>
+                    <p className="text-sm mt-2">All products are already in this collection.</p>
+                    <Link href={`/stores/${storeSlug}/admin/products/new`}>
+                      <Button className="mt-4" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create New Product
+                      </Button>
+                    </Link>
+                  </>
                 )}
               </div>
             ) : (

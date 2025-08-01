@@ -14,14 +14,16 @@ interface Collection {
 
 interface CollectionProductsManagerProps {
   collection: Collection;
+  storeSlug: string;
 }
 
 export function CollectionProductsManager({
   collection,
+  storeSlug,
 }: CollectionProductsManagerProps) {
   return (
     <div className="w-full">
-      <CollectionProductsList collection={collection} />
+      <CollectionProductsList collection={collection} storeSlug={storeSlug} />
     </div>
   );
 }

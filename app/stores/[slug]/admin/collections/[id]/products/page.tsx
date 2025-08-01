@@ -81,6 +81,7 @@ export default async function CollectionProductsPage({ params }: CollectionProdu
       {/* Products Management */}
       <CollectionProductsManager
         collection={collection}
+        storeSlug={slug}
       />
     </div>
   );
