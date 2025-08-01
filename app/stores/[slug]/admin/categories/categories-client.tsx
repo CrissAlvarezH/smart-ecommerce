@@ -19,6 +19,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface Category {
   id: string;
@@ -109,18 +115,36 @@ export function CategoriesClient({ initialCategories, slug }: CategoriesClientPr
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Link href={`/stores/${slug}/admin/categories/${category.id}/edit`}>
-                      <Button variant="outline" size="sm">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                    </Link>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Link href={`/stores/${slug}/admin/categories/${category.id}/edit`}>
+                            <Button variant="outline" size="sm">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </Link>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Edit category</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     
                     <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" disabled={isDeleting}>
-                          <Trash2 className="h-4 w-4 text-red-600" />
-                        </Button>
-                      </DialogTrigger>
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DialogTrigger asChild>
+                              <Button variant="outline" size="sm" disabled={isDeleting}>
+                                <Trash2 className="h-4 w-4 text-red-600" />
+                              </Button>
+                            </DialogTrigger>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Delete category</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Delete Category</DialogTitle>
