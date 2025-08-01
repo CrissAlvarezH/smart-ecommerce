@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,6 +69,11 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
     isFeatured: product?.isFeatured ?? false,
   });
 
+  const [errors, setErrors] = useState({
+    price: "",
+    compareAtPrice: "",
+  });
+
   const { execute: createProduct, isExecuting: isCreating } = useAction(createProductAction, {
     onSuccess: () => {
       toast({
@@ -111,6 +117,26 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
       .replace(/(^-|-$)/g, '');
   };
 
+  const validatePrice = (value: string, fieldName: "price" | "compareAtPrice") => {
+    if (!value && fieldName === "compareAtPrice") {
+      // Compare at price is optional
+      setErrors(prev => ({ ...prev, [fieldName]: "" }));
+      return true;
+    }
+
+    const numValue = parseFloat(value);
+    if (isNaN(numValue) || numValue <= 0) {
+      const errorMessage = fieldName === "price" 
+        ? "Price must be greater than 0" 
+        : "Compare at price must be greater than 0";
+      setErrors(prev => ({ ...prev, [fieldName]: errorMessage }));
+      return false;
+    }
+
+    setErrors(prev => ({ ...prev, [fieldName]: "" }));
+    return true;
+  };
+
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const name = e.target.value;
     setFormData(prev => ({
@@ -120,8 +146,22 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
     }));
   };
 
+  const handlePriceChange = (value: string, fieldName: "price" | "compareAtPrice") => {
+    setFormData(prev => ({ ...prev, [fieldName]: value }));
+    validatePrice(value, fieldName);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Validate all prices and set error states
+    const isPriceValid = validatePrice(formData.price, "price");
+    const isCompareAtPriceValid = validatePrice(formData.compareAtPrice, "compareAtPrice");
+
+    // Don't submit if there are validation errors
+    if (!isPriceValid || !isCompareAtPriceValid) {
+      return;
+    }
 
     const productData = {
       ...formData,
@@ -225,12 +265,16 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
                 id="price"
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
                 value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                placeholder="0.00"
+                onChange={(e) => handlePriceChange(e.target.value, "price")}
+                placeholder="0.01"
                 required
+                className={errors.price ? "border-red-500 focus:border-red-500" : ""}
               />
+              {errors.price && (
+                <p className="text-sm text-red-500 mt-1">{errors.price}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -239,11 +283,15 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
                 id="compareAtPrice"
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
                 value={formData.compareAtPrice}
-                onChange={(e) => setFormData({ ...formData, compareAtPrice: e.target.value })}
-                placeholder="0.00"
+                onChange={(e) => handlePriceChange(e.target.value, "compareAtPrice")}
+                placeholder="0.01"
+                className={errors.compareAtPrice ? "border-red-500 focus:border-red-500" : ""}
               />
+              {errors.compareAtPrice && (
+                <p className="text-sm text-red-500 mt-1">{errors.compareAtPrice}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -271,18 +319,32 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="category">Category</Label>
-              <Select value={formData.categoryId} onValueChange={(value) => setFormData({ ...formData, categoryId: value })}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a category" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categories.map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              {categories.length > 0 ? (
+                <Select value={formData.categoryId} onValueChange={(value) => setFormData({ ...formData, categoryId: value })}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {categories.map((category) => (
+                      <SelectItem key={category.id} value={category.id}>
+                        {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-sm text-gray-500">
+                    No categories available.{" "}
+                    <Link 
+                      href={`/stores/${slug}/admin/categories/new`}
+                      className="text-blue-600 hover:text-blue-800 underline"
+                    >
+                      Add a category
+                    </Link>
+                  </p>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
