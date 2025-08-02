@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +12,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAction } from "next-safe-action/hooks";
 import { 
-  createProductAction, 
+  createProductWithImagesAction, 
   updateProductAction,
   addProductImageAction,
   deleteProductImageAction,
@@ -22,6 +22,7 @@ import {
 } from "./actions";
 import { toast } from "@/hooks/use-toast";
 import { ProductImageManager } from "@/components/admin/product-image-manager";
+import { TemporaryImageUpload, type TemporaryImage } from "@/components/admin/temporary-image-upload";
 
 interface Category {
   id: string;
@@ -54,6 +55,7 @@ interface ProductFormProps {
 
 export function ProductForm({ categories, product, isEditing = false, slug, storeId }: ProductFormProps) {
   const router = useRouter();
+  const [temporaryImages, setTemporaryImages] = useState<TemporaryImage[]>([]);
   const [formData, setFormData] = useState({
     name: product?.name || "",
     slug: product?.slug || "",
@@ -74,11 +76,13 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
     compareAtPrice: "",
   });
 
-  const { execute: createProduct, isExecuting: isCreating } = useAction(createProductAction, {
+  const { execute: createProduct, isExecuting: isCreating } = useAction(createProductWithImagesAction, {
     onSuccess: () => {
       toast({
         title: "Product created",
-        description: "The product has been successfully created.",
+        description: temporaryImages.length > 0 
+          ? "The product and images have been successfully created."
+          : "The product has been successfully created.",
       });
       router.push(`/stores/${slug}/admin/products`);
     },
@@ -201,7 +205,20 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
         ...productData,
       });
     } else {
-      createProduct(productData);
+      // Create FormData for images
+      const imagesFormData = new FormData();
+      imagesFormData.append('imageCount', temporaryImages.length.toString());
+      
+      temporaryImages.forEach((image, index) => {
+        imagesFormData.append(`image_${index}`, image.file);
+        imagesFormData.append(`altText_${index}`, image.altText);
+        imagesFormData.append(`position_${index}`, image.position.toString());
+      });
+      
+      createProduct({
+        ...productData,
+        imagesFormData: temporaryImages.length > 0 ? imagesFormData : undefined,
+      });
     }
   };
 
@@ -218,6 +235,14 @@ export function ProductForm({ categories, product, isEditing = false, slug, stor
             updateProductImageAction,
             reorderProductImagesAction
           }}
+        />
+      )}
+
+      {/* Image Upload for New Products */}
+      {!isEditing && (
+        <TemporaryImageUpload 
+          images={temporaryImages}
+          onImagesChange={setTemporaryImages}
         />
       )}
 

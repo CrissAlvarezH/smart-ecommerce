@@ -6,6 +6,7 @@ import { revalidatePath } from "next/cache";
 import * as productsRepo from "@/repositories/admin/products";
 import * as categoriesRepo from "@/repositories/admin/categories";
 import * as collectionsRepo from "@/repositories/admin/collections";
+import { uploadFileToBucket } from "@/lib/files";
 
 // Product Schemas
 const createProductSchema = z.object({
@@ -108,6 +109,104 @@ export const createProductAction = authenticatedAction
     console.log("📦 Creating product:", parsedInput);
     const product = await productsRepo.createProduct(parsedInput);
     console.log("✅ Product created:", product.id);
+    
+    revalidatePath("/", "layout");
+    return product;
+  });
+
+// Schema for product creation with images
+const createProductWithImagesSchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  slug: z.string().min(1, "Slug is required"),
+  description: z.string().optional().transform((val) => val === "" ? undefined : val),
+  shortDescription: z.string().optional().transform((val) => val === "" ? undefined : val),
+  price: z.string()
+    .min(1, "Price is required")
+    .refine((val) => {
+      const numPrice = parseFloat(val);
+      return !isNaN(numPrice) && numPrice > 0;
+    }, "Price must be greater than 0"),
+  compareAtPrice: z.string()
+    .optional()
+    .transform((val) => val === "" ? undefined : val)
+    .refine((val) => {
+      if (!val) return true; // Optional field
+      const numPrice = parseFloat(val);
+      return !isNaN(numPrice) && numPrice > 0;
+    }, "Compare at price must be greater than 0"),
+  sku: z.string().optional().transform((val) => val === "" ? undefined : val),
+  inventory: z.number().int().min(0, "Inventory must be non-negative"),
+  weight: z.string().optional().transform((val) => val === "" ? undefined : val),
+  categoryId: z.string().optional().transform((val) => val === "" ? undefined : val),
+  storeId: z.string().min(1, "Store ID is required"),
+  isActive: z.boolean().default(true),
+  isFeatured: z.boolean().default(false),
+  imagesFormData: z.instanceof(FormData).optional()
+});
+
+// Create product with images action
+export const createProductWithImagesAction = authenticatedAction
+  .inputSchema(createProductWithImagesSchema)
+  .action(async ({ parsedInput }) => {
+    const { imagesFormData, ...productData } = parsedInput;
+    
+    console.log("📦 Creating product:", productData);
+    const product = await productsRepo.createProduct(productData);
+    console.log("✅ Product created:", product.id);
+    
+    // Handle image uploads if FormData is provided
+    if (imagesFormData) {
+      const imageCount = parseInt(imagesFormData.get('imageCount') as string || '0');
+      console.log(`📸 Processing ${imageCount} images for product ${product.id}`);
+      
+      let successfulUploads = 0;
+      
+      for (let i = 0; i < imageCount; i++) {
+        const file = imagesFormData.get(`image_${i}`) as File;
+        const altText = imagesFormData.get(`altText_${i}`) as string;
+        const position = parseInt(imagesFormData.get(`position_${i}`) as string);
+        
+        console.log(`🔍 Processing image ${i + 1}:`, {
+          fileName: file?.name,
+          fileSize: file?.size,
+          fileType: file?.type,
+          altText,
+          position
+        });
+        
+        if (file && file instanceof File) {
+          try {
+            // Generate a unique path for the image
+            const timestamp = Date.now();
+            const cleanFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+            const path = `products/images/${timestamp}_${cleanFileName}`;
+            
+            console.log(`📤 Uploading to S3 path:`, path);
+            
+            // Upload file directly to S3
+            await uploadFileToBucket(file, path);
+            console.log(`✅ Image ${i + 1} uploaded to S3:`, path);
+            
+            // Add image to product
+            const imageRecord = await productsRepo.addProductImage(product.id, {
+              url: path,
+              altText: altText || file.name,
+              position: position,
+            });
+            console.log(`✅ Image ${i + 1} linked to product:`, imageRecord);
+            successfulUploads++;
+          } catch (error) {
+            console.error(`❌ Error uploading image ${i}:`, error);
+          }
+        } else {
+          console.warn(`⚠️ No file found for image ${i}`);
+        }
+      }
+      
+      console.log(`✅ Successfully uploaded ${successfulUploads}/${imageCount} images`);
+    } else {
+      console.log("📸 No images to process");
+    }
     
     revalidatePath("/", "layout");
     return product;
