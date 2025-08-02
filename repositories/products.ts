@@ -1,6 +1,64 @@
 import { db } from "@/db";
-import { categories, collections, products, productImages, productCollections, carts, cartItems } from "@/db/schemas";
-import { eq, desc, and, ilike } from "drizzle-orm";
+import { categories, collections, products, productImages, productCollections, carts, cartItems, discounts, productDiscounts } from "@/db/schemas";
+import { eq, desc, and, ilike, gte } from "drizzle-orm";
+
+// Helper function to apply discounts to products
+async function applyDiscountsToProducts(productsData: any[]) {
+  if (productsData.length === 0) return productsData;
+
+  // Get all product IDs
+  const productIds = productsData.map(p => p.id);
+
+  // Get active discounts for these products
+  const activeDiscounts = await db
+    .select({
+      productId: productDiscounts.productId,
+      discountId: discounts.id,
+      name: discounts.name,
+      percentage: discounts.percentage,
+      endDate: discounts.endDate,
+    })
+    .from(productDiscounts)
+    .innerJoin(discounts, eq(productDiscounts.discountId, discounts.id))
+    .where(and(
+      eq(discounts.isActive, true),
+      gte(discounts.endDate, new Date())
+    ));
+
+  // Group discounts by product ID and get the best discount (highest percentage)
+  const discountMap = new Map();
+  activeDiscounts.forEach(discount => {
+    const productId = discount.productId;
+    const currentBest = discountMap.get(productId);
+    if (!currentBest || parseFloat(discount.percentage) > parseFloat(currentBest.percentage)) {
+      discountMap.set(productId, discount);
+    }
+  });
+
+  // Apply discounts to products
+  return productsData.map(product => {
+    const discount = discountMap.get(product.id);
+    if (discount) {
+      const originalPrice = parseFloat(product.price);
+      const discountPercentage = parseFloat(discount.percentage);
+      const discountedPrice = originalPrice * (1 - discountPercentage / 100);
+      
+      return {
+        ...product,
+        originalPrice: product.price,
+        price: discountedPrice.toFixed(2),
+        compareAtPrice: product.price, // Original price becomes the compare at price
+        discountInfo: {
+          id: discount.discountId,
+          name: discount.name,
+          percentage: discount.percentage,
+          endDate: discount.endDate,
+        }
+      };
+    }
+    return product;
+  });
+}
 
 export async function getProducts(limit = 20, offset = 0, storeId?: string) {
   const productsData = await db
@@ -30,9 +88,12 @@ export async function getProducts(limit = 20, offset = 0, storeId?: string) {
     .limit(limit)
     .offset(offset);
 
+  // Apply discounts to products
+  const productsWithDiscounts = await applyDiscountsToProducts(productsData);
+
   // Get the first image for each product
   const productsWithImages = await Promise.all(
-    productsData.map(async (product) => {
+    productsWithDiscounts.map(async (product) => {
       const images = await db
         .select()
         .from(productImages)
@@ -79,11 +140,14 @@ export async function getProductBySlug(slug: string, storeId?: string) {
 
   if (product.length === 0) return null;
 
+  // Apply discounts to the product
+  const productWithDiscounts = await applyDiscountsToProducts(product);
+  
   const productImages = await getProductImages(product[0].id);
   const productCollectionsList = await getProductCollections(product[0].id);
 
   return {
-    ...product[0],
+    ...productWithDiscounts[0],
     images: productImages,
     collections: productCollectionsList,
   };
@@ -130,9 +194,12 @@ export async function getFeaturedProducts(limit = 8, storeId?: string) {
     )
     .limit(limit);
 
+  // Apply discounts to featured products
+  const featuredWithDiscounts = await applyDiscountsToProducts(featuredData);
+
   // Get the first image for each product
   const productsWithImages = await Promise.all(
-    featuredData.map(async (product) => {
+    featuredWithDiscounts.map(async (product) => {
       const images = await db
         .select()
         .from(productImages)
@@ -173,7 +240,7 @@ export async function getCollections(storeId?: string) {
 }
 
 export async function getProductsByCategory(categoryId: string, limit = 20, offset = 0, storeId?: string) {
-  return await db
+  const productsData = await db
     .select({
       id: products.id,
       name: products.name,
@@ -192,10 +259,12 @@ export async function getProductsByCategory(categoryId: string, limit = 20, offs
     .orderBy(desc(products.createdAt))
     .limit(limit)
     .offset(offset);
+
+  return await applyDiscountsToProducts(productsData);
 }
 
 export async function getProductsByCollection(collectionId: string, limit = 20, offset = 0, storeId?: string) {
-  return await db
+  const productsData = await db
     .select({
       id: products.id,
       name: products.name,
@@ -215,10 +284,12 @@ export async function getProductsByCollection(collectionId: string, limit = 20, 
     .orderBy(desc(products.createdAt))
     .limit(limit)
     .offset(offset);
+
+  return await applyDiscountsToProducts(productsData);
 }
 
 export async function searchProducts(query: string, limit = 20, offset = 0, storeId?: string) {
-  return await db
+  const productsData = await db
     .select({
       id: products.id,
       name: products.name,
@@ -244,4 +315,6 @@ export async function searchProducts(query: string, limit = 20, offset = 0, stor
     .orderBy(desc(products.createdAt))
     .limit(limit)
     .offset(offset);
+
+  return await applyDiscountsToProducts(productsData);
 }

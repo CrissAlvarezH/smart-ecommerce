@@ -1,6 +1,7 @@
 import * as productsRepo from "@/repositories/admin/products";
 import * as categoriesRepo from "@/repositories/admin/categories";
 import * as collectionsRepo from "@/repositories/admin/collections";
+import * as discountsRepo from "@/repositories/admin/discounts";
 
 export const adminProductService = {
   getProducts: productsRepo.getProducts,
@@ -40,4 +41,18 @@ export const adminCollectionService = {
   deleteCollection: collectionsRepo.deleteCollection,
   addProductToCollection: collectionsRepo.addProductToCollection,
   removeProductFromCollection: collectionsRepo.removeProductFromCollection,
+};
+
+export const adminDiscountService = {
+  getDiscounts: discountsRepo.getDiscounts,
+  getDiscountsCount: discountsRepo.getDiscountsCount,
+  getDiscountById: discountsRepo.getDiscountById,
+  createDiscount: discountsRepo.createDiscount,
+  updateDiscount: discountsRepo.updateDiscount,
+  deleteDiscount: discountsRepo.deleteDiscount,
+  addProductToDiscount: discountsRepo.addProductToDiscount,
+  removeProductFromDiscount: discountsRepo.removeProductFromDiscount,
+  getDiscountProducts: discountsRepo.getDiscountProducts,
+  getProductDiscounts: discountsRepo.getProductDiscounts,
+  getActiveDiscountsForProducts: discountsRepo.getActiveDiscountsForProducts,
 };

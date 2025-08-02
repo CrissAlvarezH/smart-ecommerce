@@ -10,6 +10,12 @@ export {
   productCollections, 
   carts, 
   cartItems,
+  discounts,
+  productDiscounts,
   type InsertStore,
-  type SelectStore
+  type SelectStore,
+  type InsertDiscount,
+  type SelectDiscount,
+  type InsertProductDiscount,
+  type SelectProductDiscount
 } from "./ecommerce";

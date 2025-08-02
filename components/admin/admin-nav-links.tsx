@@ -7,7 +7,8 @@ import {
   Package, 
   Tag, 
   FolderOpen, 
-  BarChart3 
+  BarChart3,
+  Percent
 } from "lucide-react";
 
 interface AdminNavLinksProps {
@@ -41,6 +42,12 @@ export function AdminNavLinks({ storeSlug }: AdminNavLinksProps) {
       label: "Collections",
       icon: FolderOpen,
       isActive: pathname.startsWith(`/stores/${storeSlug}/admin/collections`)
+    },
+    {
+      href: `/stores/${storeSlug}/admin/discounts`,
+      label: "Discounts",
+      icon: Percent,
+      isActive: pathname.startsWith(`/stores/${storeSlug}/admin/discounts`)
     }
   ];
 

@@ -111,3 +111,26 @@ export const cartItems = pgTable("cart_items", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
+
+export const discounts = pgTable("discounts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  percentage: decimal("percentage", { precision: 5, scale: 2 }).notNull(),
+  endDate: timestamp("end_date").notNull(),
+  storeId: uuid("store_id").notNull().references(() => stores.id),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const productDiscounts = pgTable("product_discounts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),
+  discountId: uuid("discount_id").notNull().references(() => discounts.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type InsertDiscount = typeof discounts.$inferInsert;
+export type SelectDiscount = typeof discounts.$inferSelect;
+export type InsertProductDiscount = typeof productDiscounts.$inferInsert;
+export type SelectProductDiscount = typeof productDiscounts.$inferSelect;
