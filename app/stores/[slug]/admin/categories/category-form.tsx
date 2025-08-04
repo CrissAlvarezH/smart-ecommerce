@@ -209,23 +209,21 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <CategoryImageUpload
-              title="Category Image"
-              type="image"
-              currentImageUrl={formData.imageUrl}
-              onImageChange={(url) => setFormData({ ...formData, imageUrl: url || "" })}
-              onFileChange={(file) => setImageFile(file)}
-            />
-            
-            <CategoryImageUpload
-              title="Category Banner"
-              type="banner"
-              currentImageUrl={formData.bannerUrl}
-              onImageChange={(url) => setFormData({ ...formData, bannerUrl: url || "" })}
-              onFileChange={(file) => setBannerFile(file)}
-            />
-          </div>
+          <CategoryImageUpload
+            title="Category Image"
+            type="image"
+            currentImageUrl={formData.imageUrl}
+            onImageChange={(url) => setFormData({ ...formData, imageUrl: url || "" })}
+            onFileChange={(file) => setImageFile(file)}
+          />
+          
+          <CategoryImageUpload
+            title="Category Banner"
+            type="banner"
+            currentImageUrl={formData.bannerUrl}
+            onImageChange={(url) => setFormData({ ...formData, bannerUrl: url || "" })}
+            onFileChange={(file) => setBannerFile(file)}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="displayMode">Display Mode</Label>
