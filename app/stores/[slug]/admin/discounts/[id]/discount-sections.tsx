@@ -34,6 +34,7 @@ export function DiscountSections({ discount, storeId, storeSlug }: DiscountSecti
       <DiscountCollectionsSection
         discount={discount}
         storeId={storeId}
+        storeSlug={storeSlug}
         onCollectionsChange={handleCollectionsChange}
       />
       <DiscountProductsSection

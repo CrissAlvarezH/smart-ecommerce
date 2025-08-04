@@ -309,6 +309,9 @@ export const getAvailableCollectionsForDiscountAction = authenticatedAction
       parsedInput.storeId
     );
     
+    // Store the total count of collections in the store
+    const totalCollectionsInStore = allCollections.length;
+    
     // Get collections already in discount
     const discountCollections = await adminDiscountService.getDiscountCollections(
       parsedInput.discountId
@@ -329,5 +332,8 @@ export const getAvailableCollectionsForDiscountAction = authenticatedAction
     
     console.log(`✅ Fetched ${availableCollections.length} available collections for discount`);
     
-    return availableCollections;
+    return {
+      collections: availableCollections,
+      totalCollectionsInStore
+    };
   });

@@ -20,9 +20,10 @@ import {
   CommandList,
 } from "@/components/ui/command";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Loader2, Check } from "lucide-react";
+import { Plus, Loader2, Check, Package2 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "@/hooks/use-toast";
+import Link from "next/link";
 import {
   addCollectionToDiscountAction,
   getAvailableCollectionsForDiscountAction,
@@ -43,12 +44,14 @@ interface AddCollectionToDiscountDialogProps {
     name: string;
   };
   storeId: string;
+  storeSlug: string;
   onCollectionAdded?: () => void;
 }
 
 export function AddCollectionToDiscountDialog({
   discount,
   storeId,
+  storeSlug,
   onCollectionAdded,
 }: AddCollectionToDiscountDialogProps) {
   const [open, setOpen] = useState(false);
@@ -142,7 +145,8 @@ export function AddCollectionToDiscountDialog({
     setOpen(false);
   };
 
-  const collections = collectionsResult?.data || [];
+  const collections = collectionsResult?.data?.collections || [];
+  const totalCollectionsInStore = collectionsResult?.data?.totalCollectionsInStore || 0;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -172,7 +176,36 @@ export function AddCollectionToDiscountDialog({
                   <Loader2 className="h-6 w-6 animate-spin" />
                 </div>
               ) : collections.length === 0 ? (
-                <CommandEmpty>No collections available to add.</CommandEmpty>
+                <CommandEmpty>
+                  <div className="text-center py-6">
+                    <Package2 className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                    {search ? (
+                      <p>No collections found matching &quot;{search}&quot;.</p>
+                    ) : totalCollectionsInStore === 0 ? (
+                      <>
+                        <p>No collections in this store yet.</p>
+                        <p className="text-sm mt-2">Create some collections first to add them to discounts.</p>
+                        <Link href={`/stores/${storeSlug}/admin/collections/new`}>
+                          <Button className="mt-4" variant="outline">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create Collection
+                          </Button>
+                        </Link>
+                      </>
+                    ) : (
+                      <>
+                        <p>No available collections to add to this discount.</p>
+                        <p className="text-sm mt-2">All collections are already assigned to this discount.</p>
+                        <Link href={`/stores/${storeSlug}/admin/collections/new`}>
+                          <Button className="mt-4" variant="outline">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Create New Collection
+                          </Button>
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                </CommandEmpty>
               ) : (
                 <CommandGroup>
                   {collections.map((collection) => (

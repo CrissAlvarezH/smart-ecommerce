@@ -42,12 +42,14 @@ interface Collection {
 interface DiscountCollectionsSectionProps {
   discount: Discount;
   storeId: string;
+  storeSlug: string;
   onCollectionsChange?: () => void;
 }
 
 export function DiscountCollectionsSection({
   discount,
   storeId,
+  storeSlug,
   onCollectionsChange,
 }: DiscountCollectionsSectionProps) {
   const [collections, setCollections] = useState<Collection[]>([]);
@@ -122,6 +124,7 @@ export function DiscountCollectionsSection({
           <AddCollectionToDiscountDialog
             discount={discount}
             storeId={storeId}
+            storeSlug={storeSlug}
             onCollectionAdded={handleCollectionAdded}
           />
         </div>
@@ -142,6 +145,7 @@ export function DiscountCollectionsSection({
             <AddCollectionToDiscountDialog
               discount={discount}
               storeId={storeId}
+              storeSlug={storeSlug}
               onCollectionAdded={handleCollectionAdded}
             />
           </div>
