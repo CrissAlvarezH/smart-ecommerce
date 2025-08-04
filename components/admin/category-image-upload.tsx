@@ -22,6 +22,7 @@ export function CategoryImageUpload({
   className 
 }: CategoryImageUploadProps) {
   const [isUploading, setIsUploading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoadingExisting, setIsLoadingExisting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -121,17 +122,48 @@ export function CategoryImageUpload({
     }
   };
 
-  const handleRemoveImage = () => {
-    setPreviewUrl(null);
-    onImageChange(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+  const handleRemoveImage = async () => {
+    setIsDeleting(true);
     
-    toast({
-      title: "Image removed",
-      description: `${title} has been removed.`,
-    });
+    try {
+      // If there's a current image URL (not a blob preview), delete it from S3
+      if (currentImageUrl && !currentImageUrl.startsWith('blob:')) {
+        console.log("🗑️ Deleting image from S3:", currentImageUrl);
+        
+        const response = await fetch(`/api/categories/delete-image?imageUrl=${encodeURIComponent(currentImageUrl)}`, {
+          method: "DELETE",
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to delete image from S3");
+        }
+
+        console.log("✅ Image deleted from S3");
+      }
+
+      // Update UI state
+      setPreviewUrl(null);
+      onImageChange(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+      
+      toast({
+        title: "Image removed",
+        description: `${title} has been removed and deleted from storage.`,
+      });
+
+    } catch (error) {
+      console.error("Error removing image:", error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to remove image",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const handleUploadClick = () => {
@@ -168,16 +200,18 @@ export function CategoryImageUpload({
               size="sm"
               className="absolute top-2 right-2"
               onClick={handleRemoveImage}
-              disabled={isUploading}
+              disabled={isUploading || isDeleting}
             >
-              <X className="h-4 w-4" />
+              {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
             </Button>
           </div>
         ) : (
           <div
             className={`border-2 border-dashed border-gray-300 rounded-lg ${
               type === "banner" ? "h-32" : "h-48"
-            } flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 transition-colors`}
+            } flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 transition-colors ${
+              isDeleting ? "pointer-events-none opacity-50" : ""
+            }`}
             onClick={handleUploadClick}
           >
             {isUploading ? (
@@ -201,14 +235,14 @@ export function CategoryImageUpload({
           accept="image/jpeg,image/jpg,image/png,image/webp"
           onChange={handleFileSelect}
           className="hidden"
-          disabled={isUploading}
+          disabled={isUploading || isDeleting}
         />
 
         {!previewUrl && (
           <Button
             variant="outline"
             onClick={handleUploadClick}
-            disabled={isUploading}
+            disabled={isUploading || isDeleting}
             className="w-full"
           >
             <Upload className="h-4 w-4 mr-2" />

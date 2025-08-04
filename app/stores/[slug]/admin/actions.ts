@@ -75,16 +75,18 @@ export const updateCategoryAction = authenticatedAction
     // Delete old images from S3 if they're being replaced or removed
     const promises: Promise<void>[] = [];
     
-    // Check if imageUrl is being changed or removed
+    // Check if imageUrl is being changed (not just removed to null/empty)
     if (currentCategory.imageUrl && 
-        (parsedInput.imageUrl !== currentCategory.imageUrl)) {
+        parsedInput.imageUrl && 
+        parsedInput.imageUrl !== currentCategory.imageUrl) {
       console.log("🗑️ Deleting old category image from S3:", currentCategory.imageUrl);
       promises.push(deleteFileFromBucket(currentCategory.imageUrl));
     }
     
-    // Check if bannerUrl is being changed or removed
+    // Check if bannerUrl is being changed (not just removed to null/empty)
     if (currentCategory.bannerUrl && 
-        (parsedInput.bannerUrl !== currentCategory.bannerUrl)) {
+        parsedInput.bannerUrl && 
+        parsedInput.bannerUrl !== currentCategory.bannerUrl) {
       console.log("🗑️ Deleting old category banner from S3:", currentCategory.bannerUrl);
       promises.push(deleteFileFromBucket(currentCategory.bannerUrl));
     }
