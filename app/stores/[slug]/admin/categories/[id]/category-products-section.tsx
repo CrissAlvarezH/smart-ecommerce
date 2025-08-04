@@ -73,6 +73,7 @@ export function CategoryProductsSection({
           </CardTitle>
           <AddProductDialog 
             category={category} 
+            storeSlug={slug}
             onProductAdded={handleProductAdded}
           />
         </div>
@@ -88,6 +89,7 @@ export function CategoryProductsSection({
             <div className="flex gap-2 justify-center mt-4">
               <AddProductDialog 
                 category={category} 
+                storeSlug={slug}
                 onProductAdded={handleProductAdded}
               />
               <Link href={`/stores/${slug}/admin/products/new`}>

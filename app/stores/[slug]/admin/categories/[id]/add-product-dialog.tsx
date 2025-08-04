@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Package, Search, Plus, Loader2, ShoppingBag } from "lucide-react";
+import Link from "next/link";
 import { ClientPagination } from "@/components/client-pagination";
 import { SearchHighlight } from "@/components/admin/search-highlight";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +39,7 @@ interface Category {
   storeId: string;
 }
 
-export function AddProductDialog({ category, onProductAdded }: { category: Category, onProductAdded: () => void }) {
+export function AddProductDialog({ category, storeSlug, onProductAdded }: { category: Category, storeSlug: string, onProductAdded: () => void }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [isOpen, setIsOpen] = useState(false);
@@ -75,6 +76,7 @@ export function AddProductDialog({ category, onProductAdded }: { category: Categ
 
   const products = result?.data?.data || [];
   const totalCount = result?.data?.total || 0;
+  const totalProductsInStore = result?.data?.totalProductsInStore || 0;
   const totalPages = Math.ceil(totalCount / PRODUCTS_PER_PAGE);
 
   const handlePageChange = (newPage: number) => {
@@ -123,11 +125,31 @@ export function AddProductDialog({ category, onProductAdded }: { category: Categ
               </div>
             ) : products.length === 0 && !isLoading ? (
               <div className="text-center py-8 text-gray-500">
-                <ShoppingBag className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                <Package className="mx-auto h-12 w-12 text-gray-300 mb-4" />
                 {searchTerm ? (
                   <p>No products found matching &quot;{searchTerm}&quot;.</p>
+                ) : totalProductsInStore === 0 ? (
+                  <>
+                    <p>No products in this store yet.</p>
+                    <p className="text-sm mt-2">Create some products first to add them to categories.</p>
+                    <Link href={`/stores/${storeSlug}/admin/products/new`}>
+                      <Button className="mt-4" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Product
+                      </Button>
+                    </Link>
+                  </>
                 ) : (
-                  <p>All products are already in this category.</p>
+                  <>
+                    <p>No available products to add to this category.</p>
+                    <p className="text-sm mt-2">All products are already in this category.</p>
+                    <Link href={`/stores/${storeSlug}/admin/products/new`}>
+                      <Button className="mt-4" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create New Product
+                      </Button>
+                    </Link>
+                  </>
                 )}
               </div>
             ) : (
@@ -141,6 +163,7 @@ export function AddProductDialog({ category, onProductAdded }: { category: Categ
                     onProductAdded={() => {
                       fetchAvailableProducts({
                         categoryId: category.id,
+                        storeId: category.storeId,
                         search: searchTerm,
                         limit: PRODUCTS_PER_PAGE,
                         offset: (page - 1) * PRODUCTS_PER_PAGE

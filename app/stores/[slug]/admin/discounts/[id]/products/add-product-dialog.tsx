@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Package, Search, Plus, Loader2, ShoppingBag } from "lucide-react";
+import Link from "next/link";
 import { ClientPagination } from "@/components/client-pagination";
 import { SearchHighlight } from "@/components/admin/search-highlight";
 import { Badge } from "@/components/ui/badge";
@@ -46,10 +47,12 @@ interface Discount {
 export function AddProductToDiscountDialog({ 
   discount, 
   storeId,
+  storeSlug,
   onProductAdded 
 }: { 
   discount: Discount;
   storeId: string;
+  storeSlug: string;
   onProductAdded: () => void;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -85,8 +88,9 @@ export function AddProductToDiscountDialog({
     }
   }, [discount.id, searchTerm, page, isOpen, fetchAvailableProducts, storeId]);
 
-  const products = result?.data || [];
-  const totalCount = products.length;
+  const products = result?.data?.data || [];
+  const totalCount = result?.data?.total || 0;
+  const totalProductsInStore = result?.data?.totalProductsInStore || 0;
   const totalPages = Math.ceil(totalCount / PRODUCTS_PER_PAGE);
 
   // Paginate products client-side since we're getting all available products
@@ -140,11 +144,30 @@ export function AddProductToDiscountDialog({
               </div>
             ) : paginatedProducts.length === 0 && !isLoading ? (
               <div className="text-center py-8 text-gray-500">
-                <ShoppingBag className="mx-auto h-12 w-12 text-gray-300 mb-4" />
+                <Package className="mx-auto h-12 w-12 text-gray-300 mb-4" />
                 {searchTerm ? (
                   <p>No products found matching &quot;{searchTerm}&quot;.</p>
+                ) : totalProductsInStore === 0 ? (
+                  <>
+                    <p>No products in this store yet.</p>
+                    <p className="text-sm mt-2">Create some products first to add them to discounts.</p>
+                    <Link href={`/stores/${storeSlug}/admin/products/new`}>
+                      <Button className="mt-4" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create Product
+                      </Button>
+                    </Link>
+                  </>
                 ) : (
-                  <p>All products are already assigned to this discount.</p>
+                  <>
+                    <p>No available products to add to this discount.</p>
+                    <Link href={`/stores/${storeSlug}/admin/products/new`}>
+                      <Button className="mt-4" variant="outline">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Create New Product
+                      </Button>
+                    </Link>
+                  </>
                 )}
               </div>
             ) : (

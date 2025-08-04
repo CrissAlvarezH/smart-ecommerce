@@ -18,9 +18,10 @@ interface Discount {
 interface DiscountSectionsProps {
   discount: Discount;
   storeId: string;
+  storeSlug: string;
 }
 
-export function DiscountSections({ discount, storeId }: DiscountSectionsProps) {
+export function DiscountSections({ discount, storeId, storeSlug }: DiscountSectionsProps) {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const handleCollectionsChange = () => {
@@ -39,6 +40,7 @@ export function DiscountSections({ discount, storeId }: DiscountSectionsProps) {
         key={refreshKey}
         discount={discount}
         storeId={storeId}
+        storeSlug={storeSlug}
       />
     </div>
   );

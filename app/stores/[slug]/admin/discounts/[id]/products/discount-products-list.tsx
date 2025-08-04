@@ -106,6 +106,7 @@ export function DiscountProductsList({
           <AddProductToDiscountDialog
             discount={discount}
             storeId={storeId}
+            storeSlug={storeSlug}
             onProductAdded={refetchProducts}
           />
         </div>

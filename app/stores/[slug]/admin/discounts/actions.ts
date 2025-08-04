@@ -200,6 +200,14 @@ export const getAvailableProductsForDiscountAction = authenticatedAction
   .action(async ({ parsedInput }) => {
     console.log("🛍️ Fetching available products for discount:", parsedInput);
     
+    // Get all products count (filtered by store)
+    const allProductsCount = await adminProductService.getProductsCount(
+      parsedInput.search,
+      undefined,
+      undefined,
+      parsedInput.storeId
+    );
+    
     // Get all products (filtered by store)
     const allProducts = await adminProductService.getProducts(
       parsedInput.limit,
@@ -221,7 +229,11 @@ export const getAvailableProductsForDiscountAction = authenticatedAction
     
     console.log(`✅ Fetched ${availableProducts.length} available products for discount`);
     
-    return availableProducts;
+    return {
+      data: availableProducts,
+      total: availableProducts.length,
+      totalProductsInStore: allProductsCount
+    };
   });
 
 const addCollectionToDiscountSchema = z.object({

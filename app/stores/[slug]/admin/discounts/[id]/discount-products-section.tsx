@@ -43,11 +43,13 @@ interface Product {
 interface DiscountProductsSectionProps {
   discount: Discount;
   storeId: string;
+  storeSlug: string;
 }
 
 export function DiscountProductsSection({
   discount,
   storeId,
+  storeSlug,
 }: DiscountProductsSectionProps) {
   const [products, setProducts] = useState<Product[]>([]);
   
@@ -115,6 +117,7 @@ export function DiscountProductsSection({
           <AddProductToDiscountDialog
             discount={discount}
             storeId={storeId}
+            storeSlug={storeSlug}
             onProductAdded={refetchProducts}
           />
         </div>
@@ -135,6 +138,7 @@ export function DiscountProductsSection({
             <AddProductToDiscountDialog
               discount={discount}
               storeId={storeId}
+              storeSlug={storeSlug}
               onProductAdded={refetchProducts}
             />
           </div>

@@ -77,6 +77,7 @@ export const getAvailableProductsForCategoryAction = authenticatedAction
     return {
       data: paginatedProducts,
       total: totalAvailableCount,
+      totalProductsInStore: allProductsCount,
       hasMore: parsedInput.offset + paginatedProducts.length < totalAvailableCount
     };
   });

@@ -104,6 +104,7 @@ export default async function DiscountPage({ params }: DiscountPageProps) {
       <DiscountSections
         discount={discount}
         storeId={store.id}
+        storeSlug={slug}
       />
     </div>
   );
