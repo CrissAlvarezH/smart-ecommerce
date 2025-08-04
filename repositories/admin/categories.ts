@@ -7,6 +7,8 @@ export interface CreateCategoryData {
   slug: string;
   description?: string;
   imageUrl?: string;
+  bannerUrl?: string;
+  displayMode?: "banner" | "image" | "products";
   parentId?: string;
   storeId: string;
   isActive?: boolean;

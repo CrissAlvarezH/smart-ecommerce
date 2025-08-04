@@ -33,6 +33,8 @@ export const categories: any = pgTable("categories", {
   slug: text("slug").notNull(),
   description: text("description"),
   imageUrl: text("image_url"),
+  bannerUrl: text("banner_url"),
+  displayMode: text("display_mode").notNull().default("products"), // "banner", "image", "products"
   parentId: uuid("parent_id").references((): any => categories.id),
   storeId: uuid("store_id").notNull().references(() => stores.id),
   isActive: boolean("is_active").notNull().default(true),

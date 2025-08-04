@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAction } from "next-safe-action/hooks";
 import { createCategoryAction, updateCategoryAction } from "../actions";
 import { toast } from "@/hooks/use-toast";
@@ -18,6 +19,8 @@ interface Category {
   slug: string;
   description: string | null;
   imageUrl: string | null;
+  bannerUrl: string | null;
+  displayMode: string;
   parentId: string | null;
   isActive: boolean;
   createdAt: Date;
@@ -38,6 +41,8 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
     slug: category?.slug || "",
     description: category?.description || "",
     imageUrl: category?.imageUrl || "",
+    bannerUrl: category?.bannerUrl || "",
+    displayMode: category?.displayMode || "products",
     isActive: category?.isActive ?? true,
   });
 
@@ -169,6 +174,40 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
             />
             <p className="text-sm text-gray-500">
               Optional image to represent this category.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="bannerUrl">Banner URL</Label>
+            <Input
+              id="bannerUrl"
+              type="url"
+              value={formData.bannerUrl}
+              onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
+              placeholder="https://example.com/banner.jpg"
+            />
+            <p className="text-sm text-gray-500">
+              Optional banner image for category display.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="displayMode">Display Mode</Label>
+            <Select
+              value={formData.displayMode}
+              onValueChange={(value) => setFormData({ ...formData, displayMode: value })}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select display mode" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="products">Products List</SelectItem>
+                <SelectItem value="image">Image Display</SelectItem>
+                <SelectItem value="banner">Banner Display</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-sm text-gray-500">
+              How this category should be displayed on the website.
             </p>
           </div>
 

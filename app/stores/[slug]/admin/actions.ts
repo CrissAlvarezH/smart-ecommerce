@@ -13,6 +13,8 @@ const createCategorySchema = z.object({
   slug: z.string().min(1, "Slug is required"),
   description: z.string().optional(),
   imageUrl: z.string().optional(),
+  bannerUrl: z.string().optional(),
+  displayMode: z.enum(["banner", "image", "products"]).default("products"),
   parentId: z.string().optional(),
   storeId: z.string().min(1, "Store ID is required"),
   isActive: z.boolean().default(true),

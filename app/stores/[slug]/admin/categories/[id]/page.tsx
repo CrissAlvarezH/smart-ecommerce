@@ -110,6 +110,17 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
                   </Badge>
                 </div>
               </div>
+
+              <div>
+                <label className="text-sm font-medium text-gray-500">Display Mode</label>
+                <div className="mt-1">
+                  <Badge variant="outline">
+                    {category.displayMode === "banner" && "Banner Display"}
+                    {category.displayMode === "image" && "Image Display"}
+                    {category.displayMode === "products" && "Products List"}
+                  </Badge>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -118,6 +129,32 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
                   <label className="text-sm font-medium text-gray-500">Description</label>
                   <div className="text-sm text-gray-700 bg-gray-50 p-3 rounded">
                     {category.description}
+                  </div>
+                </div>
+              )}
+
+              {category.imageUrl && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Category Image</label>
+                  <div className="mt-2">
+                    <img 
+                      src={category.imageUrl} 
+                      alt={category.name}
+                      className="w-32 h-32 object-cover rounded-lg border"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {category.bannerUrl && (
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Category Banner</label>
+                  <div className="mt-2">
+                    <img 
+                      src={category.bannerUrl} 
+                      alt={`${category.name} banner`}
+                      className="w-full h-32 object-cover rounded-lg border"
+                    />
                   </div>
                 </div>
               )}
