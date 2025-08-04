@@ -36,6 +36,7 @@ interface Product {
   createdAt: Date;
   updatedAt: Date;
   firstImageUrl: string | null;
+  storeId: string;
 }
 
 interface ProductsClientProps {
@@ -59,16 +60,16 @@ export function ProductsClient({ products, searchTerm, slug, deleteAction }: Pro
     onError: ({ error }) => {
       toast({
         title: "Error",
-        description: error.serverError || "Failed to delete product",
+        description: String(error.serverError || "Failed to delete product"),
         variant: "destructive",
       });
       setDeletingId(null);
     },
   });
 
-  const handleDelete = (productId: string) => {
-    setDeletingId(productId);
-    deleteProduct({ id: productId });
+  const handleDelete = (product: Product) => {
+    setDeletingId(product.id);
+    deleteProduct({ id: product.id, storeId: product.storeId });
   };
 
   return (
@@ -159,7 +160,7 @@ export function ProductsClient({ products, searchTerm, slug, deleteAction }: Pro
                     <Button variant="outline">Cancel</Button>
                   </DialogClose>
                   <Button
-                    onClick={() => handleDelete(product.id)}
+                    onClick={() => handleDelete(product)}
                     className="bg-red-600 hover:bg-red-700"
                     disabled={isDeleting && deletingId === product.id}
                   >

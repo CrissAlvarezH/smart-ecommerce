@@ -226,12 +226,18 @@ export const updateProductAction = authenticatedAction
 export const deleteProductAction = authenticatedAction
   .inputSchema(deleteProductSchema)
   .action(async ({ parsedInput }) => {
-    console.log("🗑️ Deleting product:", parsedInput.id);
-    await productsRepo.deleteProduct(parsedInput.id);
-    console.log("✅ Product deleted");
+    console.log("🗑️ Deleting product:", parsedInput.id, "from store:", parsedInput.storeId);
     
-    revalidatePath("/", "layout");
-    return { success: true };
+    try {
+      await productsRepo.deleteProduct(parsedInput.id);
+      console.log("✅ Product deleted successfully");
+      
+      revalidatePath("/", "layout");
+      return { success: true };
+    } catch (error) {
+      console.error("❌ Error deleting product:", error);
+      throw new Error(`Failed to delete product: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
   });
 
 export const getProductsPageDataAction = authenticatedAction

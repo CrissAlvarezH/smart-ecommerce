@@ -33,6 +33,7 @@ interface Product {
   isFeatured: boolean;
   createdAt: Date;
   updatedAt: Date;
+  storeId: string;
 }
 
 interface ProductDeleteButtonProps {
@@ -56,14 +57,16 @@ export function ProductDeleteButton({ product, deleteAction, redirectPath = "/ad
     onError: ({ error }) => {
       toast({
         title: "Error",
-        description: error.serverError || "Failed to delete product",
+        description: String(error.serverError || "Failed to delete product"),
         variant: "destructive",
       });
     },
   });
 
   const handleDelete = () => {
-    deleteProduct({ id: product.id });
+    console.log('product.id', product.id);
+    console.log('product.storeId', product.storeId);
+    deleteProduct({ id: product.id, storeId: product.storeId });
   };
 
   return (
