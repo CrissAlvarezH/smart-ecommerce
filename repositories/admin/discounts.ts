@@ -1,6 +1,6 @@
 import { db } from "@/db";
-import { discounts, productDiscounts, products } from "@/db/schemas";
-import { eq, desc, ilike, and, sql, lt, gte } from "drizzle-orm";
+import { discounts, productDiscounts, products, collectionDiscounts, collections, productCollections } from "@/db/schemas";
+import { eq, desc, ilike, and, sql, lt, gte, inArray } from "drizzle-orm";
 
 export interface CreateDiscountData {
   name: string;
@@ -205,4 +205,68 @@ export async function getActiveDiscountsForProducts(productIds: string[]) {
       eq(discounts.isActive, true),
       gte(discounts.endDate, new Date())
     ));
+}
+
+export async function addCollectionToDiscount(discountId: string, collectionId: string) {
+  const result = await db
+    .insert(collectionDiscounts)
+    .values({
+      discountId,
+      collectionId,
+    })
+    .returning();
+
+  return result[0];
+}
+
+export async function removeCollectionFromDiscount(discountId: string, collectionId: string) {
+  await db
+    .delete(collectionDiscounts)
+    .where(and(
+      eq(collectionDiscounts.discountId, discountId),
+      eq(collectionDiscounts.collectionId, collectionId)
+    ));
+}
+
+export async function getDiscountCollections(discountId: string) {
+  return await db
+    .select({
+      id: collections.id,
+      name: collections.name,
+      slug: collections.slug,
+      description: collections.description,
+      isActive: collections.isActive,
+    })
+    .from(collectionDiscounts)
+    .innerJoin(collections, eq(collectionDiscounts.collectionId, collections.id))
+    .where(eq(collectionDiscounts.discountId, discountId));
+}
+
+export async function getProductsFromDiscountedCollections(discountId: string) {
+  return await db
+    .selectDistinct({
+      id: products.id,
+      name: products.name,
+      slug: products.slug,
+      price: products.price,
+      sku: products.sku,
+      isActive: products.isActive,
+    })
+    .from(collectionDiscounts)
+    .innerJoin(productCollections, eq(collectionDiscounts.collectionId, productCollections.collectionId))
+    .innerJoin(products, eq(productCollections.productId, products.id))
+    .where(eq(collectionDiscounts.discountId, discountId));
+}
+
+export async function getAllDiscountProducts(discountId: string) {
+  const directProducts = await getDiscountProducts(discountId);
+  const collectionProducts = await getProductsFromDiscountedCollections(discountId);
+  
+  // Combine and deduplicate products
+  const allProducts = [...directProducts, ...collectionProducts];
+  const uniqueProducts = Array.from(
+    new Map(allProducts.map(product => [product.id, product])).values()
+  );
+  
+  return uniqueProducts;
 }

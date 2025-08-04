@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getDiscountByIdAction, getDiscountProductsAction } from "../actions";
 import { notFound } from "next/navigation";
 import { storeService } from "@/services/stores";
-import { DiscountProductsSection } from "./discount-products-section";
+import { DiscountSections } from "./discount-sections";
 import { BackButton } from "@/components/ui/back-button";
 
 interface DiscountPageProps {
@@ -101,7 +101,7 @@ export default async function DiscountPage({ params }: DiscountPageProps) {
         </Card>
       </div>
 
-      <DiscountProductsSection
+      <DiscountSections
         discount={discount}
         storeId={store.id}
       />

@@ -130,7 +130,16 @@ export const productDiscounts = pgTable("product_discounts", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const collectionDiscounts = pgTable("collection_discounts", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  collectionId: uuid("collection_id").notNull().references(() => collections.id, { onDelete: "cascade" }),
+  discountId: uuid("discount_id").notNull().references(() => discounts.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export type InsertDiscount = typeof discounts.$inferInsert;
 export type SelectDiscount = typeof discounts.$inferSelect;
 export type InsertProductDiscount = typeof productDiscounts.$inferInsert;
 export type SelectProductDiscount = typeof productDiscounts.$inferSelect;
+export type InsertCollectionDiscount = typeof collectionDiscounts.$inferInsert;
+export type SelectCollectionDiscount = typeof collectionDiscounts.$inferSelect;

@@ -12,10 +12,13 @@ export {
   cartItems,
   discounts,
   productDiscounts,
+  collectionDiscounts,
   type InsertStore,
   type SelectStore,
   type InsertDiscount,
   type SelectDiscount,
   type InsertProductDiscount,
-  type SelectProductDiscount
+  type SelectProductDiscount,
+  type InsertCollectionDiscount,
+  type SelectCollectionDiscount
 } from "./ecommerce";

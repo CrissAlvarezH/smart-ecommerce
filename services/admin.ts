@@ -55,4 +55,9 @@ export const adminDiscountService = {
   getDiscountProducts: discountsRepo.getDiscountProducts,
   getProductDiscounts: discountsRepo.getProductDiscounts,
   getActiveDiscountsForProducts: discountsRepo.getActiveDiscountsForProducts,
+  addCollectionToDiscount: discountsRepo.addCollectionToDiscount,
+  removeCollectionFromDiscount: discountsRepo.removeCollectionFromDiscount,
+  getDiscountCollections: discountsRepo.getDiscountCollections,
+  getProductsFromDiscountedCollections: discountsRepo.getProductsFromDiscountedCollections,
+  getAllDiscountProducts: discountsRepo.getAllDiscountProducts,
 };

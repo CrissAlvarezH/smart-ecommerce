@@ -3,7 +3,7 @@
 import { authenticatedAction } from "@/lib/server-actions";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { adminDiscountService, adminProductService } from "@/services/admin";
+import { adminDiscountService, adminProductService, adminCollectionService } from "@/services/admin";
 import { PublicError } from "@/lib/errors";
 
 const createDiscountSchema = z.object({
@@ -181,7 +181,7 @@ export const removeProductFromDiscountAction = authenticatedAction
 export const getDiscountProductsAction = authenticatedAction
   .inputSchema(getDiscountProductsSchema)
   .action(async ({ parsedInput }) => {
-    const products = await adminDiscountService.getDiscountProducts(
+    const products = await adminDiscountService.getAllDiscountProducts(
       parsedInput.discountId
     );
     
@@ -222,4 +222,100 @@ export const getAvailableProductsForDiscountAction = authenticatedAction
     console.log(`✅ Fetched ${availableProducts.length} available products for discount`);
     
     return availableProducts;
+  });
+
+const addCollectionToDiscountSchema = z.object({
+  discountId: z.string().min(1, "Discount ID is required"),
+  collectionId: z.string().min(1, "Collection ID is required"),
+});
+
+const removeCollectionFromDiscountSchema = z.object({
+  discountId: z.string().min(1, "Discount ID is required"),
+  collectionId: z.string().min(1, "Collection ID is required"),
+});
+
+const getDiscountCollectionsSchema = z.object({
+  discountId: z.string().min(1, "Discount ID is required"),
+});
+
+export const addCollectionToDiscountAction = authenticatedAction
+  .inputSchema(addCollectionToDiscountSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("➕ Adding collection to discount:", parsedInput);
+    
+    const result = await adminDiscountService.addCollectionToDiscount(
+      parsedInput.discountId,
+      parsedInput.collectionId
+    );
+    
+    console.log("✅ Collection added to discount");
+    
+    revalidatePath("/", "layout");
+    return result;
+  });
+
+export const removeCollectionFromDiscountAction = authenticatedAction
+  .inputSchema(removeCollectionFromDiscountSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("➖ Removing collection from discount:", parsedInput);
+    
+    await adminDiscountService.removeCollectionFromDiscount(
+      parsedInput.discountId,
+      parsedInput.collectionId
+    );
+    
+    console.log("✅ Collection removed from discount");
+    
+    revalidatePath("/", "layout");
+    return { success: true };
+  });
+
+export const getDiscountCollectionsAction = authenticatedAction
+  .inputSchema(getDiscountCollectionsSchema)
+  .action(async ({ parsedInput }) => {
+    const collections = await adminDiscountService.getDiscountCollections(
+      parsedInput.discountId
+    );
+    
+    return collections;
+  });
+
+const getAvailableCollectionsForDiscountSchema = z.object({
+  discountId: z.string().min(1, "Discount ID is required"),
+  storeId: z.string().min(1, "Store ID is required"),
+  search: z.string().optional(),
+  limit: z.number().int().positive().default(100),
+});
+
+export const getAvailableCollectionsForDiscountAction = authenticatedAction
+  .inputSchema(getAvailableCollectionsForDiscountSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("📦 Fetching available collections for discount:", parsedInput);
+    
+    // Get all active collections for the store
+    const allCollections = await adminCollectionService.getActiveCollections(
+      parsedInput.storeId
+    );
+    
+    // Get collections already in discount
+    const discountCollections = await adminDiscountService.getDiscountCollections(
+      parsedInput.discountId
+    );
+    
+    // Filter out collections that are already in the discount
+    const discountCollectionIds = new Set(discountCollections.map(c => c.id));
+    let availableCollections = allCollections.filter(collection => !discountCollectionIds.has(collection.id));
+    
+    // Apply search filter if provided
+    if (parsedInput.search) {
+      const searchLower = parsedInput.search.toLowerCase();
+      availableCollections = availableCollections.filter(collection => 
+        collection.name.toLowerCase().includes(searchLower) ||
+        (collection.description && collection.description.toLowerCase().includes(searchLower))
+      );
+    }
+    
+    console.log(`✅ Fetched ${availableCollections.length} available collections for discount`);
+    
+    return availableCollections;
   });
