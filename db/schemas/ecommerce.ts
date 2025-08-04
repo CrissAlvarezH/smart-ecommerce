@@ -89,6 +89,16 @@ export const productImages = pgTable("product_images", {
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
+export const categoryImages = pgTable("category_images", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  categoryId: uuid("category_id").notNull().references(() => categories.id, { onDelete: "cascade" }),
+  url: text("url").notNull(),
+  altText: text("alt_text"),
+  position: integer("position").notNull().default(0),
+  isMain: boolean("is_main").notNull().default(false),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const productCollections = pgTable("product_collections", {
   id: uuid("id").primaryKey().defaultRandom(),
   productId: uuid("product_id").notNull().references(() => products.id, { onDelete: "cascade" }),

@@ -5,6 +5,7 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import * as categoriesRepo from "@/repositories/admin/categories";
 import * as collectionsRepo from "@/repositories/admin/collections";
+import * as categoryImagesRepo from "@/repositories/admin/category-images";
 import { PublicError } from "@/lib/errors";
 import { deleteFileFromBucket } from "@/lib/files";
 
@@ -47,7 +48,34 @@ const deleteCollectionSchema = z.object({
   id: z.string().min(1, "ID is required"),
 });
 
+// Category Image Schemas
+const createCategoryImageSchema = z.object({
+  categoryId: z.string().min(1, "Category ID is required"),
+  url: z.string().min(1, "URL is required"),
+  altText: z.string().optional(),
+  position: z.number().int().min(0),
+  isMain: z.boolean().default(false),
+});
 
+const updateCategoryImageSchema = z.object({
+  id: z.string().min(1, "ID is required"),
+  altText: z.string().optional(),
+  position: z.number().int().min(0).optional(),
+  isMain: z.boolean().optional(),
+});
+
+const deleteCategoryImageSchema = z.object({
+  id: z.string().min(1, "ID is required"),
+});
+
+const getCategoryImagesSchema = z.object({
+  categoryId: z.string().min(1, "Category ID is required"),
+});
+
+const reorderCategoryImagesSchema = z.object({
+  categoryId: z.string().min(1, "Category ID is required"),
+  imageIds: z.array(z.string()),
+});
 
 // Category Actions
 export const createCategoryAction = authenticatedAction
@@ -194,5 +222,80 @@ export const deleteCollectionAction = authenticatedAction
     return { success: true };
   });
 
+// Category Image Actions
+export const addCategoryImageAction = authenticatedAction
+  .inputSchema(createCategoryImageSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("📸 Adding category image:", parsedInput);
+    
+    // If this is marked as main, unset all other images as main for this category
+    if (parsedInput.isMain) {
+      await categoryImagesRepo.setMainCategoryImage(parsedInput.categoryId, "");
+    }
+    
+    const image = await categoryImagesRepo.createCategoryImage(parsedInput);
+    console.log("✅ Category image added:", image.id);
+    
+    revalidatePath("/", "layout");
+    return image;
+  });
+
+export const deleteCategoryImageAction = authenticatedAction
+  .inputSchema(deleteCategoryImageSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("🗑️ Deleting category image:", parsedInput.id);
+    
+    // Get image details before deletion for S3 cleanup
+    const image = await categoryImagesRepo.getCategoryImageById(parsedInput.id);
+    if (!image) {
+      throw new PublicError("Image not found");
+    }
+    
+    // Delete from database first
+    await categoryImagesRepo.deleteCategoryImage(parsedInput.id);
+    
+    // Delete from S3 (don't wait for completion)
+    deleteFileFromBucket(image.url).catch(error => {
+      console.error("Failed to delete image from S3:", error);
+    });
+    
+    console.log("✅ Category image deleted");
+    
+    revalidatePath("/", "layout");
+    return { success: true };
+  });
+
+export const getCategoryImagesAction = authenticatedAction
+  .inputSchema(getCategoryImagesSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("📸 Fetching category images:", parsedInput.categoryId);
+    const images = await categoryImagesRepo.getCategoryImages(parsedInput.categoryId);
+    console.log("✅ Found category images:", images.length, images);
+    
+    // Ensure we always return an array
+    return { data: Array.isArray(images) ? images : [] };
+  });
+
+export const updateCategoryImageAction = authenticatedAction
+  .inputSchema(updateCategoryImageSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("📝 Updating category image:", parsedInput.id);
+    const image = await categoryImagesRepo.updateCategoryImage(parsedInput);
+    console.log("✅ Category image updated:", image.id);
+    
+    revalidatePath("/", "layout");
+    return image;
+  });
+
+export const reorderCategoryImagesAction = authenticatedAction
+  .inputSchema(reorderCategoryImagesSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("↕️ Reordering category images:", parsedInput);
+    await categoryImagesRepo.reorderCategoryImages(parsedInput.categoryId, parsedInput.imageIds);
+    console.log("✅ Category images reordered");
+    
+    revalidatePath("/", "layout");
+    return { success: true };
+  });
 
 

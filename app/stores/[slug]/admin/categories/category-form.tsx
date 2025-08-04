@@ -10,9 +10,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAction } from "next-safe-action/hooks";
-import { createCategoryAction, updateCategoryAction } from "../actions";
+import { 
+  createCategoryAction, 
+  updateCategoryAction,
+  addCategoryImageAction,
+  deleteCategoryImageAction,
+  getCategoryImagesAction,
+  updateCategoryImageAction,
+  reorderCategoryImagesAction
+} from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { CategoryImageUpload } from "@/components/admin/category-image-upload";
+import { CategoryImageManager } from "@/components/admin/category-image-manager";
 
 interface Category {
   id: string;
@@ -41,13 +50,12 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
     name: category?.name || "",
     slug: category?.slug || "",
     description: category?.description || "",
-    imageUrl: category?.imageUrl || "",
     bannerUrl: category?.bannerUrl || "",
     displayMode: category?.displayMode || "products",
     isActive: category?.isActive ?? true,
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [bannerFile, setBannerFile] = useState<File | null>(null);
+  const [mainImageId, setMainImageId] = useState<string | null>(null);
 
   const { execute: createCategory, isExecuting: isCreating } = useAction(createCategoryAction, {
     onSuccess: () => {
@@ -127,12 +135,7 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
       // Prepare the submission data
       const submissionData = { ...formData };
 
-      // Upload new files if present
-      if (imageFile) {
-        console.log("📤 Uploading category image...");
-        submissionData.imageUrl = await uploadFile(imageFile, "image");
-      }
-
+      // Upload banner file if present
       if (bannerFile) {
         console.log("📤 Uploading category banner...");
         submissionData.bannerUrl = await uploadFile(bannerFile, "banner");
@@ -145,6 +148,8 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
           ...submissionData,
         });
       } else {
+        // For new categories, we'll handle multi-image upload after category creation
+        // The CategoryImageManager will handle local images during creation
         createCategory({
           ...submissionData,
           storeId,
@@ -217,12 +222,17 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
             onFileChange={(file) => setBannerFile(file)}
           />
           
-          <CategoryImageUpload
-            title="Category Image"
-            type="image"
-            currentImageUrl={formData.imageUrl}
-            onImageChange={(url) => setFormData({ ...formData, imageUrl: url || "" })}
-            onFileChange={(file) => setImageFile(file)}
+          <CategoryImageManager
+            categoryId={category?.id}
+            isEditing={isEditing}
+            onMainImageChange={setMainImageId}
+            actions={isEditing ? {
+              addCategoryImageAction,
+              deleteCategoryImageAction,
+              getCategoryImagesAction,
+              updateCategoryImageAction,
+              reorderCategoryImagesAction,
+            } : undefined}
           />
 
           <div className="space-y-2">

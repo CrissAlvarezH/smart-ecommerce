@@ -4,6 +4,7 @@ export { creditPackages, creditTransactions } from "./credits";
 export { 
   stores,
   categories, 
+  categoryImages,
   collections, 
   products, 
   productImages, 

@@ -134,6 +134,13 @@
       "when": 1754324793571,
       "tag": "0018_modern_the_initiative",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1754337170222,
+      "tag": "0019_nostalgic_karma",
+      "breakpoints": true
     }
   ]
 }
