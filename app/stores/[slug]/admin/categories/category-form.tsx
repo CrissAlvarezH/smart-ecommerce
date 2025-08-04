@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,21 +57,41 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [mainImageId, setMainImageId] = useState<string | null>(null);
   const [localImages, setLocalImages] = useState<{ file: File; preview: string; id: string; altText: string; isMain: boolean }[]>([]);
+  const localImagesRef = useRef(localImages);
+
+  // Debug effect to track localImages changes
+  useEffect(() => {
+    console.log("🔍 Debug - CategoryForm localImages state changed:", localImages);
+    console.log("🔍 Debug - CategoryForm localImages length:", localImages.length);
+    localImagesRef.current = localImages;
+  }, [localImages]);
+
+  // Debug callback for local images change
+  const handleLocalImagesChange = useCallback((images: { file: File; preview: string; id: string; altText: string; isMain: boolean }[]) => {
+    console.log("🔍 Debug - CategoryForm received local images:", images);
+    console.log("🔍 Debug - CategoryForm images count:", images.length);
+    setLocalImages(images);
+  }, []);
 
   const { executeAsync: addImage } = useAction(addCategoryImageAction);
 
   const { execute: createCategory, isExecuting: isCreating } = useAction(createCategoryAction, {
     onSuccess: async (result) => {
       console.log("✅ Category created:", result.data);
+      console.log("🔍 Debug - localImages state:", localImages);
+      console.log("🔍 Debug - localImagesRef.current:", localImagesRef.current);
+      console.log("🔍 Debug - localImages length:", localImages.length);
+      console.log("🔍 Debug - localImagesRef length:", localImagesRef.current.length);
       const createdCategory = result.data;
       
-      // Upload local images after category creation
-      if (localImages.length > 0) {
-        console.log(`📸 Uploading ${localImages.length} images for category ${createdCategory.id}`);
+      // Upload local images after category creation - use ref to get current value
+      const currentLocalImages = localImagesRef.current;
+      if (currentLocalImages.length > 0) {
+        console.log(`📸 Uploading ${currentLocalImages.length} images for category ${createdCategory.id}`);
         
         try {
-          for (let i = 0; i < localImages.length; i++) {
-            const localImage = localImages[i];
+          for (let i = 0; i < currentLocalImages.length; i++) {
+            const localImage = currentLocalImages[i];
             
             // Upload file to S3
             const uploadedUrl = await uploadFile(localImage.file, "image");
@@ -90,7 +110,7 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
           
           toast({
             title: "Category created",
-            description: `Category and ${localImages.length} images have been successfully created.`,
+            description: `Category and ${currentLocalImages.length} images have been successfully created.`,
           });
         } catch (error) {
           console.error("❌ Error uploading images:", error);
@@ -119,11 +139,57 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
   });
 
   const { execute: updateCategory, isExecuting: isUpdating } = useAction(updateCategoryAction, {
-    onSuccess: () => {
-      toast({
-        title: "Category updated",
-        description: "The category has been successfully updated.",
-      });
+    onSuccess: async (result) => {
+      console.log("✅ Category updated:", result.data);
+      const updatedCategory = result.data;
+      console.log('🔍 Debug - localImages state:', localImages);
+      console.log('🔍 Debug - localImagesRef.current:', localImagesRef.current);
+      console.log('🔍 Debug - localImages detailed:', localImages.map(img => ({ id: img.id, altText: img.altText })));
+      console.log('🔍 Debug - localImagesRef detailed:', localImagesRef.current.map(img => ({ id: img.id, altText: img.altText })));
+      
+      // Upload local images after category update - use ref to get current value
+      const currentLocalImages = localImagesRef.current;
+      if (currentLocalImages.length > 0) {
+        console.log(`📸 Uploading ${currentLocalImages.length} new images for category ${updatedCategory.id}`);
+        
+        try {
+          for (let i = 0; i < currentLocalImages.length; i++) {
+            const localImage = currentLocalImages[i];
+            
+            // Upload file to S3
+            const uploadedUrl = await uploadFile(localImage.file, "image");
+            
+            // Add image to category using server action
+            await addImage({
+              categoryId: updatedCategory.id,
+              url: uploadedUrl,
+              altText: localImage.altText,
+              position: i,
+              isMain: localImage.isMain,
+            });
+            
+            console.log(`✅ Image ${i + 1} uploaded and linked to category`);
+          }
+          
+          toast({
+            title: "Category updated",
+            description: `Category and ${currentLocalImages.length} new images have been successfully updated.`,
+          });
+        } catch (error) {
+          console.error("❌ Error uploading new images:", error);
+          toast({
+            title: "Category updated",
+            description: "Category updated but some new images failed to upload. You can add them later.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Category updated",
+          description: "The category has been successfully updated.",
+        });
+      }
+      
       router.push(`/stores/${slug}/admin/categories`);
     },
     onError: (error) => {
@@ -174,6 +240,10 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    console.log("🔍 Debug - Form submission started");
+    console.log("🔍 Debug - localImages at submission:", localImages);
+    console.log("🔍 Debug - localImages length at submission:", localImages.length);
 
     try {
       // Prepare the submission data
@@ -270,7 +340,7 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
             categoryId={category?.id}
             isEditing={isEditing}
             onMainImageChange={setMainImageId}
-            onLocalImagesChange={setLocalImages}
+            onLocalImagesChange={handleLocalImagesChange}
             actions={isEditing ? {
               addCategoryImageAction,
               deleteCategoryImageAction,

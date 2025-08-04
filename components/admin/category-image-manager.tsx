@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,7 +91,7 @@ export function CategoryImageManager({
       console.error("❌ Fetch images error:", error);
       toast({
         title: "Error",
-        description: error.error?.serverError || "Failed to load images",
+        description: String(error.error?.serverError || "Failed to load images"),
         variant: "destructive",
       });
     },
@@ -111,7 +112,7 @@ export function CategoryImageManager({
       if (!actions?.addCategoryImageAction) return;
       toast({
         title: "Error",
-        description: error.error?.serverError || "Failed to add image",
+        description: String(error.error?.serverError || "Failed to add image"),
         variant: "destructive",
       });
     },
@@ -132,7 +133,7 @@ export function CategoryImageManager({
       if (!actions?.deleteCategoryImageAction) return;
       toast({
         title: "Error",
-        description: error.error?.serverError || "Failed to delete image",
+        description: String(error.error?.serverError || "Failed to delete image"),
         variant: "destructive",
       });
     },
@@ -155,7 +156,7 @@ export function CategoryImageManager({
       if (!actions?.updateCategoryImageAction) return;
       toast({
         title: "Error",
-        description: error.error?.serverError || "Failed to update image",
+        description: String(error.error?.serverError || "Failed to update image"),
         variant: "destructive",
       });
     },
@@ -173,7 +174,7 @@ export function CategoryImageManager({
       if (!actions?.reorderCategoryImagesAction) return;
       toast({
         title: "Error",
-        description: error.error?.serverError || "Failed to reorder images",
+        description: String(error.error?.serverError || "Failed to reorder images"),
         variant: "destructive",
       });
       if (categoryId) {
@@ -188,11 +189,15 @@ export function CategoryImageManager({
       console.log("🔄 Loading category images for categoryId:", categoryId);
       fetchImages.execute({ categoryId });
     }
-  }, [categoryId, isEditing, actions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [categoryId, isEditing]);
 
   // Notify parent when local images change
   useEffect(() => {
+    console.log("🔍 Debug - useEffect triggered, localImages:", localImages);
+    console.log("🔍 Debug - onLocalImagesChange exists:", !!onLocalImagesChange);
     if (onLocalImagesChange) {
+      console.log("🔍 Debug - Calling onLocalImagesChange from useEffect");
       onLocalImagesChange(localImages);
     }
   }, [localImages, onLocalImagesChange]);
@@ -223,71 +228,35 @@ export function CategoryImageManager({
       return;
     }
 
-    if (isEditing && categoryId && addImage) {
-      // For existing categories, upload immediately
-      setIsUploading(true);
-      try {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("type", "image");
+    // Always store images locally - no immediate uploads
+    const preview = URL.createObjectURL(file);
+    const id = `local-${Date.now()}-${Math.random()}`;
+    const isMain = (images.length + localImages.length) === 0; // First image is main by default
+    
+    const newLocalImage = {
+      file,
+      preview,
+      id,
+      altText: file.name,
+      isMain,
+    };
 
-        const response = await fetch("/api/categories/upload", {
-          method: "POST",
-          body: formData,
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-          const position = images.length;
-          const isMain = images.length === 0; // First image is main by default
-          
-          addImage.execute({
-            categoryId,
-            url: result.url,
-            altText: file.name,
-            position,
-            isMain,
-          });
-        } else {
-          throw new Error(result.error || "Upload failed");
-        }
-      } catch (error) {
-        toast({
-          title: "Upload failed",
-          description: error instanceof Error ? error.message : "Failed to upload image",
-          variant: "destructive",
-        });
-      } finally {
-        setIsUploading(false);
-      }
-    } else {
-      // For new categories, store locally
-      const preview = URL.createObjectURL(file);
-      const id = `local-${Date.now()}-${Math.random()}`;
-      const isMain = localImages.length === 0; // First image is main by default
-      
-      const newLocalImage = {
-        file,
-        preview,
-        id,
-        altText: file.name,
-        isMain,
-      };
-
-      const updatedLocalImages = [...localImages, newLocalImage];
-      setLocalImages(updatedLocalImages);
-      
-      if (isMain) {
-        setMainImageId(id);
-        onMainImageChange?.(id);
-      }
-
-      toast({
-        title: "Image selected",
-        description: "Image will be uploaded when you create the category.",
-      });
+    const updatedLocalImages = [...localImages, newLocalImage];
+    setLocalImages(updatedLocalImages);
+    console.log("🔍 Debug - Local images after adding:", updatedLocalImages);
+    console.log("🔍 Debug - Calling onLocalImagesChange with:", updatedLocalImages);
+    
+    if (isMain) {
+      setMainImageId(id);
+      onMainImageChange?.(id);
     }
+
+    toast({
+      title: "Image selected",
+      description: isEditing 
+        ? "Image will be uploaded when you update the category."
+        : "Image will be uploaded when you create the category.",
+    });
 
     // Reset file input
     event.target.value = "";
@@ -358,19 +327,24 @@ export function CategoryImageManager({
   };
 
   const getAllImages = () => {
-    if (isEditing) {
-      return images;
-    } else {
-      return localImages.map((img, index) => ({
-        id: img.id,
-        categoryId: '',
-        url: img.preview,
-        altText: img.altText,
-        position: index,
-        isMain: img.isMain,
-        createdAt: new Date(),
-      }));
-    }
+    // Always combine server images (existing) and local images (new)
+    const serverImages = images.map(img => ({
+      ...img,
+      isLocal: false,
+    }));
+    
+    const localImagesForDisplay = localImages.map((img, index) => ({
+      id: img.id,
+      categoryId: isEditing ? categoryId || '' : '',
+      url: img.preview,
+      altText: img.altText,
+      position: images.length + index, // Position after existing images
+      isMain: img.isMain,
+      createdAt: new Date(),
+      isLocal: true,
+    }));
+    
+    return [...serverImages, ...localImagesForDisplay];
   };
 
   const allImages = getAllImages();
@@ -453,10 +427,13 @@ export function CategoryImageManager({
 
                 {/* Image */}
                 <div className="aspect-square bg-gray-100">
-                  <img
+                  <Image
                     src={image.url}
                     alt={image.altText || `Category image ${index + 1}`}
+                    width={200}
+                    height={200}
                     className="w-full h-full object-cover"
+                    unoptimized={image.url.startsWith('blob:')}
                   />
                 </div>
 
@@ -467,10 +444,11 @@ export function CategoryImageManager({
                     size="sm"
                     variant="secondary"
                     onClick={() => {
-                      if (isEditing) {
-                        handleSetMainServerImage(image.id);
-                      } else {
+                      // Check if this is a local image (starts with 'local-') or server image
+                      if (image.id.startsWith('local-')) {
                         handleSetMainLocalImage(image.id);
+                      } else {
+                        handleSetMainServerImage(image.id);
                       }
                     }}
                     disabled={image.isMain || mainImageId === image.id}
@@ -488,10 +466,11 @@ export function CategoryImageManager({
                     size="sm"
                     variant="destructive"
                     onClick={() => {
-                      if (isEditing) {
-                        handleDeleteServerImage(image.id);
-                      } else {
+                      // Check if this is a local image (starts with 'local-') or server image
+                      if (image.id.startsWith('local-')) {
                         handleDeleteLocalImage(image.id);
+                      } else {
+                        handleDeleteServerImage(image.id);
                       }
                     }}
                     title="Delete image"
@@ -507,8 +486,8 @@ export function CategoryImageManager({
         {allImages.length > 0 && (
           <div className="mt-4 text-sm text-gray-500">
             <p>💡 Tip: Click the star to set the main category image. The main image will be displayed prominently.</p>
-            {!isEditing && (
-              <p className="mt-1">📁 Images will be uploaded when you create the category.</p>
+            {localImages.length > 0 && (
+              <p className="mt-1">📁 New images will be uploaded when you {isEditing ? 'update' : 'create'} the category.</p>
             )}
           </div>
         )}

@@ -29,6 +29,11 @@ const nextConfig = {
         hostname: "nextjs-template-public.s3.us-east-1.amazonaws.com",
         pathname: "/**",
       },
+      {
+        protocol: "https",
+        hostname: "smartecommercebucket.s3.us-east-1.amazonaws.com",
+        pathname: "/**",
+      },
     ],
   },
 };
