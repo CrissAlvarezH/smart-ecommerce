@@ -11,6 +11,7 @@ interface CategoryImageUploadProps {
   type: "image" | "banner";
   currentImageUrl?: string;
   onImageChange: (imageUrl: string | null) => void;
+  onFileChange?: (file: File | null) => void;
   className?: string;
 }
 
@@ -19,12 +20,13 @@ export function CategoryImageUpload({
   type, 
   currentImageUrl, 
   onImageChange,
+  onFileChange,
   className 
 }: CategoryImageUploadProps) {
-  const [isUploading, setIsUploading] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoadingExisting, setIsLoadingExisting] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load existing image if currentImageUrl is provided
@@ -52,7 +54,7 @@ export function CategoryImageUpload({
     }
   }, [currentImageUrl]);
 
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -78,56 +80,48 @@ export function CategoryImageUpload({
       return;
     }
 
-    setIsUploading(true);
+    // Store file locally and create preview
+    setSelectedFile(file);
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    
+    // Notify parent components about the changes
+    onImageChange(null); // Clear any existing URL since we have a new file
+    onFileChange?.(file);
 
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("type", type);
-
-      const response = await fetch("/api/categories/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || "Upload failed");
-      }
-
-      // Create preview URL
-      const objectUrl = URL.createObjectURL(file);
-      setPreviewUrl(objectUrl);
-      onImageChange(data.url);
-
-      toast({
-        title: "Upload successful",
-        description: `${title} has been uploaded successfully.`,
-      });
-
-    } catch (error) {
-      console.error("Upload error:", error);
-      toast({
-        title: "Upload failed",
-        description: error instanceof Error ? error.message : "Failed to upload image.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsUploading(false);
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
+    toast({
+      title: "File selected",
+      description: `${title} will be uploaded when you create the category.`,
+    });
   };
 
   const handleRemoveImage = async () => {
     setIsDeleting(true);
     
     try {
-      // If there's a current image URL (not a blob preview), delete it from S3
-      if (currentImageUrl && !currentImageUrl.startsWith('blob:')) {
+      // If there's a selected file (local), just remove it locally
+      if (selectedFile) {
+        // Revoke the object URL to free memory
+        if (previewUrl?.startsWith('blob:')) {
+          URL.revokeObjectURL(previewUrl);
+        }
+        
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        onImageChange(null);
+        onFileChange?.(null);
+        
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        
+        toast({
+          title: "File removed",
+          description: `${title} has been removed.`,
+        });
+      }
+      // If there's a current image URL (existing image), delete it from S3
+      else if (currentImageUrl && !currentImageUrl.startsWith('blob:')) {
         console.log("🗑️ Deleting image from S3:", currentImageUrl);
         
         const response = await fetch(`/api/categories/delete-image?imageUrl=${encodeURIComponent(currentImageUrl)}`, {
@@ -140,19 +134,19 @@ export function CategoryImageUpload({
         }
 
         console.log("✅ Image deleted from S3");
+        
+        setPreviewUrl(null);
+        onImageChange(null);
+        
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+        
+        toast({
+          title: "Image removed",
+          description: `${title} has been removed and deleted from storage.`,
+        });
       }
-
-      // Update UI state
-      setPreviewUrl(null);
-      onImageChange(null);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-      
-      toast({
-        title: "Image removed",
-        description: `${title} has been removed and deleted from storage.`,
-      });
 
     } catch (error) {
       console.error("Error removing image:", error);
@@ -200,7 +194,7 @@ export function CategoryImageUpload({
               size="sm"
               className="absolute top-2 right-2"
               onClick={handleRemoveImage}
-              disabled={isUploading || isDeleting}
+              disabled={isDeleting}
             >
               {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}
             </Button>
@@ -214,18 +208,11 @@ export function CategoryImageUpload({
             }`}
             onClick={handleUploadClick}
           >
-            {isUploading ? (
-              <div className="flex flex-col items-center gap-2">
-                <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
-                <p className="text-sm text-gray-500">Uploading...</p>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center gap-2">
-                <Upload className="h-8 w-8 text-gray-400" />
-                <p className="text-sm text-gray-500">Click to upload {title.toLowerCase()}</p>
-                <p className="text-xs text-gray-400">JPEG, PNG, WebP up to 5MB</p>
-              </div>
-            )}
+            <div className="flex flex-col items-center gap-2">
+              <Upload className="h-8 w-8 text-gray-400" />
+              <p className="text-sm text-gray-500">Click to select {title.toLowerCase()}</p>
+              <p className="text-xs text-gray-400">JPEG, PNG, WebP up to 5MB</p>
+            </div>
           </div>
         )}
 
@@ -235,18 +222,18 @@ export function CategoryImageUpload({
           accept="image/jpeg,image/jpg,image/png,image/webp"
           onChange={handleFileSelect}
           className="hidden"
-          disabled={isUploading || isDeleting}
+          disabled={isDeleting}
         />
 
         {!previewUrl && (
           <Button
             variant="outline"
             onClick={handleUploadClick}
-            disabled={isUploading || isDeleting}
+            disabled={isDeleting}
             className="w-full"
           >
             <Upload className="h-4 w-4 mr-2" />
-            {isUploading ? "Uploading..." : `Upload ${title}`}
+            Select {title}
           </Button>
         )}
       </CardContent>

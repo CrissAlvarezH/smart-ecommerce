@@ -46,6 +46,8 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
     displayMode: category?.displayMode || "products",
     isActive: category?.isActive ?? true,
   });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [bannerFile, setBannerFile] = useState<File | null>(null);
 
   const { execute: createCategory, isExecuting: isCreating } = useAction(createCategoryAction, {
     onSuccess: () => {
@@ -99,19 +101,61 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const uploadFile = async (file: File, type: "image" | "banner"): Promise<string> => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", type);
+
+    const response = await fetch("/api/categories/upload", {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || "Upload failed");
+    }
+
+    return data.url;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (isEditing && category) {
-      updateCategory({
-        id: category.id,
-        storeId,
-        ...formData,
-      });
-    } else {
-      createCategory({
-        ...formData,
-        storeId,
+    try {
+      // Prepare the submission data
+      const submissionData = { ...formData };
+
+      // Upload new files if present
+      if (imageFile) {
+        console.log("📤 Uploading category image...");
+        submissionData.imageUrl = await uploadFile(imageFile, "image");
+      }
+
+      if (bannerFile) {
+        console.log("📤 Uploading category banner...");
+        submissionData.bannerUrl = await uploadFile(bannerFile, "banner");
+      }
+
+      if (isEditing && category) {
+        updateCategory({
+          id: category.id,
+          storeId,
+          ...submissionData,
+        });
+      } else {
+        createCategory({
+          ...submissionData,
+          storeId,
+        });
+      }
+    } catch (error) {
+      console.error("Error uploading files:", error);
+      toast({
+        title: "Upload Error",
+        description: error instanceof Error ? error.message : "Failed to upload files",
+        variant: "destructive",
       });
     }
   };
@@ -171,6 +215,7 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
               type="image"
               currentImageUrl={formData.imageUrl}
               onImageChange={(url) => setFormData({ ...formData, imageUrl: url || "" })}
+              onFileChange={(file) => setImageFile(file)}
             />
             
             <CategoryImageUpload
@@ -178,6 +223,7 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
               type="banner"
               currentImageUrl={formData.bannerUrl}
               onImageChange={(url) => setFormData({ ...formData, bannerUrl: url || "" })}
+              onFileChange={(file) => setBannerFile(file)}
             />
           </div>
 
