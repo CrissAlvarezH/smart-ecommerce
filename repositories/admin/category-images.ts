@@ -101,6 +101,16 @@ export async function getCategoryImageById(id: string) {
   }
 }
 
+export async function getCategoryImageByIdRaw(id: string) {
+  const results = await db
+    .select()
+    .from(categoryImages)
+    .where(eq(categoryImages.id, id))
+    .limit(1);
+
+  return results[0] || null;
+}
+
 export async function reorderCategoryImages(categoryId: string, imageIds: string[]) {
   // Update positions based on the order of imageIds
   const promises = imageIds.map((imageId, index) =>

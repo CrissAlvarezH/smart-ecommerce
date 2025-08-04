@@ -251,21 +251,27 @@ export const deleteCategoryImageAction = authenticatedAction
   .action(async ({ parsedInput }) => {
     console.log("🗑️ Deleting category image:", parsedInput.id);
     
-    // Get image details before deletion for S3 cleanup
-    const image = await categoryImagesRepo.getCategoryImageById(parsedInput.id);
+    // Get raw image details before deletion for S3 cleanup (without signed URL conversion)
+    const image = await categoryImagesRepo.getCategoryImageByIdRaw(parsedInput.id);
     if (!image) {
       throw new PublicError("Image not found");
     }
     
-    // Delete from database first
+    console.log("🗑️ Deleting image from S3:", image.url);
+    
+    // Delete from S3 first (wait for completion to ensure it's deleted)
+    try {
+      await deleteFileFromBucket(image.url);
+      console.log("✅ Image deleted from S3 successfully");
+    } catch (error) {
+      console.error("❌ Failed to delete image from S3:", error);
+      // Continue with database deletion even if S3 deletion fails
+    }
+    
+    // Delete from database
     await categoryImagesRepo.deleteCategoryImage(parsedInput.id);
     
-    // Delete from S3 (don't wait for completion)
-    deleteFileFromBucket(image.url).catch(error => {
-      console.error("Failed to delete image from S3:", error);
-    });
-    
-    console.log("✅ Category image deleted");
+    console.log("✅ Category image deleted from database");
     
     revalidatePath("/", "layout");
     return { success: true };
