@@ -1,23 +1,17 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Tag } from "lucide-react";
-import Link from "next/link";
 
-interface CategoryNotFoundProps {
-  params: Promise<{ slug: string; }>;
-}
-
-export default async function CategoryNotFound({ params }: CategoryNotFoundProps) {
-  const { slug } = await params;
+export default function CategoryNotFound() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href={`/stores/${slug}/admin/categories`}>
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Categories
-          </Button>
-        </Link>
+        <Button variant="outline" size="sm" onClick={() => window.history.back()}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Go Back
+        </Button>
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Category Not Found</h2>
           <p className="text-gray-600 mt-2">
@@ -34,11 +28,9 @@ export default async function CategoryNotFound({ params }: CategoryNotFoundProps
             <p className="text-sm mt-2">
               It may have been deleted or moved to a different location.
             </p>
-            <Link href={`/stores/${slug}/admin/categories`}>
-              <Button className="mt-4">
-                View All Categories
-              </Button>
-            </Link>
+            <Button className="mt-4" onClick={() => window.history.back()}>
+              Go Back
+            </Button>
           </div>
         </CardContent>
       </Card>

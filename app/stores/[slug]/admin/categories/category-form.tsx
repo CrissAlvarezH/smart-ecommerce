@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAction } from "next-safe-action/hooks";
 import { createCategoryAction, updateCategoryAction } from "../actions";
 import { toast } from "@/hooks/use-toast";
+import { CategoryImageUpload } from "@/components/admin/category-image-upload";
 
 interface Category {
   id: string;
@@ -163,32 +164,20 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="imageUrl">Image URL</Label>
-            <Input
-              id="imageUrl"
-              type="url"
-              value={formData.imageUrl}
-              onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-              placeholder="https://example.com/image.jpg"
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <CategoryImageUpload
+              title="Category Image"
+              type="image"
+              currentImageUrl={formData.imageUrl}
+              onImageChange={(url) => setFormData({ ...formData, imageUrl: url || "" })}
             />
-            <p className="text-sm text-gray-500">
-              Optional image to represent this category.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="bannerUrl">Banner URL</Label>
-            <Input
-              id="bannerUrl"
-              type="url"
-              value={formData.bannerUrl}
-              onChange={(e) => setFormData({ ...formData, bannerUrl: e.target.value })}
-              placeholder="https://example.com/banner.jpg"
+            
+            <CategoryImageUpload
+              title="Category Banner"
+              type="banner"
+              currentImageUrl={formData.bannerUrl}
+              onImageChange={(url) => setFormData({ ...formData, bannerUrl: url || "" })}
             />
-            <p className="text-sm text-gray-500">
-              Optional banner image for category display.
-            </p>
           </div>
 
           <div className="space-y-2">

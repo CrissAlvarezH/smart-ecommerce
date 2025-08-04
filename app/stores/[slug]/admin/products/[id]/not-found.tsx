@@ -1,23 +1,17 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ArrowLeft, Package } from "lucide-react";
-import Link from "next/link";
 
-interface ProductNotFoundProps {
-  params: Promise<{ slug: string; }>;
-}
-
-export default async function ProductNotFound({ params }: ProductNotFoundProps) {
-  const { slug } = await params;
+export default function ProductNotFound() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Link href={`/stores/${slug}/admin/products`}>
-          <Button variant="outline" size="sm">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Products
-          </Button>
-        </Link>
+        <Button variant="outline" size="sm" onClick={() => window.history.back()}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Go Back
+        </Button>
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Product Not Found</h2>
           <p className="text-gray-600 mt-2">
@@ -34,11 +28,9 @@ export default async function ProductNotFound({ params }: ProductNotFoundProps) 
             <p className="text-sm mt-2">
               It may have been deleted or moved to a different location.
             </p>
-            <Link href={`/stores/${slug}/admin/products`}>
-              <Button className="mt-4">
-                View All Products
-              </Button>
-            </Link>
+            <Button className="mt-4" onClick={() => window.history.back()}>
+              Go Back
+            </Button>
           </div>
         </CardContent>
       </Card>
