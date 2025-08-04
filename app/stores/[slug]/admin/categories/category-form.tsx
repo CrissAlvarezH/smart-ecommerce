@@ -30,7 +30,7 @@ interface Category {
   description: string | null;
   imageUrl: string | null;
   bannerUrl: string | null;
-  displayMode: string;
+  displayMode: "banner" | "image" | "products";
   parentId: string | null;
   isActive: boolean;
   createdAt: Date;
@@ -51,18 +51,62 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
     slug: category?.slug || "",
     description: category?.description || "",
     bannerUrl: category?.bannerUrl || "",
-    displayMode: category?.displayMode || "products",
+    displayMode: (category?.displayMode as "banner" | "image" | "products") || "products",
     isActive: category?.isActive ?? true,
   });
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [mainImageId, setMainImageId] = useState<string | null>(null);
+  const [localImages, setLocalImages] = useState<{ file: File; preview: string; id: string; altText: string; isMain: boolean }[]>([]);
+
+  const { executeAsync: addImage } = useAction(addCategoryImageAction);
 
   const { execute: createCategory, isExecuting: isCreating } = useAction(createCategoryAction, {
-    onSuccess: () => {
-      toast({
-        title: "Category created",
-        description: "The category has been successfully created.",
-      });
+    onSuccess: async (result) => {
+      console.log("✅ Category created:", result.data);
+      const createdCategory = result.data;
+      
+      // Upload local images after category creation
+      if (localImages.length > 0) {
+        console.log(`📸 Uploading ${localImages.length} images for category ${createdCategory.id}`);
+        
+        try {
+          for (let i = 0; i < localImages.length; i++) {
+            const localImage = localImages[i];
+            
+            // Upload file to S3
+            const uploadedUrl = await uploadFile(localImage.file, "image");
+            
+            // Add image to category using server action
+            await addImage({
+              categoryId: createdCategory.id,
+              url: uploadedUrl,
+              altText: localImage.altText,
+              position: i,
+              isMain: localImage.isMain,
+            });
+            
+            console.log(`✅ Image ${i + 1} uploaded and linked to category`);
+          }
+          
+          toast({
+            title: "Category created",
+            description: `Category and ${localImages.length} images have been successfully created.`,
+          });
+        } catch (error) {
+          console.error("❌ Error uploading images:", error);
+          toast({
+            title: "Category created",
+            description: "Category created but some images failed to upload. You can add them later.",
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Category created",
+          description: "The category has been successfully created.",
+        });
+      }
+      
       router.push(`/stores/${slug}/admin/categories`);
     },
     onError: (error) => {
@@ -226,6 +270,7 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
             categoryId={category?.id}
             isEditing={isEditing}
             onMainImageChange={setMainImageId}
+            onLocalImagesChange={setLocalImages}
             actions={isEditing ? {
               addCategoryImageAction,
               deleteCategoryImageAction,
@@ -239,7 +284,7 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
             <Label htmlFor="displayMode">Display Mode</Label>
             <Select
               value={formData.displayMode}
-              onValueChange={(value) => setFormData({ ...formData, displayMode: value })}
+              onValueChange={(value: "banner" | "image" | "products") => setFormData({ ...formData, displayMode: value })}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select display mode" />

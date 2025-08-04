@@ -43,6 +43,7 @@ interface CategoryImageManagerProps {
   categoryId?: string; // Optional for new categories
   onImagesChange?: (images: CategoryImage[]) => void;
   onMainImageChange?: (mainImageId: string | null) => void;
+  onLocalImagesChange?: (localImages: { file: File; preview: string; id: string; altText: string; isMain: boolean }[]) => void;
   isEditing: boolean;
   actions?: {
     addCategoryImageAction: any;
@@ -57,6 +58,7 @@ export function CategoryImageManager({
   categoryId, 
   onImagesChange, 
   onMainImageChange, 
+  onLocalImagesChange,
   isEditing, 
   actions 
 }: CategoryImageManagerProps) {
@@ -67,9 +69,10 @@ export function CategoryImageManager({
   const [editingImage, setEditingImage] = useState<CategoryImage | null>(null);
   const [editAltText, setEditAltText] = useState("");
 
-  // Server actions (only available when editing existing categories)
-  const fetchImages = actions?.getCategoryImagesAction ? useAction(actions.getCategoryImagesAction, {
+  // Server actions - always call hooks but conditionally use them
+  const fetchImages = useAction(actions?.getCategoryImagesAction || (() => Promise.resolve({ data: [] })), {
     onSuccess: (result) => {
+      if (!actions?.getCategoryImagesAction) return;
       console.log("📸 Fetch images result:", result);
       // Ensure result.data is an array before sorting
       const imageData = Array.isArray(result.data) ? result.data : [];
@@ -83,6 +86,7 @@ export function CategoryImageManager({
       onImagesChange?.(sortedImages);
     },
     onError: (error) => {
+      if (!actions?.getCategoryImagesAction) return;
       console.error("❌ Fetch images error:", error);
       toast({
         title: "Error",
@@ -90,93 +94,108 @@ export function CategoryImageManager({
         variant: "destructive",
       });
     },
-  }) : null;
+  });
 
-  const addImage = actions?.addCategoryImageAction ? useAction(actions.addCategoryImageAction, {
+  const addImage = useAction(actions?.addCategoryImageAction || (() => Promise.resolve({ data: {} })), {
     onSuccess: () => {
+      if (!actions?.addCategoryImageAction) return;
       toast({
         title: "Image added",
         description: "Image has been successfully added to the category.",
       });
-      if (fetchImages && categoryId) {
+      if (categoryId) {
         fetchImages.execute({ categoryId });
       }
     },
     onError: (error) => {
+      if (!actions?.addCategoryImageAction) return;
       toast({
         title: "Error",
         description: error.error?.serverError || "Failed to add image",
         variant: "destructive",
       });
     },
-  }) : null;
+  });
 
-  const deleteImage = actions?.deleteCategoryImageAction ? useAction(actions.deleteCategoryImageAction, {
+  const deleteImage = useAction(actions?.deleteCategoryImageAction || (() => Promise.resolve({ data: {} })), {
     onSuccess: () => {
+      if (!actions?.deleteCategoryImageAction) return;
       toast({
         title: "Image deleted",
         description: "Image has been successfully deleted.",
       });
-      if (fetchImages && categoryId) {
+      if (categoryId) {
         fetchImages.execute({ categoryId });
       }
     },
     onError: (error) => {
+      if (!actions?.deleteCategoryImageAction) return;
       toast({
         title: "Error",
         description: error.error?.serverError || "Failed to delete image",
         variant: "destructive",
       });
     },
-  }) : null;
+  });
 
-  const updateImage = actions?.updateCategoryImageAction ? useAction(actions.updateCategoryImageAction, {
+  const updateImage = useAction(actions?.updateCategoryImageAction || (() => Promise.resolve({ data: {} })), {
     onSuccess: () => {
+      if (!actions?.updateCategoryImageAction) return;
       toast({
         title: "Image updated",
         description: "Image has been successfully updated.",
       });
       setEditingImage(null);
       setEditAltText("");
-      if (fetchImages && categoryId) {
+      if (categoryId) {
         fetchImages.execute({ categoryId });
       }
     },
     onError: (error) => {
+      if (!actions?.updateCategoryImageAction) return;
       toast({
         title: "Error",
         description: error.error?.serverError || "Failed to update image",
         variant: "destructive",
       });
     },
-  }) : null;
+  });
 
-  const reorderImages = actions?.reorderCategoryImagesAction ? useAction(actions.reorderCategoryImagesAction, {
+  const reorderImages = useAction(actions?.reorderCategoryImagesAction || (() => Promise.resolve({ data: {} })), {
     onSuccess: () => {
+      if (!actions?.reorderCategoryImagesAction) return;
       toast({
         title: "Images reordered",
         description: "Image order has been updated.",
       });
     },
     onError: (error) => {
+      if (!actions?.reorderCategoryImagesAction) return;
       toast({
         title: "Error",
         description: error.error?.serverError || "Failed to reorder images",
         variant: "destructive",
       });
-      if (fetchImages && categoryId) {
+      if (categoryId) {
         fetchImages.execute({ categoryId });
       }
     },
-  }) : null;
+  });
 
   // Load images on component mount (only for existing categories)
   useEffect(() => {
-    if (categoryId && fetchImages && isEditing && actions) {
+    if (categoryId && isEditing && actions?.getCategoryImagesAction) {
       console.log("🔄 Loading category images for categoryId:", categoryId);
       fetchImages.execute({ categoryId });
     }
   }, [categoryId, isEditing, actions]);
+
+  // Notify parent when local images change
+  useEffect(() => {
+    if (onLocalImagesChange) {
+      onLocalImagesChange(localImages);
+    }
+  }, [localImages, onLocalImagesChange]);
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

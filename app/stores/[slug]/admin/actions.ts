@@ -8,6 +8,9 @@ import * as collectionsRepo from "@/repositories/admin/collections";
 import * as categoryImagesRepo from "@/repositories/admin/category-images";
 import { PublicError } from "@/lib/errors";
 import { deleteFileFromBucket } from "@/lib/files";
+import { db } from "@/db";
+import { categoryImages } from "@/db/schemas";
+import { eq } from "drizzle-orm";
 
 // Category Schemas
 const createCategorySchema = z.object({
@@ -228,9 +231,12 @@ export const addCategoryImageAction = authenticatedAction
   .action(async ({ parsedInput }) => {
     console.log("📸 Adding category image:", parsedInput);
     
-    // If this is marked as main, unset all other images as main for this category
+    // If this is marked as main, unset all other images as main for this category first
     if (parsedInput.isMain) {
-      await categoryImagesRepo.setMainCategoryImage(parsedInput.categoryId, "");
+      await db
+        .update(categoryImages)
+        .set({ isMain: false })
+        .where(eq(categoryImages.categoryId, parsedInput.categoryId));
     }
     
     const image = await categoryImagesRepo.createCategoryImage(parsedInput);
@@ -272,8 +278,8 @@ export const getCategoryImagesAction = authenticatedAction
     const images = await categoryImagesRepo.getCategoryImages(parsedInput.categoryId);
     console.log("✅ Found category images:", images.length, images);
     
-    // Ensure we always return an array
-    return { data: Array.isArray(images) ? images : [] };
+    // Return images directly (the server action wrapper will handle the response format)
+    return Array.isArray(images) ? images : [];
   });
 
 export const updateCategoryImageAction = authenticatedAction

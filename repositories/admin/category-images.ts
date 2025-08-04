@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { categoryImages } from "@/db/schemas";
 import { eq, desc, asc } from "drizzle-orm";
+import { getFileUrl } from "@/lib/files";
 
 export interface CreateCategoryImageData {
   categoryId: string;
@@ -51,18 +52,53 @@ export async function getCategoryImages(categoryId: string) {
     .where(eq(categoryImages.categoryId, categoryId))
     .orderBy(asc(categoryImages.position), asc(categoryImages.createdAt));
   
-  console.log("📸 Repository getCategoryImages result:", results);
-  return results;
+  console.log("📸 Repository getCategoryImages raw result:", results);
+  
+  // Convert S3 paths to signed URLs
+  const imagesWithUrls = await Promise.all(
+    results.map(async (image) => {
+      try {
+        const signedUrl = await getFileUrl(image.url);
+        console.log("🔗 Generated signed URL for category image", image.url, "->", signedUrl);
+        return {
+          ...image,
+          url: signedUrl, // Convert S3 path to signed URL
+        };
+      } catch (error) {
+        console.error("❌ Error generating signed URL for category image", image.url, error);
+        return {
+          ...image,
+          url: image.url, // Fallback to original URL
+        };
+      }
+    })
+  );
+
+  console.log("✅ Final category images with URLs:", imagesWithUrls.length);
+  return imagesWithUrls;
 }
 
 export async function getCategoryImageById(id: string) {
-  const image = await db
+  const results = await db
     .select()
     .from(categoryImages)
     .where(eq(categoryImages.id, id))
     .limit(1);
 
-  return image[0] || null;
+  const image = results[0];
+  if (!image) return null;
+
+  // Convert S3 path to signed URL
+  try {
+    const signedUrl = await getFileUrl(image.url);
+    return {
+      ...image,
+      url: signedUrl,
+    };
+  } catch (error) {
+    console.error("❌ Error generating signed URL for category image", image.url, error);
+    return image; // Fallback to original
+  }
 }
 
 export async function reorderCategoryImages(categoryId: string, imageIds: string[]) {
