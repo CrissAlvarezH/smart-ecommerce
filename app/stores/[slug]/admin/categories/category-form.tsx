@@ -210,19 +210,19 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
           </div>
 
           <CategoryImageUpload
-            title="Category Image"
-            type="image"
-            currentImageUrl={formData.imageUrl}
-            onImageChange={(url) => setFormData({ ...formData, imageUrl: url || "" })}
-            onFileChange={(file) => setImageFile(file)}
-          />
-          
-          <CategoryImageUpload
             title="Category Banner"
             type="banner"
             currentImageUrl={formData.bannerUrl}
             onImageChange={(url) => setFormData({ ...formData, bannerUrl: url || "" })}
             onFileChange={(file) => setBannerFile(file)}
+          />
+          
+          <CategoryImageUpload
+            title="Category Image"
+            type="image"
+            currentImageUrl={formData.imageUrl}
+            onImageChange={(url) => setFormData({ ...formData, imageUrl: url || "" })}
+            onFileChange={(file) => setImageFile(file)}
           />
 
           <div className="space-y-2">
