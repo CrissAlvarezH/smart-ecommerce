@@ -258,15 +258,83 @@ export async function getProductsFromDiscountedCollections(discountId: string) {
     .where(eq(collectionDiscounts.discountId, discountId));
 }
 
+export async function getProductCollectionsInDiscount(discountId: string, productId: string) {
+  // Get collections that have this discount and contain this product
+  return await db
+    .select({
+      collectionId: collectionDiscounts.collectionId,
+      collectionName: collections.name,
+    })
+    .from(collectionDiscounts)
+    .innerJoin(collections, eq(collectionDiscounts.collectionId, collections.id))
+    .innerJoin(productCollections, eq(collections.id, productCollections.collectionId))
+    .where(and(
+      eq(collectionDiscounts.discountId, discountId),
+      eq(productCollections.productId, productId)
+    ));
+}
+
+export async function checkAndRemoveEmptyCollections(discountId: string, collectionIds: string[]) {
+  // For each collection, check if it has any products left with this discount
+  for (const collectionId of collectionIds) {
+    // Get remaining products in this collection that have the discount
+    const remainingProducts = await db
+      .select({ productId: products.id })
+      .from(products)
+      .innerJoin(productCollections, eq(products.id, productCollections.productId))
+      .innerJoin(productDiscounts, eq(products.id, productDiscounts.productId))
+      .where(and(
+        eq(productCollections.collectionId, collectionId),
+        eq(productDiscounts.discountId, discountId)
+      ))
+      .limit(1);
+    
+    // If no products remain, remove the collection from the discount
+    if (remainingProducts.length === 0) {
+      await removeCollectionFromDiscount(discountId, collectionId);
+    }
+  }
+}
+
 export async function getAllDiscountProducts(discountId: string) {
   const directProducts = await getDiscountProducts(discountId);
   const collectionProducts = await getProductsFromDiscountedCollections(discountId);
   
-  // Combine and deduplicate products
-  const allProducts = [...directProducts, ...collectionProducts];
-  const uniqueProducts = Array.from(
-    new Map(allProducts.map(product => [product.id, product])).values()
-  );
+  // Mark products that come from collections
+  const directProductsWithSource = directProducts.map(product => ({
+    ...product,
+    isFromCollection: false,
+    isDirect: true
+  }));
   
-  return uniqueProducts;
+  const collectionProductsWithSource = collectionProducts.map(product => ({
+    ...product,
+    isFromCollection: true,
+    isDirect: false
+  }));
+  
+  // Combine products, giving priority to direct assignments
+  const productMap = new Map();
+  
+  // Add collection products first
+  collectionProductsWithSource.forEach(product => {
+    productMap.set(product.id, product);
+  });
+  
+  // Override with direct products (they have both sources)
+  directProductsWithSource.forEach(product => {
+    const existing = productMap.get(product.id);
+    if (existing && existing.isFromCollection) {
+      // Product is both direct and from collection
+      productMap.set(product.id, {
+        ...product,
+        isFromCollection: true,
+        isDirect: true
+      });
+    } else {
+      productMap.set(product.id, product);
+    }
+  });
+  
+  return Array.from(productMap.values());
 }

@@ -167,12 +167,28 @@ export const removeProductFromDiscountAction = authenticatedAction
   .action(async ({ parsedInput }) => {
     console.log("➖ Removing product from discount:", parsedInput);
     
+    // First, check which collections this product belongs to within this discount
+    const productCollections = await adminDiscountService.getProductCollectionsInDiscount(
+      parsedInput.discountId,
+      parsedInput.productId
+    );
+    
+    // Remove the product from the discount
     await adminDiscountService.removeProductFromDiscount(
       parsedInput.discountId,
       parsedInput.productId
     );
     
-    console.log("✅ Product removed from discount");
+    // Check if any collections should be removed (if all their products are gone)
+    if (productCollections.length > 0) {
+      const collectionIds = productCollections.map(c => c.collectionId);
+      await adminDiscountService.checkAndRemoveEmptyCollections(
+        parsedInput.discountId,
+        collectionIds
+      );
+    }
+    
+    console.log("✅ Product removed from discount and collections cleaned up");
     
     revalidatePath("/", "layout");
     return { success: true };
@@ -218,13 +234,13 @@ export const getAvailableProductsForDiscountAction = authenticatedAction
       parsedInput.storeId
     );
     
-    // Get products already in discount
-    const discountProducts = await adminDiscountService.getDiscountProducts(
+    // Get products that already have this discount (directly or through collections)
+    const allDiscountProducts = await adminDiscountService.getAllDiscountProducts(
       parsedInput.discountId
     );
     
-    // Filter out products that are already in the discount
-    const discountProductIds = new Set(discountProducts.map(p => p.id));
+    // Filter out products that already have the discount (either directly or through collections)
+    const discountProductIds = new Set(allDiscountProducts.map(p => p.id));
     const availableProducts = allProducts.filter(product => !discountProductIds.has(product.id));
     
     console.log(`✅ Fetched ${availableProducts.length} available products for discount`);

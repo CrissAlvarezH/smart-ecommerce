@@ -4,9 +4,15 @@ import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Percent, Package, Minus, Loader2 } from "lucide-react";
+import { Percent, Package, Minus, Loader2, Info } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "@/hooks/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   Dialog,
   DialogClose,
@@ -38,18 +44,22 @@ interface Product {
   price: string;
   sku: string | null;
   isActive: boolean;
+  isFromCollection?: boolean;
+  isDirect?: boolean;
 }
 
 interface DiscountProductsSectionProps {
   discount: Discount;
   storeId: string;
   storeSlug: string;
+  onProductRemoved?: () => void;
 }
 
 export function DiscountProductsSection({
   discount,
   storeId,
   storeSlug,
+  onProductRemoved,
 }: DiscountProductsSectionProps) {
   const [products, setProducts] = useState<Product[]>([]);
   
@@ -75,6 +85,7 @@ export function DiscountProductsSection({
           description: "Product has been removed from the discount.",
         });
         refetchProducts();
+        onProductRemoved?.(); // Notify parent to refresh collections
       },
       onError: (error) => {
         toast({
@@ -158,6 +169,12 @@ export function DiscountProductsSection({
                       <p className="text-sm text-gray-500 mt-1">
                         ${product.price}
                         {product.sku && ` • SKU: ${product.sku}`}
+                        {product.isFromCollection && !product.isDirect && (
+                          <span className="ml-2 text-xs text-blue-600">• From collection</span>
+                        )}
+                        {product.isFromCollection && product.isDirect && (
+                          <span className="ml-2 text-xs text-purple-600">• Direct + Collection</span>
+                        )}
                       </p>
                     </div>
                     <Badge variant={product.isActive ? "default" : "secondary"}>
@@ -181,9 +198,20 @@ export function DiscountProductsSection({
                       <DialogHeader>
                         <DialogTitle>Remove Product from Discount</DialogTitle>
                         <DialogDescription>
-                          Are you sure you want to remove &quot;{product.name}&quot; from the discount &quot;{discount.name}&quot;? 
-                          This action cannot be undone.
+                          Are you sure you want to remove &quot;{product.name}&quot; from the discount &quot;{discount.name}&quot;?
                         </DialogDescription>
+                        {(product.isFromCollection && !product.isDirect) && (
+                          <div className="text-blue-600 bg-blue-50 p-3 rounded-md mt-4">
+                            <strong>Note:</strong> This product is currently added via a collection. 
+                            Removing it will also remove the collection from this discount if this is the last product from that collection.
+                          </div>
+                        )}
+                        {(product.isFromCollection && product.isDirect) && (
+                          <div className="text-purple-600 bg-purple-50 p-3 rounded-md mt-4">
+                            <strong>Note:</strong> This product is assigned both directly and via a collection. 
+                            This will only remove the direct assignment - it will still receive the discount through the collection.
+                          </div>
+                        )}
                       </DialogHeader>
                       <DialogFooter>
                         <DialogClose asChild>
@@ -195,7 +223,7 @@ export function DiscountProductsSection({
                             onClick={() => handleRemoveProduct(product.id)}
                             disabled={isRemoving}
                           >
-                            Remove Product
+                            {product.isFromCollection && !product.isDirect ? "Remove from Collection" : "Remove Product"}
                           </Button>
                         </DialogClose>
                       </DialogFooter>

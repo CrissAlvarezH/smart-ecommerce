@@ -60,4 +60,6 @@ export const adminDiscountService = {
   getDiscountCollections: discountsRepo.getDiscountCollections,
   getProductsFromDiscountedCollections: discountsRepo.getProductsFromDiscountedCollections,
   getAllDiscountProducts: discountsRepo.getAllDiscountProducts,
+  getProductCollectionsInDiscount: discountsRepo.getProductCollectionsInDiscount,
+  checkAndRemoveEmptyCollections: discountsRepo.checkAndRemoveEmptyCollections,
 };

@@ -23,15 +23,23 @@ interface DiscountSectionsProps {
 
 export function DiscountSections({ discount, storeId, storeSlug }: DiscountSectionsProps) {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [collectionsRefreshKey, setCollectionsRefreshKey] = useState(1000);
 
   const handleCollectionsChange = () => {
     // Force refresh of products section when collections change
     setRefreshKey(prev => prev + 1);
   };
 
+  const handleProductRemoved = () => {
+    // Force refresh of collections section when products are removed
+    // (in case collections were auto-removed)
+    setCollectionsRefreshKey(prev => prev + 1);
+  };
+
   return (
     <div className="space-y-6">
       <DiscountCollectionsSection
+        key={collectionsRefreshKey}
         discount={discount}
         storeId={storeId}
         storeSlug={storeSlug}
@@ -42,6 +50,7 @@ export function DiscountSections({ discount, storeId, storeSlug }: DiscountSecti
         discount={discount}
         storeId={storeId}
         storeSlug={storeSlug}
+        onProductRemoved={handleProductRemoved}
       />
     </div>
   );
