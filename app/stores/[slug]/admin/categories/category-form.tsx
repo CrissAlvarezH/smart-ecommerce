@@ -17,7 +17,8 @@ import {
   deleteCategoryImageAction,
   getCategoryImagesAction,
   updateCategoryImageAction,
-  reorderCategoryImagesAction
+  reorderCategoryImagesAction,
+  setMainCategoryImageAction
 } from "../actions";
 import { toast } from "@/hooks/use-toast";
 import { CategoryImageUpload } from "@/components/admin/category-image-upload";
@@ -347,6 +348,7 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
               getCategoryImagesAction,
               updateCategoryImageAction,
               reorderCategoryImagesAction,
+              setMainCategoryImageAction,
             } : undefined}
           />
 

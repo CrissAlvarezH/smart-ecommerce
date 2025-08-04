@@ -80,6 +80,11 @@ const reorderCategoryImagesSchema = z.object({
   imageIds: z.array(z.string()),
 });
 
+const setMainCategoryImageSchema = z.object({
+  categoryId: z.string().min(1, "Category ID is required"),
+  imageId: z.string().min(1, "Image ID is required"),
+});
+
 // Category Actions
 export const createCategoryAction = authenticatedAction
   .inputSchema(createCategorySchema)
@@ -268,8 +273,24 @@ export const deleteCategoryImageAction = authenticatedAction
       // Continue with database deletion even if S3 deletion fails
     }
     
+    // If this was the main image, we need to set another image as main
+    const wasMainImage = image.isMain;
+    
     // Delete from database
     await categoryImagesRepo.deleteCategoryImage(parsedInput.id);
+    
+    // If the deleted image was main, set the next image as main
+    if (wasMainImage) {
+      console.log("🔄 Deleted image was main, setting next image as main");
+      const remainingImages = await categoryImagesRepo.getCategoryImages(image.categoryId);
+      
+      if (remainingImages.length > 0) {
+        // Sort by position and set the first one as main
+        const sortedImages = remainingImages.sort((a, b) => a.position - b.position);
+        await categoryImagesRepo.setMainCategoryImage(image.categoryId, sortedImages[0].id);
+        console.log("✅ Set new main image:", sortedImages[0].id);
+      }
+    }
     
     console.log("✅ Category image deleted from database");
     
@@ -305,6 +326,20 @@ export const reorderCategoryImagesAction = authenticatedAction
     console.log("↕️ Reordering category images:", parsedInput);
     await categoryImagesRepo.reorderCategoryImages(parsedInput.categoryId, parsedInput.imageIds);
     console.log("✅ Category images reordered");
+    
+    revalidatePath("/", "layout");
+    return { success: true };
+  });
+
+export const setMainCategoryImageAction = authenticatedAction
+  .inputSchema(setMainCategoryImageSchema)
+  .action(async ({ parsedInput }) => {
+    console.log("⭐ Setting main category image:", parsedInput);
+    
+    // Use the repository function to set main image (it handles unsetting others)
+    await categoryImagesRepo.setMainCategoryImage(parsedInput.categoryId, parsedInput.imageId);
+    
+    console.log("✅ Main category image updated");
     
     revalidatePath("/", "layout");
     return { success: true };

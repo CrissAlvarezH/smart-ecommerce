@@ -52,6 +52,7 @@ interface CategoryImageManagerProps {
     getCategoryImagesAction: any;
     updateCategoryImageAction: any;
     reorderCategoryImagesAction: any;
+    setMainCategoryImageAction: any;
   };
 }
 
@@ -180,6 +181,27 @@ export function CategoryImageManager({
       if (categoryId) {
         fetchImages.execute({ categoryId });
       }
+    },
+  });
+
+  const setMainImage = useAction(actions?.setMainCategoryImageAction || (() => Promise.resolve({ data: {} })), {
+    onSuccess: () => {
+      if (!actions?.setMainCategoryImageAction) return;
+      toast({
+        title: "Main image set",
+        description: "This image is now the main category image.",
+      });
+      if (categoryId) {
+        fetchImages.execute({ categoryId });
+      }
+    },
+    onError: (error) => {
+      if (!actions?.setMainCategoryImageAction) return;
+      toast({
+        title: "Error",
+        description: String(error.error?.serverError || "Failed to set main image"),
+        variant: "destructive",
+      });
     },
   });
 
@@ -315,14 +337,16 @@ export function CategoryImageManager({
   };
 
   const handleSetMainServerImage = (imageId: string) => {
-    // This would require a server action to update the isMain flag
-    // For now, we'll handle this through the existing update mechanism
+    if (!categoryId || !setMainImage) return;
+    
+    // Update local state immediately for UI feedback
     setMainImageId(imageId);
     onMainImageChange?.(imageId);
     
-    toast({
-      title: "Main image set",
-      description: "This image is now the main category image.",
+    // Update database via server action
+    setMainImage.execute({
+      categoryId,
+      imageId,
     });
   };
 
