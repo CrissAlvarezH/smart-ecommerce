@@ -58,6 +58,7 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [mainImageId, setMainImageId] = useState<string | null>(null);
   const [localImages, setLocalImages] = useState<{ file: File; preview: string; id: string; altText: string; isMain: boolean }[]>([]);
+  const [serverImages, setServerImages] = useState<any[]>([]);
   const localImagesRef = useRef(localImages);
 
   // Debug effect to track localImages changes
@@ -73,6 +74,28 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
     console.log("🔍 Debug - CategoryForm images count:", images.length);
     setLocalImages(images);
   }, []);
+
+  // Callback for server images change
+  const handleServerImagesChange = useCallback((images: any[]) => {
+    console.log("🔍 Debug - CategoryForm received server images:", images.length);
+    setServerImages(images);
+  }, []);
+
+  // Validation logic for display modes
+  const hasImages = localImages.length > 0 || serverImages.length > 0;
+  const hasBanner = !!formData.bannerUrl || !!bannerFile;
+
+  // Auto-reset display mode if required content is not available
+  useEffect(() => {
+    if (formData.displayMode === "image" && !hasImages) {
+      console.log("🔄 Resetting display mode from 'image' to 'products' - no images available");
+      setFormData(prev => ({ ...prev, displayMode: "products" }));
+    }
+    if (formData.displayMode === "banner" && !hasBanner) {
+      console.log("🔄 Resetting display mode from 'banner' to 'products' - no banner available");
+      setFormData(prev => ({ ...prev, displayMode: "products" }));
+    }
+  }, [formData.displayMode, hasImages, hasBanner]);
 
   const { executeAsync: addImage } = useAction(addCategoryImageAction);
 
@@ -342,6 +365,7 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
             isEditing={isEditing}
             onMainImageChange={setMainImageId}
             onLocalImagesChange={handleLocalImagesChange}
+            onImagesChange={handleServerImagesChange}
             actions={isEditing ? {
               addCategoryImageAction,
               deleteCategoryImageAction,
@@ -363,13 +387,35 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="products">Products List</SelectItem>
-                <SelectItem value="image">Image Display</SelectItem>
-                <SelectItem value="banner">Banner Display</SelectItem>
+                <SelectItem 
+                  value="image" 
+                  disabled={!hasImages}
+                  className={!hasImages ? "opacity-50 cursor-not-allowed" : ""}
+                >
+                  Image Display {!hasImages && "(requires category images)"}
+                </SelectItem>
+                <SelectItem 
+                  value="banner" 
+                  disabled={!hasBanner}
+                  className={!hasBanner ? "opacity-50 cursor-not-allowed" : ""}
+                >
+                  Banner Display {!hasBanner && "(requires category banner)"}
+                </SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-sm text-gray-500">
-              How this category should be displayed on the website.
-            </p>
+            <div className="text-sm text-gray-500 space-y-1">
+              <p>How this category should be displayed on the website.</p>
+              {!hasImages && (
+                <p className="text-amber-600">
+                  ⚠️ Add category images to enable &quot;Image Display&quot; mode
+                </p>
+              )}
+              {!hasBanner && (
+                <p className="text-amber-600">
+                  ⚠️ Add a category banner to enable &quot;Banner Display&quot; mode
+                </p>
+              )}
+            </div>
           </div>
 
           <div className="flex items-center space-x-2">
