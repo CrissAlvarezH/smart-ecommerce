@@ -105,6 +105,7 @@ export function CategoryForm({ category, isEditing = false, slug, storeId }: Cat
     if (isEditing && category) {
       updateCategory({
         id: category.id,
+        storeId,
         ...formData,
       });
     } else {
