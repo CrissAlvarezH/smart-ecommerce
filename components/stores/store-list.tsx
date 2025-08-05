@@ -62,7 +62,7 @@ export function StoreList({ stores, showAdminLinks = false }: StoreListProps) {
             </div>
 
             <div className="flex gap-2">
-              <Link href={`/stores/${store.slug}`} className="flex-1">
+              <Link href={`/stores/${store.slug}/client`} className="flex-1">
                 <Button variant="outline" size="sm" className="w-full">
                   <ExternalLink className="w-4 h-4 mr-2" />
                   Visit Store

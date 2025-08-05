@@ -96,7 +96,7 @@ export default async function AdminDashboard({ params }: AdminDashboardProps) {
               </a>
             </div>
             <a
-              href={`/stores/${slug}`}
+              href={`/stores/${slug}/client`}
               className="flex items-center gap-2 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
             >
               <Eye className="h-5 w-5 text-purple-600" />
