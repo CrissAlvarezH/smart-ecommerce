@@ -4,6 +4,7 @@ import { getStoreBySlugAction, getStoreCategoriesAction } from "../../actions";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Folder, Package } from "lucide-react";
+import { CategoryImage } from "@/components/store/category-image";
 
 interface StoreCategoriesPageProps {
   params: Promise<{
@@ -52,19 +53,10 @@ export default async function StoreCategoriesPage({ params }: StoreCategoriesPag
               className="group"
             >
               <Card className="overflow-hidden hover:shadow-lg transition-shadow group-hover:scale-105 transition-transform duration-300">
-                <div className="aspect-square overflow-hidden bg-gray-100">
-                  {category.imageUrl ? (
-                    <img
-                      src={category.imageUrl}
-                      alt={category.name}
-                      className="h-full w-full object-cover group-hover:scale-110 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="h-full w-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                      <Folder className="h-16 w-16 text-gray-400" />
-                    </div>
-                  )}
-                </div>
+                <CategoryImage 
+                  imageUrl={category.bannerUrl}
+                  categoryName={category.name}
+                />
                 
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-2">
