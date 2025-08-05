@@ -1,14 +1,31 @@
-import Navbar from "@/components/navbar";
+import { notFound } from "next/navigation";
+import { getStoreBySlugAction } from "../actions";
+import { StoreNavbar } from "@/components/store/store-navbar";
 
-export default function StoreClientLayout({
-  children,
-}: {
+interface ClientLayoutProps {
   children: React.ReactNode;
-}) {
+  params: Promise<{
+    slug: string;
+  }>;
+}
+
+export default async function ClientLayout({ children, params }: ClientLayoutProps) {
+  const { slug } = await params;
+  
+  const result = await getStoreBySlugAction({ slug });
+  
+  if (!result.data) {
+    notFound();
+  }
+  
+  const store = result.data.store;
+
   return (
-    <>
-      <Navbar />
-      {children}
-    </>
+    <div className="min-h-screen bg-gray-50">
+      <StoreNavbar store={store} />
+      <main className="pt-16">
+        {children}
+      </main>
+    </div>
   );
 }

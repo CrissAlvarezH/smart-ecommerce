@@ -12,13 +12,21 @@ export default async function StoreProductsPage({ params }: StoreProductsPagePro
   const { slug } = await params;
   
   // Get store info
-  const { store } = await getStoreBySlugAction({ slug });
-  if (!store) {
+  const storeResult = await getStoreBySlugAction({ slug });
+  if (!storeResult.data) {
     notFound();
   }
+  
+  const store = storeResult.data.store;
 
   // Get products for this store
-  const { products } = await getStoreProductsAction({ storeSlug: slug });
+  const productsResult = await getStoreProductsAction({ storeId: store.id });
+  
+  if (!productsResult.data) {
+    notFound();
+  }
+  
+  const products = productsResult.data.products || [];
 
   return (
     <div className="container mx-auto px-4 py-8">

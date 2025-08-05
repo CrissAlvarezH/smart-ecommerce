@@ -19,13 +19,26 @@ export default async function StoreProductPage({ params }: StoreProductPageProps
   const { slug, productSlug } = await params;
 
   // Get store info
-  const { store } = await getStoreBySlugAction({ slug });
+  const storeResult = await getStoreBySlugAction({ slug });
+  
+  if (!storeResult.data) {
+    notFound();
+  }
+  
+  const store = storeResult.data.store;
+  
   if (!store) {
     notFound();
   }
 
   // Get product from database
-  const { product } = await getStoreProductBySlugAction({ storeSlug: slug, productSlug });
+  const productResult = await getStoreProductBySlugAction({ storeSlug: slug, productSlug });
+  
+  if (!productResult.data) {
+    notFound();
+  }
+  
+  const product = productResult.data.product;
 
   if (!product) {
     notFound();
@@ -38,7 +51,7 @@ export default async function StoreProductPage({ params }: StoreProductPageProps
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Link href={`/stores/${slug}/client/products`} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6">
+      <Link href={`/stores/${slug}/client`} className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-6">
         <ArrowLeft className="h-4 w-4" />
         Back to Products
       </Link>
@@ -47,18 +60,24 @@ export default async function StoreProductPage({ params }: StoreProductPageProps
         {/* Product Images */}
         <div className="space-y-4">
           <div className="aspect-square overflow-hidden bg-gray-100 rounded-lg">
-            <Image
-              src={product.images[0]?.url || "/placeholder.jpg"}
-              alt={product.images[0]?.altText || product.name}
-              width={600}
-              height={600}
-              className="h-full w-full object-cover"
-            />
+            {product.images && product.images.length > 0 ? (
+              <Image
+                src={product.images[0].url}
+                alt={product.images[0].altText || product.name}
+                width={600}
+                height={600}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="h-full w-full bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-400">No image available</span>
+              </div>
+            )}
           </div>
           
-          {product.images.length > 1 && (
+          {product.images && product.images.length > 1 && (
             <div className="flex gap-2">
-              {product.images.slice(1).map((image, index) => (
+              {product.images.slice(1).map((image: any, index: number) => (
                 <div key={index} className="w-20 h-20 overflow-hidden bg-gray-100 rounded-md">
                   <Image
                     src={image.url}
@@ -119,11 +138,11 @@ export default async function StoreProductPage({ params }: StoreProductPageProps
                     {inStock ? `${product.inventory} in stock` : 'Out of stock'}
                   </span>
                 </div>
-                {product.collections.length > 0 && (
+                {product.collections && product.collections.length > 0 && (
                   <div className="flex justify-between">
                     <span className="text-sm text-gray-600">Collections:</span>
                     <div className="flex gap-1">
-                      {product.collections.map((collection) => (
+                      {product.collections.map((collection: any) => (
                         <Badge key={collection.id} variant="outline" className="text-xs">
                           {collection.name}
                         </Badge>

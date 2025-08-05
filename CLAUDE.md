@@ -150,6 +150,64 @@ if (result?.data) {
 
 **Important**: Always access returned data through `result.data`, not directly on `result`.
 
+### Server Action Result Object (next-safe-action)
+
+**CRITICAL**: When calling server actions from Server Components, you must properly handle the action result object structure.
+
+#### Action Result Object Structure:
+```typescript
+type ActionResult<T> = {
+  data?: T;                    // Successful action return value
+  validationErrors?: object;   // Input validation errors  
+  serverError?: string;        // Server-side execution errors
+}
+```
+
+#### Correct Usage in Server Components:
+```typescript
+// ❌ WRONG - Direct destructuring fails
+const { store } = await getStoreBySlugAction({ slug });
+
+// ✅ CORRECT - Access via result object
+const result = await getStoreBySlugAction({ slug });
+if (result.data) {
+  const store = result.data.store; // Access actual data
+}
+
+// ✅ CORRECT - Handle all cases
+const result = await getStoreBySlugAction({ slug });
+if (result.data) {
+  // Success case
+  const store = result.data.store;
+} else if (result.validationErrors) {
+  // Handle validation errors
+} else if (result.serverError) {
+  // Handle server errors
+}
+```
+
+#### Common Patterns:
+```typescript
+// Pattern 1: Simple success check
+const result = await getDataAction(input);
+if (!result.data) {
+  notFound(); // or throw error
+}
+const data = result.data;
+
+// Pattern 2: With error handling
+const result = await getDataAction(input);
+if (result.serverError) {
+  throw new Error(result.serverError);
+}
+if (result.validationErrors) {
+  // Handle validation errors
+}
+const data = result.data;
+```
+
+**Remember**: Server actions return a result object, not the data directly. Always check `result.data` exists before accessing properties.
+
 ### Error Handling
 - Custom error types in `lib/errors.ts`
 - Sentry integration for error monitoring
