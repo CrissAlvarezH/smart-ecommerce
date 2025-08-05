@@ -65,20 +65,20 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
         )}
         
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-gray-900">
-              ${price.toFixed(2)}
-            </span>
+          <div className="flex flex-col">
             {comparePrice && (
-              <>
+              <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm text-gray-500 line-through">
                   ${comparePrice.toFixed(2)}
                 </span>
                 <span className="text-sm text-green-600 font-medium">
                   -{discount}%
                 </span>
-              </>
+              </div>
             )}
+            <span className="text-xl font-bold text-gray-900">
+              ${price.toFixed(2)}
+            </span>
           </div>
           
           <AddToCartButton
