@@ -129,10 +129,12 @@ export default async function StoreProductPage({ params }: StoreProductPageProps
                   <span className="text-sm text-gray-600">Store:</span>
                   <span className="text-sm font-medium">{store.name}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">SKU:</span>
-                  <span className="text-sm font-medium">{product.sku}</span>
-                </div>
+                {product.sku && (
+                  <div className="flex justify-between">
+                    <span className="text-sm text-gray-600">SKU:</span>
+                    <span className="text-sm font-medium">{product.sku}</span>
+                  </div>
+                )}
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Availability:</span>
                   <span className={`text-sm font-medium ${inStock ? 'text-green-600' : 'text-red-600'}`}>
@@ -165,7 +167,12 @@ export default async function StoreProductPage({ params }: StoreProductPageProps
               className="w-full"
             />
             
-            <Button variant="outline" size="lg" className="w-full">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="w-full" 
+              disabled={!inStock}
+            >
               Buy Now
             </Button>
           </div>
