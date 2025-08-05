@@ -249,6 +249,7 @@ export async function getProductsByCategory(categoryId: string, limit = 20, offs
       price: products.price,
       compareAtPrice: products.compareAtPrice,
       categoryName: categories.name,
+      inventory: products.inventory,
     })
     .from(products)
     .leftJoin(categories, eq(products.categoryId, categories.id))
@@ -260,7 +261,26 @@ export async function getProductsByCategory(categoryId: string, limit = 20, offs
     .limit(limit)
     .offset(offset);
 
-  return await applyDiscountsToProducts(productsData);
+  const productsWithDiscounts = await applyDiscountsToProducts(productsData);
+
+  // Get the first image for each product
+  const productsWithImages = await Promise.all(
+    productsWithDiscounts.map(async (product) => {
+      const images = await db
+        .select()
+        .from(productImages)
+        .where(eq(productImages.productId, product.id))
+        .orderBy(productImages.position)
+        .limit(1);
+      
+      return {
+        ...product,
+        image: images[0] || null,
+      };
+    })
+  );
+
+  return productsWithImages;
 }
 
 export async function getProductsByCollection(collectionId: string, limit = 20, offset = 0, storeId?: string) {
