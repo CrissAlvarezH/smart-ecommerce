@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
+import { formatPrice } from "@/lib/format-price";
 
 interface CartItemProps {
   item: {
@@ -73,7 +74,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
 
           <div className="flex-grow">
             <h3 className="font-semibold text-lg mb-1">{item.product.name}</h3>
-            <p className="text-gray-600 mb-2">${price.toFixed(2)} each</p>
+            <p className="text-gray-600 mb-2">{formatPrice(price)} each</p>
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -104,7 +105,7 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
 
               <div className="flex items-center gap-3">
                 <span className="font-bold text-lg">
-                  ${total.toFixed(2)}
+                  {formatPrice(total)}
                 </span>
                 
                 <Button

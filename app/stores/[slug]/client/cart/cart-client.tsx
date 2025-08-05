@@ -10,6 +10,7 @@ import { useAction } from "next-safe-action/hooks";
 import { toast } from "@/hooks/use-toast";
 import { useState, useOptimistic, startTransition } from "react";
 import { useStoreCart } from "@/hooks/use-store-cart";
+import { formatPrice } from "@/lib/format-price";
 
 interface CartItemType {
   id: string;
@@ -235,24 +236,24 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal ({cartItems.length} items)</span>
-                <span>${subtotal.toFixed(2)}</span>
+                <span>{formatPrice(subtotal)}</span>
               </div>
               
               <div className="flex justify-between">
                 <span className="text-gray-600">Shipping</span>
-                <span>${shipping.toFixed(2)}</span>
+                <span>{formatPrice(shipping)}</span>
               </div>
               
               <div className="flex justify-between">
                 <span className="text-gray-600">Tax</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>{formatPrice(tax)}</span>
               </div>
               
               <hr />
               
               <div className="flex justify-between text-lg font-bold">
                 <span>Total</span>
-                <span>${total.toFixed(2)}</span>
+                <span>{formatPrice(total)}</span>
               </div>
 
               <Button size="lg" className="w-full mt-6" disabled={isLoading}>

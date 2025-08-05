@@ -7,6 +7,7 @@ import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { AddToCartButton } from "@/components/products/add-to-cart-button";
 import { getStoreBySlugAction, getStoreProductBySlugAction } from "../../../actions";
+import { formatPrice } from "@/lib/format-price";
 
 interface StoreProductPageProps {
   params: Promise<{
@@ -104,12 +105,12 @@ export default async function StoreProductPage({ params }: StoreProductPageProps
             
             <div className="flex items-center gap-3 mb-4">
               <span className="text-3xl font-bold text-gray-900">
-                ${price.toFixed(2)}
+                {formatPrice(price)}
               </span>
               {comparePrice && (
                 <>
                   <span className="text-lg text-gray-500 line-through">
-                    ${comparePrice.toFixed(2)}
+                    {formatPrice(comparePrice)}
                   </span>
                   <Badge variant="destructive">
                     -{discount}% OFF

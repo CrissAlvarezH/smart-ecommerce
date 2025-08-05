@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Card, CardContent } from "@/components/ui/card";
 import { AddToCartButton } from "./add-to-cart-button";
+import { formatPrice } from "@/lib/format-price";
 
 interface ProductCardProps {
   product: {
@@ -70,7 +71,7 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
             {comparePrice && (
               <div className="flex items-center gap-2 mb-1">
                 <span className="text-sm text-gray-500 line-through">
-                  ${comparePrice.toFixed(2)}
+                  {formatPrice(comparePrice)}
                 </span>
                 <span className="text-sm text-green-600 font-medium">
                   -{discount}%
@@ -78,7 +79,7 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
               </div>
             )}
             <span className="text-xl font-bold text-gray-900">
-              ${price.toFixed(2)}
+              {formatPrice(price)}
             </span>
           </div>
           
