@@ -12,6 +12,7 @@ import { BackButton } from "@/components/ui/back-button";
 import { CategoryProductsSection } from "./category-products-section";
 import { storeRepository } from "@/repositories/stores";
 import { formatDateToLocaleString } from "@/lib/dates";
+import { getFileUrl } from "@/lib/files";
 
 interface CategoryDetailsPageProps {
   params: Promise<{ slug: string; id: string }>;
@@ -48,6 +49,26 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
   ]);
 
   const totalPages = Math.ceil(totalCount / limit);
+
+  // Fetch signed URLs for images if they exist
+  let categoryImageUrl: string | undefined;
+  let categoryBannerUrl: string | undefined;
+
+  if (category.imageUrl) {
+    try {
+      categoryImageUrl = await getFileUrl(category.imageUrl);
+    } catch (error) {
+      console.error("Failed to get category image URL:", error);
+    }
+  }
+
+  if (category.bannerUrl) {
+    try {
+      categoryBannerUrl = await getFileUrl(category.bannerUrl);
+    } catch (error) {
+      console.error("Failed to get category banner URL:", error);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -133,12 +154,12 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
                 </div>
               )}
 
-              {category.imageUrl && (
+              {categoryImageUrl && (
                 <div>
                   <label className="text-sm font-medium text-gray-500">Category Image</label>
                   <div className="mt-2">
                     <img 
-                      src={category.imageUrl} 
+                      src={categoryImageUrl} 
                       alt={category.name}
                       className="w-32 h-32 object-cover rounded-lg border"
                     />
@@ -146,12 +167,12 @@ export default async function CategoryDetailsPage({ params, searchParams }: Cate
                 </div>
               )}
 
-              {category.bannerUrl && (
+              {categoryBannerUrl && (
                 <div>
                   <label className="text-sm font-medium text-gray-500">Category Banner</label>
                   <div className="mt-2">
                     <img 
-                      src={category.bannerUrl} 
+                      src={categoryBannerUrl} 
                       alt={`${category.name} banner`}
                       className="w-full h-32 object-cover rounded-lg border"
                     />

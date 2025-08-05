@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error(`Error uploading category ${formData?.get("type")}:`, error);
+    console.error(`Error uploading category image:`, error);
     return NextResponse.json({ 
       error: "Failed to upload image" 
     }, { status: 500 });

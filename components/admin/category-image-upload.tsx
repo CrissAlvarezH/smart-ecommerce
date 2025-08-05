@@ -224,18 +224,6 @@ export function CategoryImageUpload({
           className="hidden"
           disabled={isDeleting}
         />
-
-        {!previewUrl && (
-          <Button
-            variant="outline"
-            onClick={handleUploadClick}
-            disabled={isDeleting}
-            className="w-full"
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            Select {title}
-          </Button>
-        )}
       </CardContent>
     </Card>
   );
