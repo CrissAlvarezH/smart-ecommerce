@@ -75,11 +75,12 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
         description: "Item quantity has been updated.",
       });
     },
-    onError: (error) => {
-      console.error("Update quantity error:", error);
+    onError: (result) => {
+      console.error("Update quantity error:", result);
+      const errorMessage = result.serverError || result.validationErrors || "Failed to update quantity";
       toast({
         title: "Error",
-        description: error.error?.serverError || "Failed to update quantity",
+        description: typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage),
         variant: "destructive",
       });
     },
@@ -93,11 +94,12 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
         description: "Item has been removed from your cart.",
       });
     },
-    onError: (error) => {
-      console.error("Remove item error:", error);
+    onError: (result) => {
+      console.error("Remove item error:", result);
+      const errorMessage = result.serverError || result.validationErrors || "Failed to remove item";
       toast({
         title: "Error",
-        description: error.error?.serverError || "Failed to remove item",
+        description: typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage),
         variant: "destructive",
       });
     },
@@ -111,11 +113,12 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
         description: "All items have been removed from your cart.",
       });
     },
-    onError: (error) => {
-      console.error("Clear cart error:", error);
+    onError: (result) => {
+      console.error("Clear cart error:", result);
+      const errorMessage = result.serverError || result.validationErrors || "Failed to clear cart";
       toast({
         title: "Error",
-        description: error.error?.serverError || "Failed to clear cart",
+        description: typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage),
         variant: "destructive",
       });
     },
@@ -139,7 +142,7 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
     startTransition(() => {
       setOptimisticCartItems({ type: 'update', itemId, quantity });
     });
-    updateQuantity({ cartItemId: itemId, quantity });
+    updateQuantity({ cartItemId: itemId, quantity, storeSlug: store.slug });
   };
 
   const handleRemoveItem = async (itemId: string) => {
@@ -153,7 +156,7 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
     startTransition(() => {
       setOptimisticCartItems({ type: 'remove', itemId });
     });
-    removeItem({ cartItemId: itemId });
+    removeItem({ cartItemId: itemId, storeSlug: store.slug });
   };
 
   const handleClearCart = async () => {
@@ -164,7 +167,7 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
     startTransition(() => {
       setOptimisticCartItems({ type: 'clear' });
     });
-    clearCart();
+    clearCart({ storeSlug: store.slug });
   };
 
   const subtotal = cartItems.reduce((total, item) => {

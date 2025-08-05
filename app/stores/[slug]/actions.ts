@@ -312,5 +312,37 @@ export const getStoreCartItemsAction = unauthenticatedAction
     const cart = await cartService.getOrCreateCart(undefined, parsedInput.sessionId);
     const cartItems = await cartService.getCartWithItems(cart.id);
     
-    return { cartItems };
+    // Generate signed URLs for product images
+    const cartItemsWithSignedUrls = await Promise.all(
+      cartItems.map(async (item) => {
+        if (item.product.image?.url) {
+          try {
+            const signedUrl = await getFileUrl(item.product.image.url);
+            return {
+              ...item,
+              product: {
+                ...item.product,
+                image: {
+                  ...item.product.image,
+                  url: signedUrl
+                }
+              }
+            };
+          } catch (error) {
+            console.error(`Failed to get signed URL for cart item image: ${item.product.image.url}`, error);
+            // Return item without image if URL generation fails
+            return {
+              ...item,
+              product: {
+                ...item.product,
+                image: null
+              }
+            };
+          }
+        }
+        return item;
+      })
+    );
+    
+    return { cartItems: cartItemsWithSignedUrls };
   });
