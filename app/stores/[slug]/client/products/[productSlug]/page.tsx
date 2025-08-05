@@ -97,7 +97,7 @@ export default async function StoreProductPage({ params }: StoreProductPageProps
         <div className="space-y-6">
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <Badge variant="secondary">{product.categoryName}</Badge>
+              {product.categoryName && <Badge variant="secondary">{product.categoryName}</Badge>}
               {!inStock && <Badge variant="destructive">Out of Stock</Badge>}
             </div>
             
