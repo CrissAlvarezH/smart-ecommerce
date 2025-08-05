@@ -17,7 +17,12 @@ export default async function StoreCartPage({ params }: StoreCartPageProps) {
   const { slug } = await params;
   
   // Get store info
-  const { store } = await getStoreBySlugAction({ slug });
+  const storeResult = await getStoreBySlugAction({ slug });
+  if (!storeResult.data) {
+    notFound();
+  }
+  
+  const store = storeResult.data.store;
   if (!store) {
     notFound();
   }
@@ -31,7 +36,9 @@ export default async function StoreCartPage({ params }: StoreCartPageProps) {
   if (sessionId) {
     try {
       const result = await getStoreCartItemsAction({ storeSlug: slug, sessionId });
-      cartItems = result.cartItems || [];
+      if (result.data) {
+        cartItems = result.data.cartItems || [];
+      }
     } catch (error) {
       console.error("Error fetching cart:", error);
       cartItems = [];

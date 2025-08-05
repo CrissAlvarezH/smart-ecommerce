@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Store } from "lucide-react";
-import { CartButton } from "@/components/cart/cart-button";
+import { StoreCartButton } from "@/components/cart/store-cart-button";
 import { UserMenu } from "@/components/store/user-menu";
 import { SelectStore } from "@/db/schemas";
 import { validateRequest } from "@/lib/auth";
@@ -56,7 +56,7 @@ export async function StoreNavbar({ store }: StoreNavbarProps) {
           {/* Right side buttons */}
           <div className="flex items-center space-x-4">
             {/* Cart Button */}
-            <CartButton />
+            <StoreCartButton storeSlug={store.slug} />
 
             {/* User Menu */}
             <div className="hidden md:block">
