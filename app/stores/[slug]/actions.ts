@@ -133,6 +133,155 @@ export const getStoreProductBySlugAction = unauthenticatedAction
     return { product: productWithSignedUrls };
   });
 
+export const getStoreCategoriesAction = unauthenticatedAction
+  .inputSchema(z.object({
+    storeId: z.string(),
+  }))
+  .action(async ({ parsedInput }) => {
+    const { storeId } = parsedInput;
+    
+    // Get categories for this store from the product service
+    const dbCategories = await productService.getCategories(storeId);
+    
+    // Transform and generate signed URLs for category images
+    const categories = await Promise.all(
+      dbCategories.map(async (category) => {
+        let imageUrl: string | undefined;
+        let bannerUrl: string | undefined;
+        
+        // Generate signed URLs for category images if they exist
+        if (category.imageUrl) {
+          try {
+            imageUrl = await getFileUrl(category.imageUrl);
+          } catch (error) {
+            console.error(`Failed to get signed URL for category image: ${category.imageUrl}`, error);
+          }
+        }
+        
+        if (category.bannerUrl) {
+          try {
+            bannerUrl = await getFileUrl(category.bannerUrl);
+          } catch (error) {
+            console.error(`Failed to get signed URL for category banner: ${category.bannerUrl}`, error);
+          }
+        }
+        
+        return {
+          id: category.id,
+          name: category.name,
+          slug: category.slug,
+          description: category.description,
+          imageUrl,
+          bannerUrl,
+          displayMode: category.displayMode,
+          isActive: category.isActive,
+        };
+      })
+    );
+    
+    return { categories };
+  });
+
+export const getStoreCategoryBySlugAction = unauthenticatedAction
+  .inputSchema(z.object({
+    storeId: z.string(),
+    categorySlug: z.string(),
+  }))
+  .action(async ({ parsedInput }) => {
+    const { storeId, categorySlug } = parsedInput;
+    
+    // Get category by slug from the database
+    const dbCategories = await productService.getCategories(storeId);
+    const category = dbCategories.find(cat => cat.slug === categorySlug);
+    
+    if (!category) {
+      return { category: null };
+    }
+    
+    // Generate signed URLs for category images
+    let imageUrl: string | undefined;
+    let bannerUrl: string | undefined;
+    
+    if (category.imageUrl) {
+      try {
+        imageUrl = await getFileUrl(category.imageUrl);
+      } catch (error) {
+        console.error(`Failed to get signed URL for category image: ${category.imageUrl}`, error);
+      }
+    }
+    
+    if (category.bannerUrl) {
+      try {
+        bannerUrl = await getFileUrl(category.bannerUrl);
+      } catch (error) {
+        console.error(`Failed to get signed URL for category banner: ${category.bannerUrl}`, error);
+      }
+    }
+    
+    const categoryWithUrls = {
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+      description: category.description,
+      imageUrl,
+      bannerUrl,
+      displayMode: category.displayMode,
+      isActive: category.isActive,
+    };
+    
+    return { category: categoryWithUrls };
+  });
+
+export const getStoreCategoryProductsAction = unauthenticatedAction
+  .inputSchema(z.object({
+    storeId: z.string(),
+    categoryId: z.string(),
+    page: z.string().optional(),
+  }))
+  .action(async ({ parsedInput }) => {
+    const { storeId, categoryId, page = "1" } = parsedInput;
+    
+    const currentPage = parseInt(page, 10);
+    const limit = 12; // Products per page
+    const offset = (currentPage - 1) * limit;
+    
+    // Get products by category from the product service
+    const dbProducts = await productService.getProductsByCategory(categoryId, limit, offset, storeId);
+    const totalPages = Math.ceil(dbProducts.length / limit); // This is approximate, ideally we'd have a count method
+    
+    // Transform and generate signed URLs for product images
+    const products = await Promise.all(
+      dbProducts.map(async (product) => {
+        let imageUrl: string | undefined;
+        
+        // Generate signed URL for product image if it exists
+        if (product.image?.url) {
+          try {
+            imageUrl = await getFileUrl(product.image.url);
+          } catch (error) {
+            console.error(`Failed to get signed URL for product image: ${product.image.url}`, error);
+          }
+        }
+        
+        return {
+          id: product.id,
+          name: product.name,
+          slug: product.slug,
+          shortDescription: product.shortDescription || undefined,
+          price: product.price,
+          compareAtPrice: product.compareAtPrice || undefined,
+          categoryName: product.categoryName || undefined,
+          image: imageUrl ? {
+            url: imageUrl,
+            altText: product.image?.altText || product.name,
+          } : undefined,
+        };
+      })
+    );
+    
+    return { products, totalPages, currentPage };
+  });
+
 export const getStoreCartItemsAction = unauthenticatedAction
   .inputSchema(z.object({
     storeSlug: z.string(),
