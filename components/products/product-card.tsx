@@ -14,6 +14,7 @@ interface ProductCardProps {
     price: string;
     compareAtPrice?: string;
     categoryName?: string;
+    inventory: number;
     image?: {
       url: string;
       altText?: string;
@@ -84,7 +85,7 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
           <AddToCartButton
             productId={product.id}
             productName={product.name}
-            inStock={true}
+            inStock={product.inventory > 0}
             size="sm"
             className="flex items-center gap-2"
             storeSlug={storeSlug}

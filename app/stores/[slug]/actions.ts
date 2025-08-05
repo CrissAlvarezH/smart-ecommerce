@@ -97,6 +97,7 @@ export const getStoreProductsAction = unauthenticatedAction
           price: product.price,
           compareAtPrice: product.compareAtPrice || undefined,
           categoryName: product.categoryName || undefined,
+          inventory: product.inventory,
           image: imageUrl ? {
             url: imageUrl,
             altText: product.image?.altText || product.name,
@@ -284,6 +285,7 @@ export const getStoreCategoryProductsAction = unauthenticatedAction
           price: product.price,
           compareAtPrice: product.compareAtPrice || undefined,
           categoryName: product.categoryName || undefined,
+          inventory: product.inventory,
           image: imageUrl ? {
             url: imageUrl,
             altText: product.image?.altText || product.name,

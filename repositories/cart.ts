@@ -81,6 +81,17 @@ export async function getCartWithItems(cartId: string) {
 }
 
 export async function addToCart(cartId: string, productId: string, quantity: number = 1) {
+  // First check if product has enough stock
+  const product = await db
+    .select({ inventory: products.inventory })
+    .from(products)
+    .where(eq(products.id, productId))
+    .limit(1);
+
+  if (!product[0]) {
+    throw new Error("Product not found");
+  }
+
   // Check if item already exists in cart
   const existingItem = await db
     .select()
@@ -88,12 +99,21 @@ export async function addToCart(cartId: string, productId: string, quantity: num
     .where(and(eq(cartItems.cartId, cartId), eq(cartItems.productId, productId)))
     .limit(1);
 
+  const totalQuantity = existingItem.length > 0 
+    ? existingItem[0].quantity + quantity 
+    : quantity;
+
+  // Check if we have enough stock
+  if (product[0].inventory < totalQuantity) {
+    throw new Error(`Not enough stock. Only ${product[0].inventory} items available.`);
+  }
+
   if (existingItem.length > 0) {
     // Update quantity
     const updatedItem = await db
       .update(cartItems)
       .set({ 
-        quantity: existingItem[0].quantity + quantity,
+        quantity: totalQuantity,
         updatedAt: new Date()
       })
       .where(eq(cartItems.id, existingItem[0].id))
@@ -115,9 +135,29 @@ export async function addToCart(cartId: string, productId: string, quantity: num
   }
 }
 
-export async function updateCartItemQuantity(cartItemId: string, quantity: number) {
+export async function updateCartItemQuantity(cartId: string, cartItemId: string, quantity: number) {
   if (quantity <= 0) {
-    return await removeFromCart(cartItemId);
+    return await removeFromCart(cartId, cartItemId);
+  }
+
+  // Get the cart item with product info to check stock
+  const cartItem = await db
+    .select({
+      productId: cartItems.productId,
+      inventory: products.inventory
+    })
+    .from(cartItems)
+    .innerJoin(products, eq(cartItems.productId, products.id))
+    .where(eq(cartItems.id, cartItemId))
+    .limit(1);
+
+  if (!cartItem[0]) {
+    throw new Error("Cart item not found");
+  }
+
+  // Check if we have enough stock
+  if (cartItem[0].inventory < quantity) {
+    throw new Error(`Not enough stock. Only ${cartItem[0].inventory} items available.`);
   }
 
   const updatedItem = await db
@@ -132,7 +172,7 @@ export async function updateCartItemQuantity(cartItemId: string, quantity: numbe
   return updatedItem[0];
 }
 
-export async function removeFromCart(cartItemId: string) {
+export async function removeFromCart(cartId: string, cartItemId: string) {
   await db
     .delete(cartItems)
     .where(eq(cartItems.id, cartItemId));

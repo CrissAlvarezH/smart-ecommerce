@@ -10,6 +10,7 @@ interface Product {
   price: string;
   compareAtPrice?: string;
   categoryName?: string;
+  inventory: number;
   image?: {
     url: string;
     altText?: string;
