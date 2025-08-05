@@ -55,12 +55,25 @@ export const getStoreProductsAction = unauthenticatedAction
     const limit = 12; // Products per page
     const offset = (currentPage - 1) * limit;
     
-    // TODO: Update productService to filter by storeId and support pagination
-    const dbProducts = await productService.getProducts();
+    let dbProducts;
     
-    // For now, just slice the products for pagination
-    const paginatedProducts = dbProducts.slice(offset, offset + limit);
-    const totalPages = Math.ceil(dbProducts.length / limit);
+    if (search) {
+      // Search products by name
+      dbProducts = await productService.searchProducts(search, limit, offset, storeId);
+    } else if (categoryId) {
+      // Get products by category
+      dbProducts = await productService.getProductsByCategory(categoryId, limit, offset, storeId);
+    } else {
+      // Get all products for the store
+      dbProducts = await productService.getProducts(limit, offset, storeId);
+    }
+    
+    // Products are already paginated from the database query
+    const paginatedProducts = dbProducts;
+    
+    // TODO: We need a separate count query to get accurate total pages
+    // For now, assume there might be more pages if we got a full limit of products
+    const totalPages = dbProducts.length === limit ? currentPage + 1 : currentPage;
     
     // Transform database products to match the expected format
     const products = await Promise.all(
@@ -106,8 +119,8 @@ export const getStoreProductBySlugAction = unauthenticatedAction
       throw new Error("Store not found");
     }
     
-    // TODO: Verify product belongs to store when we add storeId to products
-    const product = await productService.getProductBySlug(parsedInput.productSlug);
+    // Get product by slug and verify it belongs to this store
+    const product = await productService.getProductBySlug(parsedInput.productSlug, store.id);
     
     if (!product) {
       return { product: null };
