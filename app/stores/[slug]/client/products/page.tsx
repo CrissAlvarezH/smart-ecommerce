@@ -1,15 +1,18 @@
-import { ProductGrid } from "@/components/products/product-grid";
 import { notFound } from "next/navigation";
 import { getStoreBySlugAction, getStoreProductsAction } from "../../actions";
+import { ProductsClient } from "./products-client";
 
 interface StoreProductsPageProps {
   params: Promise<{
     slug: string;
   }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
-export default async function StoreProductsPage({ params }: StoreProductsPageProps) {
+export default async function StoreProductsPage({ params, searchParams }: StoreProductsPageProps) {
   const { slug } = await params;
+  const resolvedSearchParams = await searchParams;
+  const sort = typeof resolvedSearchParams.sort === 'string' ? resolvedSearchParams.sort : undefined;
   
   // Get store info
   const storeResult = await getStoreBySlugAction({ slug });
@@ -19,8 +22,11 @@ export default async function StoreProductsPage({ params }: StoreProductsPagePro
   
   const store = storeResult.data.store;
 
-  // Get products for this store
-  const productsResult = await getStoreProductsAction({ storeId: store.id });
+  // Get products for this store with sorting
+  const productsResult = await getStoreProductsAction({ 
+    storeId: store.id,
+    sort: sort 
+  });
   
   if (!productsResult.data) {
     notFound();
@@ -29,13 +35,10 @@ export default async function StoreProductsPage({ params }: StoreProductsPagePro
   const products = productsResult.data.products || [];
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">{store.name} Products</h1>
-        <p className="text-gray-600">Discover our amazing collection of products</p>
-      </div>
-
-      <ProductGrid products={products} storeSlug={slug} />
-    </div>
+    <ProductsClient 
+      products={products} 
+      storeSlug={slug} 
+      storeName={store.name}
+    />
   );
 }

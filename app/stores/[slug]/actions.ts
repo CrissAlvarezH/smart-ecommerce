@@ -59,13 +59,13 @@ export const getStoreProductsAction = unauthenticatedAction
     
     if (search) {
       // Search products by name
-      dbProducts = await productService.searchProducts(search, limit, offset, storeId);
+      dbProducts = await productService.searchProducts(search, limit, offset, storeId, sort);
     } else if (categoryId) {
       // Get products by category
-      dbProducts = await productService.getProductsByCategory(categoryId, limit, offset, storeId);
+      dbProducts = await productService.getProductsByCategory(categoryId, limit, offset, storeId, sort);
     } else {
       // Get all products for the store
-      dbProducts = await productService.getProducts(limit, offset, storeId);
+      dbProducts = await productService.getProducts(limit, offset, storeId, sort);
     }
     
     // Products are already paginated from the database query

@@ -69,7 +69,28 @@ export async function applyDiscountsToProducts(productsData: any[]) {
   });
 }
 
-export async function getProducts(limit = 20, offset = 0, storeId?: string) {
+export async function getProducts(limit = 20, offset = 0, storeId?: string, sort?: string) {
+  // Determine sort order
+  let orderByClause;
+  switch (sort) {
+    case "price-asc":
+      orderByClause = products.price;
+      break;
+    case "price-desc":
+      orderByClause = desc(products.price);
+      break;
+    case "name-asc":
+      orderByClause = products.name;
+      break;
+    case "name-desc":
+      orderByClause = desc(products.name);
+      break;
+    case "newest":
+    default:
+      orderByClause = desc(products.createdAt);
+      break;
+  }
+
   const productsData = await db
     .select({
       id: products.id,
@@ -93,7 +114,7 @@ export async function getProducts(limit = 20, offset = 0, storeId?: string) {
       ? and(eq(products.isActive, true), eq(products.storeId, storeId))
       : eq(products.isActive, true)
     )
-    .orderBy(desc(products.createdAt))
+    .orderBy(orderByClause)
     .limit(limit)
     .offset(offset);
 
@@ -248,7 +269,28 @@ export async function getCollections(storeId?: string) {
     .orderBy(collections.name);
 }
 
-export async function getProductsByCategory(categoryId: string, limit = 20, offset = 0, storeId?: string) {
+export async function getProductsByCategory(categoryId: string, limit = 20, offset = 0, storeId?: string, sort?: string) {
+  // Determine sort order
+  let orderByClause;
+  switch (sort) {
+    case "price-asc":
+      orderByClause = products.price;
+      break;
+    case "price-desc":
+      orderByClause = desc(products.price);
+      break;
+    case "name-asc":
+      orderByClause = products.name;
+      break;
+    case "name-desc":
+      orderByClause = desc(products.name);
+      break;
+    case "newest":
+    default:
+      orderByClause = desc(products.createdAt);
+      break;
+  }
+
   const productsData = await db
     .select({
       id: products.id,
@@ -266,7 +308,7 @@ export async function getProductsByCategory(categoryId: string, limit = 20, offs
       ? and(eq(products.categoryId, categoryId), eq(products.isActive, true), eq(products.storeId, storeId))
       : and(eq(products.categoryId, categoryId), eq(products.isActive, true))
     )
-    .orderBy(desc(products.createdAt))
+    .orderBy(orderByClause)
     .limit(limit)
     .offset(offset);
 
@@ -317,7 +359,28 @@ export async function getProductsByCollection(collectionId: string, limit = 20, 
   return await applyDiscountsToProducts(productsData);
 }
 
-export async function searchProducts(query: string, limit = 20, offset = 0, storeId?: string) {
+export async function searchProducts(query: string, limit = 20, offset = 0, storeId?: string, sort?: string) {
+  // Determine sort order
+  let orderByClause;
+  switch (sort) {
+    case "price-asc":
+      orderByClause = products.price;
+      break;
+    case "price-desc":
+      orderByClause = desc(products.price);
+      break;
+    case "name-asc":
+      orderByClause = products.name;
+      break;
+    case "name-desc":
+      orderByClause = desc(products.name);
+      break;
+    case "newest":
+    default:
+      orderByClause = desc(products.createdAt);
+      break;
+  }
+
   const productsData = await db
     .select({
       id: products.id,
@@ -341,7 +404,7 @@ export async function searchProducts(query: string, limit = 20, offset = 0, stor
           ilike(products.name, `%${query}%`)
         )
     )
-    .orderBy(desc(products.createdAt))
+    .orderBy(orderByClause)
     .limit(limit)
     .offset(offset);
 
