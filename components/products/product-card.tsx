@@ -28,7 +28,6 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
   const price = parseFloat(product.price);
   const comparePrice = product.compareAtPrice ? parseFloat(product.compareAtPrice) : null;
   const discount = comparePrice ? Math.round(((comparePrice - price) / comparePrice) * 100) : 0;
-
   return (
     <Card className="group overflow-hidden hover:shadow-lg transition-shadow">
       <div className="aspect-square overflow-hidden bg-gray-100">

@@ -16,6 +16,7 @@ interface CartItemProps {
       name: string;
       slug: string;
       price: string;
+      compareAtPrice?: string;
       inventory: number;
       image?: {
         url: string;
@@ -28,9 +29,11 @@ interface CartItemProps {
 }
 
 export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
-  const [isUpdating, setIsUpdating] = useState(false);
-  const price = parseFloat(item.product.price);
+ const price = parseFloat(item.product.price);
+  const comparePrice = item.product.compareAtPrice ? parseFloat(item.product.compareAtPrice) : null;
+  const discount = comparePrice ? Math.round(((comparePrice - price) / comparePrice) * 100) : 0;
   const total = price * item.quantity;
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const handleQuantityChange = async (newQuantity: number) => {
     if (newQuantity < 0 || newQuantity > item.product.inventory) return;
@@ -74,7 +77,25 @@ export function CartItem({ item, onUpdateQuantity, onRemove }: CartItemProps) {
 
           <div className="flex-grow">
             <h3 className="font-semibold text-lg mb-1">{item.product.name}</h3>
-            <p className="text-gray-600 mb-2">{formatPrice(price)} each</p>
+            <div className="mb-2">
+              {comparePrice ? (
+                <div className="flex flex-col">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm text-gray-500 line-through">
+                      {formatPrice(comparePrice!)}
+                    </span>
+                    <span className="text-sm text-green-600 font-medium">
+                      -{discount}%
+                    </span>
+                  </div>
+                  <span className="text-lg font-bold text-gray-900">
+                    {formatPrice(price)} each
+                  </span>
+                </div>
+              ) : (
+                <span className="text-lg font-bold text-gray-900">{formatPrice(price)} each</span>
+              )}
+            </div>
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">

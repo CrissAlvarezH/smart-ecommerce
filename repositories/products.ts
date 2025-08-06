@@ -3,7 +3,7 @@ import { categories, collections, products, productImages, productCollections, c
 import { eq, desc, and, ilike, gte } from "drizzle-orm";
 
 // Helper function to apply discounts to products
-async function applyDiscountsToProducts(productsData: any[]) {
+export async function applyDiscountsToProducts(productsData: any[]) {
   if (productsData.length === 0) return productsData;
 
   // Get all product IDs
@@ -39,6 +39,7 @@ async function applyDiscountsToProducts(productsData: any[]) {
   return productsData.map(product => {
     const discount = discountMap.get(product.id);
     if (discount) {
+      // Dynamic discount from discounts table
       const originalPrice = parseFloat(product.price);
       const discountPercentage = parseFloat(discount.percentage);
       const discountedPrice = originalPrice * (1 - discountPercentage / 100);
@@ -54,6 +55,14 @@ async function applyDiscountsToProducts(productsData: any[]) {
           percentage: discount.percentage,
           endDate: discount.endDate,
         }
+      };
+    } else if (product.compareAtPrice && parseFloat(product.compareAtPrice) > parseFloat(product.price)) {
+      // Direct compareAtPrice discount in products table
+      return {
+        ...product,
+        // Keep the existing price (already discounted) and compareAtPrice (original)
+        price: product.price,
+        compareAtPrice: product.compareAtPrice
       };
     }
     return product;

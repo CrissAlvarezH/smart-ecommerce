@@ -20,6 +20,7 @@ interface CartItemType {
     name: string;
     slug: string;
     price: string;
+    compareAtPrice?: string;
     inventory: number;
     image?: {
       url: string;

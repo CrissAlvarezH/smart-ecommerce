@@ -1,6 +1,7 @@
 import { db } from "@/db";
 import { carts, cartItems, products, productImages } from "@/db/schemas";
 import { eq, and, desc } from "drizzle-orm";
+import { applyDiscountsToProducts } from "./products";
 
 export async function getOrCreateCart(userId?: string, sessionId?: string) {
   if (!userId && !sessionId) {
@@ -49,6 +50,7 @@ export async function getCartWithItems(cartId: string) {
         name: products.name,
         slug: products.slug,
         price: products.price,
+        compareAtPrice: products.compareAtPrice,
         inventory: products.inventory,
       },
     })
@@ -57,9 +59,19 @@ export async function getCartWithItems(cartId: string) {
     .where(eq(cartItems.cartId, cartId))
     .orderBy(desc(cartItems.createdAt));
 
+  // Apply discounts to products
+  const productsData = cartItemsWithProducts.map(item => item.product);
+  const productsWithDiscounts = await applyDiscountsToProducts(productsData);
+  
+  // Map discounted products back to cart items
+  const cartItemsWithDiscountedProducts = cartItemsWithProducts.map((item, index) => ({
+    ...item,
+    product: productsWithDiscounts[index]
+  }));
+
   // Get first image for each product
   const itemsWithImages = await Promise.all(
-    cartItemsWithProducts.map(async (item) => {
+    cartItemsWithDiscountedProducts.map(async (item) => {
       const images = await db
         .select()
         .from(productImages)
