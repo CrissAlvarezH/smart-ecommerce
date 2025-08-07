@@ -31,7 +31,7 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
   const discount = comparePrice ? Math.round(((comparePrice - price) / comparePrice) * 100) : 0;
   return (
     <TooltipProvider>
-      <Card className="group overflow-hidden hover:shadow-lg transition-shadow">
+      <Card className="group overflow-hidden hover:shadow-lg transition-shadow h-full flex flex-col">
       <div className="aspect-square overflow-hidden bg-gray-100">
         <Link href={storeSlug ? `/stores/${storeSlug}/client/products/${product.slug}` : `/products/${product.slug}`}>
           {product.image ? (
@@ -50,7 +50,7 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
         </Link>
       </div>
       
-      <CardContent className="p-4">
+      <CardContent className="p-4 flex flex-col flex-grow">
         {product.categoryName && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -90,7 +90,7 @@ export function ProductCard({ product, storeSlug }: ProductCardProps) {
           </Tooltip>
         )}
         
-        <div className="space-y-3">
+        <div className="space-y-3 mt-auto">
           <div className="flex flex-col">
             {comparePrice && (
               <div className="flex items-center gap-2 mb-1">
