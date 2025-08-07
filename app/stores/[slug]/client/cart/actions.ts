@@ -7,6 +7,7 @@ import { cookies } from "next/headers";
 import { getFileUrl } from "@/lib/files";
 import * as cartRepository from "@/repositories/cart";
 import { calculateShippingForRates } from "@/services/shipping-calculator";
+import * as productRepository from "@/repositories/products";
 
 // Helper function to generate signed URLs for cart item images
 async function generateSignedUrlsForCartItems(cartItems: any[]) {
@@ -41,6 +42,84 @@ async function generateSignedUrlsForCartItems(cartItems: any[]) {
     })
   );
 }
+
+// Helper function to generate signed URLs for product images
+async function generateSignedUrlsForProducts(products: any[]) {
+  return Promise.all(
+    products.map(async (product) => {
+      if (product.image?.url) {
+        try {
+          const signedUrl = await getFileUrl(product.image.url);
+          return {
+            ...product,
+            image: {
+              ...product.image,
+              url: signedUrl
+            }
+          };
+        } catch (error) {
+          console.error(`Failed to get signed URL for product image: ${product.image.url}`, error);
+          return {
+            ...product,
+            image: null
+          };
+        }
+      }
+      return product;
+    })
+  );
+}
+
+export const getRecommendedProductsAction = unauthenticatedAction
+  .inputSchema(z.object({
+    storeId: z.string(),
+    limit: z.number().optional().default(4),
+  }))
+  .action(async ({ parsedInput }) => {
+    // Get more products to have a better selection for sorting
+    const fetchLimit = Math.max(parsedInput.limit * 3, 12);
+    const products = await productRepository.getProducts(
+      fetchLimit, // Get more products to sort from
+      0, // offset
+      parsedInput.storeId, // storeId
+      "newest" // sort
+    );
+
+    // Sort products to prioritize those with discounts
+    const sortedProducts = products.sort((a, b) => {
+      // Check if product has any type of discount
+      const aHasDiscount = (a.compareAtPrice && parseFloat(a.compareAtPrice) > parseFloat(a.price)) || a.discountInfo;
+      const bHasDiscount = (b.compareAtPrice && parseFloat(b.compareAtPrice) > parseFloat(b.price)) || b.discountInfo;
+      
+      // Products with discounts come first
+      if (aHasDiscount && !bHasDiscount) return -1;
+      if (!aHasDiscount && bHasDiscount) return 1;
+      
+      // If both have discounts, sort by discount percentage (highest first)
+      if (aHasDiscount && bHasDiscount) {
+        const aDiscountPercent = a.discountInfo?.percentage ? 
+          parseFloat(a.discountInfo.percentage) : 
+          (a.compareAtPrice ? ((parseFloat(a.compareAtPrice) - parseFloat(a.price)) / parseFloat(a.compareAtPrice)) * 100 : 0);
+        
+        const bDiscountPercent = b.discountInfo?.percentage ? 
+          parseFloat(b.discountInfo.percentage) : 
+          (b.compareAtPrice ? ((parseFloat(b.compareAtPrice) - parseFloat(b.price)) / parseFloat(b.compareAtPrice)) * 100 : 0);
+        
+        return bDiscountPercent - aDiscountPercent;
+      }
+      
+      // If neither has discounts, sort by creation date (newest first)
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
+
+    // Take only the requested limit
+    const limitedProducts = sortedProducts.slice(0, parsedInput.limit);
+
+    // Generate signed URLs for product images
+    const productsWithSignedUrls = await generateSignedUrlsForProducts(limitedProducts);
+    
+    return { products: productsWithSignedUrls };
+  });
 
 export const updateCartItemAction = unauthenticatedAction
   .inputSchema(z.object({

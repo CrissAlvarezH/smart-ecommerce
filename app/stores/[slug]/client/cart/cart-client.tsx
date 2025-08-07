@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CartItem } from "@/components/cart/cart-item";
 import { ShippingSelector } from "@/components/cart/shipping-selector";
+import { RecommendedProducts } from "@/components/cart/recommended-products";
 import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { updateCartItemAction, removeFromCartAction, clearCartAction } from "./actions";
 import { useAction } from "next-safe-action/hooks";
@@ -230,6 +231,16 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
                 onRemove={handleRemoveItem}
               />
             ))}
+          </div>
+          
+          {/* Recommended Products */}
+          <div className="mt-8">
+            <RecommendedProducts
+              storeId={store.id}
+              storeSlug={store.slug}
+              title="You may be interested in"
+              limit={4}
+            />
           </div>
         </div>
 
