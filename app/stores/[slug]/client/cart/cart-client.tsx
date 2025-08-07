@@ -178,8 +178,7 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
   }, 0);
 
   const shipping = parseFloat(shippingCost);
-  const tax = subtotal * 0.08;
-  const total = subtotal + shipping + tax;
+  const total = subtotal + shipping; // IVA already included in Colombian prices
 
   const isLoading = isUpdating || isRemoving || isClearing;
 
@@ -245,24 +244,19 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
           {/* Order Summary */}
           <Card className="sticky top-8">
             <CardHeader>
-              <CardTitle>Order Summary</CardTitle>
+              <CardTitle>Resumen del Pedido</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal ({cartItems.length} items)</span>
+                <span className="text-gray-600">Subtotal ({cartItems.length} {cartItems.length === 1 ? 'artículo' : 'artículos'})</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
               
               <div className="flex justify-between">
-                <span className="text-gray-600">Shipping</span>
-                <span>
-                  {shipping === 0 ? "Free" : formatPrice(shipping)}
+                <span className="text-gray-600">Envío</span>
+                <span className={shipping > 0 ? "font-semibold" : ""}>
+                  {shipping === 0 ? "Por calcular" : formatPrice(shipping)}
                 </span>
-              </div>
-              
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tax</span>
-                <span>{formatPrice(tax)}</span>
               </div>
               
               <hr />
@@ -271,13 +265,17 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
                 <span>Total</span>
                 <span>{formatPrice(total)}</span>
               </div>
+              
+              <div className="text-xs text-gray-500 mt-2">
+                * Precios incluyen IVA (19%)
+              </div>
 
-              <Button size="lg" className="w-full mt-6" disabled={isLoading}>
-                Proceed to Checkout
+              <Button size="lg" className="w-full mt-6" disabled={isLoading || shipping === 0}>
+                {shipping === 0 ? "Selecciona método de envío" : "Proceder al Pago"}
               </Button>
 
               <div className="text-sm text-gray-500 text-center mt-4">
-                Free shipping on orders over $50
+                Envío gratis en compras superiores a $150.000
               </div>
             </CardContent>
           </Card>

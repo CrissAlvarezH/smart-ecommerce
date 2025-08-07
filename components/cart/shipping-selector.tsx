@@ -48,36 +48,86 @@ export function ShippingSelector({
   const [selectedRateId, setSelectedRateId] = useState<string>(currentShippingRate?.id || "");
   const [shippingOptions, setShippingOptions] = useState<any[]>([]);
   const [showAddressForm, setShowAddressForm] = useState(false);
+  const [expandedAccordion, setExpandedAccordion] = useState<string>("");
 
-  const { execute: getShippingRates, isExecuting: loadingRates } = useAction(getAvailableShippingRatesAction, {
-    onSuccess: (result) => {
-      setShippingOptions(result.data?.shippingOptions || []);
-    },
-    onError: (error) => {
-      toast.error(error.serverError || "Failed to load shipping options");
-    }
-  });
-
-  const { execute: updateShipping, isExecuting: updatingShipping } = useAction(updateCartShippingAction, {
-    onSuccess: (result) => {
-      toast.success("Shipping method updated");
-      const selectedRate = findSelectedRate(selectedRateId);
-      if (selectedRate && onShippingUpdate) {
-        onShippingUpdate(selectedRate.calculatedCost);
-      }
-    },
-    onError: (error) => {
-      toast.error(error.serverError || "Failed to update shipping method");
-    }
-  });
-
-  const findSelectedRate = (rateId: string) => {
-    for (const option of shippingOptions) {
+  const findSelectedRate = (rateId: string, options?: any[]) => {
+    const searchOptions = options || shippingOptions;
+    for (const option of searchOptions) {
       const rate = option.rates.find((r: any) => r.rateId === rateId);
       if (rate) return rate;
     }
     return null;
   };
+
+  const handleShippingSelection = (rateId: string, options?: any[]) => {
+    setSelectedRateId(rateId);
+    const selectedRate = findSelectedRate(rateId, options);
+    
+    if (selectedRate) {
+      // Update the UI immediately
+      if (onShippingUpdate) {
+        onShippingUpdate(selectedRate.calculatedCost);
+      }
+      
+      // Then update the backend
+      updateShipping({
+        storeSlug,
+        shippingRateId: rateId,
+        shippingCost: selectedRate.calculatedCost,
+        shippingAddress: `${address.state} ${address.postalCode}`.trim() || undefined,
+        shippingCity: undefined,
+        shippingState: address.state || undefined,
+        shippingCountry: address.country || undefined,
+        shippingPostalCode: address.postalCode || undefined,
+      });
+    }
+  };
+
+  const { execute: getShippingRates, isExecuting: loadingRates } = useAction(getAvailableShippingRatesAction, {
+    onSuccess: (result) => {
+      const options = result.data?.shippingOptions || [];
+      setShippingOptions(options);
+      
+      // Auto-select the cheapest option when rates are loaded
+      if (options.length > 0 && !selectedRateId) {
+        // Find the cheapest rate across all options
+        let cheapestRate: any = null;
+        let cheapestPrice = Infinity;
+        let cheapestCompany = "";
+        
+        options.forEach((option: any) => {
+          option.rates.forEach((rate: any) => {
+            const price = parseFloat(rate.calculatedCost);
+            if (price < cheapestPrice) {
+              cheapestPrice = price;
+              cheapestRate = rate;
+              cheapestCompany = rate.name.split(' - ')[0];
+            }
+          });
+        });
+        
+        if (cheapestRate) {
+          // Auto-select the cheapest rate
+          handleShippingSelection(cheapestRate.rateId, options);
+          // Expand the accordion that contains the cheapest rate
+          setExpandedAccordion(cheapestCompany);
+          toast.success(`Opción más económica seleccionada: ${cheapestCompany}`);
+        }
+      }
+    },
+    onError: (error) => {
+      toast.error(error.serverError || "Error al cargar opciones de envío");
+    }
+  });
+
+  const { execute: updateShipping, isExecuting: updatingShipping } = useAction(updateCartShippingAction, {
+    onSuccess: (result) => {
+      toast.success("Método de envío actualizado");
+    },
+    onError: (error) => {
+      toast.error(error.serverError || "Error al actualizar método de envío");
+    }
+  });
 
   const handleAddressSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -90,24 +140,6 @@ export function ShippingSelector({
         postalCode: address.city // Using city as identifier for Colombian shipping
       } : undefined
     });
-  };
-
-  const handleShippingSelection = (rateId: string) => {
-    setSelectedRateId(rateId);
-    const selectedRate = findSelectedRate(rateId);
-    
-    if (selectedRate) {
-      updateShipping({
-        storeSlug,
-        shippingRateId: rateId,
-        shippingCost: selectedRate.calculatedCost,
-        shippingAddress: `${address.state} ${address.postalCode}`.trim() || undefined,
-        shippingCity: undefined,
-        shippingState: address.state || undefined,
-        shippingCountry: address.country || undefined,
-        shippingPostalCode: address.postalCode || undefined,
-      });
-    }
   };
 
   useEffect(() => {
@@ -261,12 +293,13 @@ export function ShippingSelector({
             <div className="flex gap-2">
               <Button type="submit" disabled={loadingRates || !address.city}>
                 {loadingRates && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                Calcular Envíos
+                {loadingRates ? "Calculando..." : "Calcular Envíos"}
               </Button>
               <Button 
                 type="button" 
                 variant="outline" 
                 onClick={() => setShowAddressForm(false)}
+                disabled={loadingRates}
               >
                 Cancelar
               </Button>
@@ -281,7 +314,13 @@ export function ShippingSelector({
           </div>
         ) : (
           <RadioGroup value={selectedRateId} onValueChange={handleShippingSelection}>
-            <Accordion type="single" collapsible className="w-full">
+            <Accordion 
+              type="single" 
+              collapsible 
+              className="w-full"
+              value={expandedAccordion}
+              onValueChange={setExpandedAccordion}
+            >
               {Object.entries(groupedShippingOptions).map(([companyName, rates]) => {
                 const companyInfo = getCompanyInfo(companyName);
                 const CompanyIcon = companyInfo.icon;
