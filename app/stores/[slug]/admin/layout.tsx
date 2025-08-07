@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Store, Package, Tag, Users, Settings, BarChart3, Layers, Percent } from "lucide-react";
+import { ArrowLeft, Store, Package, Tag, Users, Settings, BarChart3, Layers, Percent, Truck } from "lucide-react";
 import { getStoreBySlugAction } from "../actions";
 import { validateRequest } from "@/lib/auth";
 import { notFound, redirect } from "next/navigation";
@@ -39,6 +39,7 @@ export default async function AdminLayout({ children, params }: AdminLayoutProps
     { name: "Categories", href: `/stores/${slug}/admin/categories`, icon: Tag },
     { name: "Collections", href: `/stores/${slug}/admin/collections`, icon: Layers },
     { name: "Discounts", href: `/stores/${slug}/admin/discounts`, icon: Percent },
+    { name: "Shipping", href: `/stores/${slug}/admin/shipping`, icon: Truck },
     { name: "Orders", href: `/stores/${slug}/admin/orders`, icon: Users },
     { name: "Settings", href: `/stores/${slug}/admin/settings`, icon: Settings },
   ];

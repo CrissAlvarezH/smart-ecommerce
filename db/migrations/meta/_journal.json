@@ -141,6 +141,13 @@
       "when": 1754337170222,
       "tag": "0019_nostalgic_karma",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1754583280025,
+      "tag": "0020_chemical_ricochet",
+      "breakpoints": true
     }
   ]
 }

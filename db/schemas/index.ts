@@ -14,6 +14,9 @@ export {
   discounts,
   productDiscounts,
   collectionDiscounts,
+  shippingZones,
+  shippingRates,
+  shippingMethods,
   type InsertStore,
   type SelectStore,
   type InsertDiscount,
@@ -21,5 +24,11 @@ export {
   type InsertProductDiscount,
   type SelectProductDiscount,
   type InsertCollectionDiscount,
-  type SelectCollectionDiscount
+  type SelectCollectionDiscount,
+  type InsertShippingZone,
+  type SelectShippingZone,
+  type InsertShippingRate,
+  type SelectShippingRate,
+  type InsertShippingMethod,
+  type SelectShippingMethod
 } from "./ecommerce";
