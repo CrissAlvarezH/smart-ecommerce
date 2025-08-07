@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Loader2, MapPin, Truck, Package, Clock, ChevronRight, Zap, Shield } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Loader2, MapPin, Truck, Package, Clock, ChevronRight, Zap, Shield, Info } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { getAvailableShippingRatesAction, updateCartShippingAction } from "@/app/stores/[slug]/client/cart/actions";
 import { toast } from "sonner";
@@ -144,37 +145,32 @@ export function ShippingSelector({
 
   // Get company metadata with brand colors
   const getCompanyInfo = (companyName: string) => {
-    const info: Record<string, { color: string; icon: any; description: string; textColor: string }> = {
+    const info: Record<string, { color: string; icon: any; textColor: string }> = {
       'Envia': { 
         color: 'bg-red-50 border-red-200 hover:bg-red-100',
         textColor: 'text-red-900',
-        icon: Package,
-        description: 'Cobertura nacional con múltiples opciones'
+        icon: Package
       },
       'Servientrega': { 
         color: 'bg-green-50 border-green-200 hover:bg-green-100',
         textColor: 'text-green-900',
-        icon: Zap,
-        description: 'Entregas rápidas y mismo día disponible'
+        icon: Zap
       },
       'Coordinadora': { 
         color: 'bg-blue-50 border-blue-200 hover:bg-blue-100',
         textColor: 'text-blue-900',
-        icon: Shield,
-        description: 'Servicio confiable y seguro'
+        icon: Shield
       },
       'Interrapidisimo': { 
         color: 'bg-orange-50 border-orange-200 hover:bg-orange-100',
         textColor: 'text-orange-900',
-        icon: Truck,
-        description: 'Red nacional con servicio express'
+        icon: Truck
       },
     };
     return info[companyName] || { 
       color: 'bg-gray-50 border-gray-200 hover:bg-gray-100',
       textColor: 'text-gray-900',
-      icon: Truck,
-      description: 'Servicio de envío'
+      icon: Truck
     };
   };
 
@@ -303,10 +299,7 @@ export function ShippingSelector({
                       <div className="flex items-center justify-between w-full pr-2">
                         <div className="flex items-center gap-2">
                           <CompanyIcon className={`h-4 w-4 flex-shrink-0 ${companyInfo.textColor}`} />
-                          <div className="text-left min-w-0">
-                            <div className={`font-semibold text-sm ${companyInfo.textColor}`}>{companyName}</div>
-                            <div className="text-xs text-gray-600 hidden sm:block">{companyInfo.description}</div>
-                          </div>
+                          <div className={`font-semibold text-sm ${companyInfo.textColor}`}>{companyName}</div>
                         </div>
                         <div className="flex items-center gap-2 ml-2">
                           <div className="hidden sm:flex gap-1">
@@ -331,75 +324,83 @@ export function ShippingSelector({
                       </div>
                     </AccordionTrigger>
                     <AccordionContent className="px-3 pb-3 pt-1">
-                      <div className="space-y-1.5">
-                        {rates.map((rate: any) => {
-                          const serviceName = rate.name.split(' - ')[1] || 'Estándar';
-                          const isExpress = rate.estimatedDays <= 1;
-                          const isSameDay = rate.estimatedDays === 0;
-                          const isCOD = rate.name.includes("Recaudo") || rate.name.includes("Contra");
-                          
-                          return (
-                            <label
-                              key={rate.rateId}
-                              htmlFor={rate.rateId}
-                              className={`flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-all
-                                ${selectedRateId === rate.rateId 
-                                  ? `bg-white ${
-                                    companyName === 'Envia' ? 'border-red-500' :
-                                    companyName === 'Servientrega' ? 'border-green-500' :
-                                    companyName === 'Coordinadora' ? 'border-blue-500' :
-                                    companyName === 'Interrapidisimo' ? 'border-orange-500' :
-                                    'border-gray-500'
-                                  } shadow-sm` 
-                                  : 'bg-white/50 border-gray-200 hover:bg-white hover:border-gray-300'}`}
-                            >
-                              <RadioGroupItem value={rate.rateId} id={rate.rateId} className="flex-shrink-0" />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="font-medium text-sm text-gray-900">{serviceName}</span>
-                                  {isSameDay && (
-                                    <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">
-                                      HOY
-                                    </span>
-                                  )}
-                                  {isExpress && !isSameDay && (
-                                    <span className="bg-orange-100 text-orange-800 text-xs px-1.5 py-0.5 rounded-full font-medium">
-                                      EXPRESS
-                                    </span>
-                                  )}
-                                  {isCOD && (
-                                    <span className="bg-green-100 text-green-800 text-xs px-1.5 py-0.5 rounded-full font-medium">
-                                      COD
-                                    </span>
-                                  )}
-                                </div>
-                                
-                                <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3" />
-                                    <span>
-                                      {rate.estimatedDays === 0 ? "Hoy" : 
-                                       rate.estimatedDays === 1 ? "1 día" : 
-                                       `${rate.estimatedDays} días`}
-                                    </span>
+                      <TooltipProvider>
+                        <div className="space-y-1.5">
+                          {rates.map((rate: any) => {
+                            const serviceName = rate.name.split(' - ')[1] || 'Estándar';
+                            const isExpress = rate.estimatedDays <= 1;
+                            const isSameDay = rate.estimatedDays === 0;
+                            const isCOD = rate.name.includes("Recaudo") || rate.name.includes("Contra");
+                            
+                            return (
+                              <label
+                                key={rate.rateId}
+                                htmlFor={rate.rateId}
+                                className={`flex items-center gap-2 p-2 rounded-md border cursor-pointer transition-all
+                                  ${selectedRateId === rate.rateId 
+                                    ? `bg-white ${
+                                      companyName === 'Envia' ? 'border-red-500' :
+                                      companyName === 'Servientrega' ? 'border-green-500' :
+                                      companyName === 'Coordinadora' ? 'border-blue-500' :
+                                      companyName === 'Interrapidisimo' ? 'border-orange-500' :
+                                      'border-gray-500'
+                                    } shadow-sm` 
+                                    : 'bg-white/50 border-gray-200 hover:bg-white hover:border-gray-300'}`}
+                              >
+                                <RadioGroupItem value={rate.rateId} id={rate.rateId} className="flex-shrink-0" />
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap">
+                                    <span className="font-medium text-sm text-gray-900">{serviceName}</span>
+                                    {rate.description && (
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Info className="h-3 w-3 text-gray-400 hover:text-gray-600 cursor-help" />
+                                        </TooltipTrigger>
+                                        <TooltipContent>
+                                          <p className="text-xs">{rate.description}</p>
+                                        </TooltipContent>
+                                      </Tooltip>
+                                    )}
+                                    {isSameDay && (
+                                      <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">
+                                        HOY
+                                      </span>
+                                    )}
+                                    {isExpress && !isSameDay && (
+                                      <span className="bg-orange-100 text-orange-800 text-xs px-1.5 py-0.5 rounded-full font-medium">
+                                        EXPRESS
+                                      </span>
+                                    )}
+                                    {isCOD && (
+                                      <span className="bg-green-100 text-green-800 text-xs px-1.5 py-0.5 rounded-full font-medium">
+                                        COD
+                                      </span>
+                                    )}
                                   </div>
                                   
-                                  {rate.description && (
-                                    <span className="hidden sm:inline truncate">{rate.description}</span>
-                                  )}
+                                  <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
+                                    <div className="flex items-center gap-1">
+                                      <Clock className="h-3 w-3" />
+                                      <span>
+                                        {rate.estimatedDays === 0 ? "Hoy" : 
+                                         rate.estimatedDays === 1 ? "1 día" : 
+                                         `${rate.estimatedDays} días`}
+                                      </span>
+                                    </div>
+                                  </div>
                                 </div>
-                              </div>
-                              
-                              <div className="text-right flex-shrink-0">
-                                <div className="font-bold text-sm text-gray-900">
-                                  ${parseFloat(rate.calculatedCost).toLocaleString('es-CO')}
+                                
+                                <div className="text-right flex-shrink-0">
+                                  <div className="font-bold text-sm text-gray-900">
+                                    ${parseFloat(rate.calculatedCost).toLocaleString('es-CO')}
+                                  </div>
+                                  <div className="text-xs text-gray-500">COP</div>
                                 </div>
-                                <div className="text-xs text-gray-500">COP</div>
-                              </div>
-                            </label>
-                          );
-                        })}
-                      </div>
+                              </label>
+                            );
+                          })}
+                        </div>
+                      </TooltipProvider>
                     </AccordionContent>
                   </AccordionItem>
                 );
