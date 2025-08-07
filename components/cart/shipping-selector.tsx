@@ -49,6 +49,7 @@ export function ShippingSelector({
   const [shippingOptions, setShippingOptions] = useState<any[]>([]);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const [expandedAccordion, setExpandedAccordion] = useState<string>("");
+  const [autoCloseTimer, setAutoCloseTimer] = useState<NodeJS.Timeout | null>(null);
 
   const findSelectedRate = (rateId: string, options?: any[]) => {
     const searchOptions = options || shippingOptions;
@@ -59,14 +60,27 @@ export function ShippingSelector({
     return null;
   };
 
-  const handleShippingSelection = (rateId: string, options?: any[]) => {
+  const handleShippingSelection = (rateId: string, options?: any[], isAutoSelection: boolean = false) => {
     setSelectedRateId(rateId);
     const selectedRate = findSelectedRate(rateId, options);
     
     if (selectedRate) {
+      // Clear any existing auto-close timer
+      if (autoCloseTimer) {
+        clearTimeout(autoCloseTimer);
+        setAutoCloseTimer(null);
+      }
+      
       // Update the UI immediately
       if (onShippingUpdate) {
         onShippingUpdate(selectedRate.calculatedCost);
+      }
+      
+      // Close the accordion after manual selection (not auto-selection)
+      if (!isAutoSelection) {
+        setTimeout(() => {
+          setExpandedAccordion("");
+        }, 300);
       }
       
       // Then update the backend
@@ -108,10 +122,17 @@ export function ShippingSelector({
         
         if (cheapestRate) {
           // Auto-select the cheapest rate
-          handleShippingSelection(cheapestRate.rateId, options);
+          handleShippingSelection(cheapestRate.rateId, options, true);
           // Expand the accordion that contains the cheapest rate
           setExpandedAccordion(cheapestCompany);
           toast.success(`Cheapest option selected: ${cheapestCompany}`);
+          
+          // Set auto-close timer for 5 seconds
+          const timer = setTimeout(() => {
+            setExpandedAccordion("");
+            setAutoCloseTimer(null);
+          }, 5000);
+          setAutoCloseTimer(timer);
         }
       }
     },
@@ -150,6 +171,25 @@ export function ShippingSelector({
       address: undefined
     });
   }, [storeId, storeSlug]);
+
+  // Cleanup timer on unmount
+  useEffect(() => {
+    return () => {
+      if (autoCloseTimer) {
+        clearTimeout(autoCloseTimer);
+      }
+    };
+  }, [autoCloseTimer]);
+
+  // Handle accordion value changes (when user manually opens/closes)
+  const handleAccordionChange = (value: string) => {
+    // Clear auto-close timer when user manually interacts with accordion
+    if (autoCloseTimer) {
+      clearTimeout(autoCloseTimer);
+      setAutoCloseTimer(null);
+    }
+    setExpandedAccordion(value);
+  };
 
   // Group shipping options by company
   const groupedShippingOptions = useMemo(() => {
@@ -319,7 +359,7 @@ export function ShippingSelector({
               collapsible 
               className="w-full"
               value={expandedAccordion}
-              onValueChange={setExpandedAccordion}
+              onValueChange={handleAccordionChange}
             >
               {Object.entries(groupedShippingOptions).map(([companyName, rates]) => {
                 const companyInfo = getCompanyInfo(companyName);
