@@ -30,7 +30,7 @@ export default function ZoneError({
             <CardTitle>Error Loading Shipping Zone</CardTitle>
           </div>
           <CardDescription>
-            We couldn't load the shipping zone details.
+            We couldn&apos;t load the shipping zone details.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
