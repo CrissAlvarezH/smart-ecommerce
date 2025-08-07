@@ -111,21 +111,21 @@ export function ShippingSelector({
           handleShippingSelection(cheapestRate.rateId, options);
           // Expand the accordion that contains the cheapest rate
           setExpandedAccordion(cheapestCompany);
-          toast.success(`Opción más económica seleccionada: ${cheapestCompany}`);
+          toast.success(`Cheapest option selected: ${cheapestCompany}`);
         }
       }
     },
     onError: (error) => {
-      toast.error(error.serverError || "Error al cargar opciones de envío");
+      toast.error(error.serverError || "Failed to load shipping options");
     }
   });
 
   const { execute: updateShipping, isExecuting: updatingShipping } = useAction(updateCartShippingAction, {
     onSuccess: (result) => {
-      toast.success("Método de envío actualizado");
+      toast.success("Shipping method updated");
     },
     onError: (error) => {
-      toast.error(error.serverError || "Error al actualizar método de envío");
+      toast.error(error.serverError || "Failed to update shipping method");
     }
   });
 
@@ -241,7 +241,7 @@ export function ShippingSelector({
             className="w-full"
           >
             <MapPin className="h-4 w-4 mr-2" />
-            Calcular Envío a Tu Ciudad
+            Calculate Shipping to Your City
           </Button>
         )}
 
@@ -249,12 +249,12 @@ export function ShippingSelector({
           <form onSubmit={handleAddressSubmit} className="space-y-4 p-4 border rounded-lg bg-blue-50 border-blue-200">
             <div className="flex items-center gap-2 mb-3">
               <MapPin className="h-5 w-5 text-blue-600" />
-              <h3 className="font-medium text-blue-900">Dirección de Entrega en Colombia</h3>
+              <h3 className="font-medium text-blue-900">Delivery Address in Colombia</h3>
             </div>
             
             <div className="grid grid-cols-1 gap-3">
               <div>
-                <Label htmlFor="city">Ciudad de Destino</Label>
+                <Label htmlFor="city">Destination City</Label>
                 <Select 
                   value={address.city} 
                   onValueChange={(value) => {
@@ -267,7 +267,7 @@ export function ShippingSelector({
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecciona tu ciudad" />
+                    <SelectValue placeholder="Select your city" />
                   </SelectTrigger>
                   <SelectContent>
                     {COLOMBIAN_CITIES.map((city) => (
@@ -280,7 +280,7 @@ export function ShippingSelector({
               </div>
               
               <div>
-                <Label htmlFor="postalCode">Código Postal (Opcional)</Label>
+                <Label htmlFor="postalCode">Postal Code (Optional)</Label>
                 <Input
                   id="postalCode"
                   value={address.postalCode}
@@ -293,7 +293,7 @@ export function ShippingSelector({
             <div className="flex gap-2">
               <Button type="submit" disabled={loadingRates || !address.city}>
                 {loadingRates && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-                {loadingRates ? "Calculando..." : "Calcular Envíos"}
+                {loadingRates ? "Calculating..." : "Calculate Shipping"}
               </Button>
               <Button 
                 type="button" 
@@ -301,7 +301,7 @@ export function ShippingSelector({
                 onClick={() => setShowAddressForm(false)}
                 disabled={loadingRates}
               >
-                Cancelar
+                Cancel
               </Button>
             </div>
           </form>
@@ -310,7 +310,7 @@ export function ShippingSelector({
         {loadingRates ? (
           <div className="flex items-center justify-center py-8">
             <Loader2 className="h-6 w-6 animate-spin mr-2" />
-            Cargando opciones de envío...
+            Loading shipping options...
           </div>
         ) : (
           <RadioGroup value={selectedRateId} onValueChange={handleShippingSelection}>
@@ -354,7 +354,7 @@ export function ShippingSelector({
                             )}
                           </div>
                           <div className="text-right">
-                            <div className="text-xs text-gray-500">Desde</div>
+                            <div className="text-xs text-gray-500">From</div>
                             <div className={`font-bold text-sm ${companyInfo.textColor}`}>
                               ${parseFloat(cheapestRate.calculatedCost).toLocaleString('es-CO')}
                             </div>
@@ -402,7 +402,7 @@ export function ShippingSelector({
                                     )}
                                     {isSameDay && (
                                       <span className="bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full font-medium">
-                                        HOY
+                                        TODAY
                                       </span>
                                     )}
                                     {isExpress && !isSameDay && (
@@ -421,9 +421,9 @@ export function ShippingSelector({
                                     <div className="flex items-center gap-1">
                                       <Clock className="h-3 w-3" />
                                       <span>
-                                        {rate.estimatedDays === 0 ? "Hoy" : 
-                                         rate.estimatedDays === 1 ? "1 día" : 
-                                         `${rate.estimatedDays} días`}
+                                        {rate.estimatedDays === 0 ? "Today" : 
+                                         rate.estimatedDays === 1 ? "1 day" : 
+                                         `${rate.estimatedDays} days`}
                                       </span>
                                     </div>
                                   </div>

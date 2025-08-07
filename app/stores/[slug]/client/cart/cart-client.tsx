@@ -244,18 +244,18 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
           {/* Order Summary */}
           <Card className="sticky top-8">
             <CardHeader>
-              <CardTitle>Resumen del Pedido</CardTitle>
+              <CardTitle>Order Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex justify-between">
-                <span className="text-gray-600">Subtotal ({cartItems.length} {cartItems.length === 1 ? 'artículo' : 'artículos'})</span>
+                <span className="text-gray-600">Subtotal ({cartItems.length} {cartItems.length === 1 ? 'item' : 'items'})</span>
                 <span>{formatPrice(subtotal)}</span>
               </div>
               
               <div className="flex justify-between">
-                <span className="text-gray-600">Envío</span>
+                <span className="text-gray-600">Shipping</span>
                 <span className={shipping > 0 ? "font-semibold" : ""}>
-                  {shipping === 0 ? "Por calcular" : formatPrice(shipping)}
+                  {shipping === 0 ? "To be calculated" : formatPrice(shipping)}
                 </span>
               </div>
               
@@ -267,15 +267,15 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
               </div>
               
               <div className="text-xs text-gray-500 mt-2">
-                * Precios incluyen IVA (19%)
+                * Prices include VAT (19%)
               </div>
 
               <Button size="lg" className="w-full mt-6" disabled={isLoading || shipping === 0}>
-                {shipping === 0 ? "Selecciona método de envío" : "Proceder al Pago"}
+                {shipping === 0 ? "Select shipping method" : "Proceed to Checkout"}
               </Button>
 
               <div className="text-sm text-gray-500 text-center mt-4">
-                Envío gratis en compras superiores a $150.000
+                Free shipping on orders over $150,000
               </div>
             </CardContent>
           </Card>
