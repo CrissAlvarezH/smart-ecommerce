@@ -73,11 +73,30 @@ async function generateSignedUrlsForProducts(products: any[]) {
 export const getRecommendedProductsAction = unauthenticatedAction
   .inputSchema(z.object({
     storeId: z.string(),
+    storeSlug: z.string(),
     limit: z.number().optional().default(4),
   }))
   .action(async ({ parsedInput }) => {
-    // Get more products to have a better selection for sorting
-    const fetchLimit = Math.max(parsedInput.limit * 3, 12);
+    // Get current cart items to exclude products already in cart
+    const cookieStore = await cookies();
+    const sessionId = cookieStore.get(`cart_session_${parsedInput.storeSlug}`)?.value;
+    let cartProductIds: string[] = [];
+    
+    if (sessionId) {
+      try {
+        const cart = await cartService.getCartBySession(sessionId);
+        if (cart) {
+          const cartItems = await cartService.getCartWithItems(cart.id);
+          cartProductIds = cartItems.map(item => item.product.id);
+        }
+      } catch (error) {
+        console.error("Error getting cart items for recommendations:", error);
+        // Continue without cart filtering if there's an error
+      }
+    }
+
+    // Get more products to have a better selection for sorting and filtering
+    const fetchLimit = Math.max(parsedInput.limit * 5, 20); // Increased to account for filtering
     const products = await productRepository.getProducts(
       fetchLimit, // Get more products to sort from
       0, // offset
@@ -85,8 +104,19 @@ export const getRecommendedProductsAction = unauthenticatedAction
       "newest" // sort
     );
 
+    // Filter out products that are out of stock or already in cart
+    const availableProducts = products.filter(product => {
+      // Filter out products with no inventory
+      if (product.inventory <= 0) return false;
+      
+      // Filter out products already in cart
+      if (cartProductIds.includes(product.id)) return false;
+      
+      return true;
+    });
+
     // Sort products to prioritize those with discounts
-    const sortedProducts = products.sort((a, b) => {
+    const sortedProducts = availableProducts.sort((a, b) => {
       // Check if product has any type of discount
       const aHasDiscount = (a.compareAtPrice && parseFloat(a.compareAtPrice) > parseFloat(a.price)) || a.discountInfo;
       const bHasDiscount = (b.compareAtPrice && parseFloat(b.compareAtPrice) > parseFloat(b.price)) || b.discountInfo;

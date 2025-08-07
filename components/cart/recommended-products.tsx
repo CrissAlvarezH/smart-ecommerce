@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProductCard } from "@/components/products/product-card";
 import { useAction } from "next-safe-action/hooks";
@@ -31,9 +31,15 @@ export function RecommendedProducts({
     }
   });
 
+  const fetchProducts = useCallback(() => {
+    if (storeId && storeSlug) {
+      getRecommendedProducts({ storeId, storeSlug, limit });
+    }
+  }, [storeId, storeSlug, limit, getRecommendedProducts]);
+
   useEffect(() => {
-    getRecommendedProducts({ storeId, limit });
-  }, [storeId, limit]);
+    fetchProducts();
+  }, [fetchProducts]);
 
   if (isLoading) {
     return (
