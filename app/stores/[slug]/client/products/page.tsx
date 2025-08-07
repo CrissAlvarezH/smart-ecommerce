@@ -13,6 +13,7 @@ export default async function StoreProductsPage({ params, searchParams }: StoreP
   const { slug } = await params;
   const resolvedSearchParams = await searchParams;
   const sort = typeof resolvedSearchParams.sort === 'string' ? resolvedSearchParams.sort : undefined;
+  const search = typeof resolvedSearchParams.search === 'string' ? resolvedSearchParams.search : undefined;
   
   // Get store info
   const storeResult = await getStoreBySlugAction({ slug });
@@ -22,10 +23,11 @@ export default async function StoreProductsPage({ params, searchParams }: StoreP
   
   const store = storeResult.data.store;
 
-  // Get products for this store with sorting
+  // Get products for this store with sorting and search
   const productsResult = await getStoreProductsAction({ 
     storeId: store.id,
-    sort: sort 
+    sort: sort,
+    search: search
   });
   
   if (!productsResult.data) {

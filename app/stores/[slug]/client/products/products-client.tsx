@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ProductGrid } from "@/components/products/product-grid";
+import { ProductSearch } from "@/components/store/product-search";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useRouter, useSearchParams } from "next/navigation";
 
@@ -33,6 +34,7 @@ export function ProductsClient({ products: initialProducts, storeSlug, storeName
   const [isLoading, setIsLoading] = useState(false);
   
   const currentSort = searchParams.get("sort") || "newest";
+  const searchTerm = searchParams.get("search") || "";
 
   const handleSortChange = (newSort: string) => {
     // Update URL with new sort parameter
@@ -71,9 +73,21 @@ export function ProductsClient({ products: initialProducts, storeSlug, storeName
         <p className="text-gray-600">Discover our amazing collection of products</p>
       </div>
 
+      {/* Search Bar */}
+      <div className="mb-6 flex justify-center">
+        <ProductSearch 
+          storeSlug={storeSlug} 
+          placeholder={`Search ${storeName} products...`}
+        />
+      </div>
+
       <div className="flex justify-between items-center mb-6">
         <p className="text-sm text-gray-600">
-          Showing {products.length} products
+          {searchTerm ? (
+            <>Showing {products.length} results for &quot;{searchTerm}&quot;</>
+          ) : (
+            <>Showing {products.length} products</>
+          )}
         </p>
         
         <Select value={currentSort} onValueChange={handleSortChange}>
