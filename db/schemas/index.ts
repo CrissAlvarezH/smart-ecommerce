@@ -30,5 +30,9 @@ export {
   type InsertShippingRate,
   type SelectShippingRate,
   type InsertShippingMethod,
-  type SelectShippingMethod
+  type SelectShippingMethod,
+  type InsertCart,
+  type SelectCart,
+  type InsertCartItem,
+  type SelectCartItem
 } from "./ecommerce";

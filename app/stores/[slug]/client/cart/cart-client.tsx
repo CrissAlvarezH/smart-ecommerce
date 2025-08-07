@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CartItem } from "@/components/cart/cart-item";
+import { ShippingSelector } from "@/components/cart/shipping-selector";
 import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { updateCartItemAction, removeFromCartAction, clearCartAction } from "./actions";
 import { useAction } from "next-safe-action/hooks";
@@ -45,6 +46,7 @@ type OptimisticAction =
 
 export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageClientProps) {
   const { refreshCartCount, updateCartCount } = useStoreCart(store.slug);
+  const [shippingCost, setShippingCost] = useState<string>("0.00");
   const [cartItems, setOptimisticCartItems] = useOptimistic(
     initialCartItems,
     (state: CartItemType[], action: OptimisticAction) => {
@@ -175,7 +177,7 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
     return total + (parseFloat(item.product.price) * item.quantity);
   }, 0);
 
-  const shipping = 10.00;
+  const shipping = parseFloat(shippingCost);
   const tax = subtotal * 0.08;
   const total = subtotal + shipping + tax;
 
@@ -232,7 +234,15 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
           </div>
         </div>
 
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 space-y-6">
+          {/* Shipping Selector */}
+          <ShippingSelector
+            storeId={store.id}
+            storeSlug={store.slug}
+            onShippingUpdate={setShippingCost}
+          />
+
+          {/* Order Summary */}
           <Card className="sticky top-8">
             <CardHeader>
               <CardTitle>Order Summary</CardTitle>
@@ -245,7 +255,9 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
               
               <div className="flex justify-between">
                 <span className="text-gray-600">Shipping</span>
-                <span>{formatPrice(shipping)}</span>
+                <span>
+                  {shipping === 0 ? "Free" : formatPrice(shipping)}
+                </span>
               </div>
               
               <div className="flex justify-between">

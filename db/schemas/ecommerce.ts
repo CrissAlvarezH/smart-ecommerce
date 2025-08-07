@@ -111,6 +111,13 @@ export const carts = pgTable("carts", {
   userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
   sessionId: text("session_id"),
   storeId: uuid("store_id").notNull().references(() => stores.id),
+  shippingRateId: uuid("shipping_rate_id").references(() => shippingRates.id),
+  shippingCost: decimal("shipping_cost", { precision: 10, scale: 2 }).default("0.00"),
+  shippingAddress: text("shipping_address"),
+  shippingCity: text("shipping_city"),
+  shippingState: text("shipping_state"),
+  shippingCountry: text("shipping_country"),
+  shippingPostalCode: text("shipping_postal_code"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -202,3 +209,7 @@ export type InsertShippingRate = typeof shippingRates.$inferInsert;
 export type SelectShippingRate = typeof shippingRates.$inferSelect;
 export type InsertShippingMethod = typeof shippingMethods.$inferInsert;
 export type SelectShippingMethod = typeof shippingMethods.$inferSelect;
+export type InsertCart = typeof carts.$inferInsert;
+export type SelectCart = typeof carts.$inferSelect;
+export type InsertCartItem = typeof cartItems.$inferInsert;
+export type SelectCartItem = typeof cartItems.$inferSelect;

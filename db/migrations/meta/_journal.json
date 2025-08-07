@@ -148,6 +148,13 @@
       "when": 1754583280025,
       "tag": "0020_chemical_ricochet",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1754585852729,
+      "tag": "0021_material_old_lace",
+      "breakpoints": true
     }
   ]
 }

@@ -1,9 +1,9 @@
 import { db } from "@/db";
-import { carts, cartItems, products, productImages } from "@/db/schemas";
+import { carts, cartItems, products, productImages, shippingRates, shippingZones } from "@/db/schemas";
 import { eq, and, desc } from "drizzle-orm";
 import { applyDiscountsToProducts } from "./products";
 
-export async function getOrCreateCart(userId?: string, sessionId?: string) {
+export async function getOrCreateCart(userId?: string, sessionId?: string, storeId?: string) {
   if (!userId && !sessionId) {
     throw new Error("Either userId or sessionId must be provided");
   }
@@ -28,11 +28,17 @@ export async function getOrCreateCart(userId?: string, sessionId?: string) {
     return cart[0];
   }
 
+  // For new carts, storeId is required
+  if (!storeId) {
+    throw new Error("storeId is required when creating a new cart");
+  }
+
   const newCart = await db
     .insert(carts)
     .values({
       userId: userId ? parseInt(userId) : null,
       sessionId: sessionId || null,
+      storeId: storeId,
     })
     .returning();
 
@@ -263,4 +269,79 @@ export async function mergeGuestCartToUser(guestSessionId: string, userId: strin
   await db.delete(carts).where(eq(carts.id, guestCart[0].id));
 
   return userCart;
+}
+
+export async function updateCartShipping(cartId: string, data: {
+  shippingRateId?: string | null;
+  shippingCost?: string | null;
+  shippingAddress?: string | null;
+  shippingCity?: string | null;
+  shippingState?: string | null;
+  shippingCountry?: string | null;
+  shippingPostalCode?: string | null;
+}) {
+  const updatedCart = await db
+    .update(carts)
+    .set({ 
+      ...data,
+      updatedAt: new Date()
+    })
+    .where(eq(carts.id, cartId))
+    .returning();
+
+  return updatedCart[0];
+}
+
+export async function getCartWithShippingDetails(cartId: string) {
+  const cart = await db
+    .select({
+      cart: carts,
+      shippingRate: shippingRates,
+      shippingZone: shippingZones,
+    })
+    .from(carts)
+    .leftJoin(shippingRates, eq(carts.shippingRateId, shippingRates.id))
+    .leftJoin(shippingZones, eq(shippingRates.zoneId, shippingZones.id))
+    .where(eq(carts.id, cartId))
+    .limit(1);
+
+  return cart[0] || null;
+}
+
+export async function getAvailableShippingRates(storeId: string, address?: {
+  country?: string;
+  state?: string;
+  postalCode?: string;
+}) {
+  // For now, get all active shipping zones and rates for the store
+  // In a more advanced implementation, you would filter by address
+  const zones = await db
+    .select({
+      zone: shippingZones,
+      rates: shippingRates,
+    })
+    .from(shippingZones)
+    .innerJoin(shippingRates, and(
+      eq(shippingZones.id, shippingRates.zoneId),
+      eq(shippingRates.isActive, true)
+    ))
+    .where(and(
+      eq(shippingZones.storeId, storeId),
+      eq(shippingZones.isActive, true)
+    ))
+    .orderBy(shippingRates.price);
+
+  // Group rates by zone
+  const groupedRates = zones.reduce((acc, { zone, rates }) => {
+    if (!acc[zone.id]) {
+      acc[zone.id] = {
+        zone,
+        rates: []
+      };
+    }
+    acc[zone.id].rates.push(rates);
+    return acc;
+  }, {} as Record<string, { zone: typeof zone, rates: typeof rates[] }>);
+
+  return Object.values(groupedRates);
 }
