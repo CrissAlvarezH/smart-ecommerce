@@ -1,5 +1,13 @@
 // Colombian shipping companies data and configurations
 
+export const COLOMBIAN_DEPARTMENTS = [
+  "Amazonas", "Antioquia", "Arauca", "Atlántico", "Bolívar", "Boyacá", "Caldas", 
+  "Caquetá", "Casanare", "Cauca", "Cesar", "Chocó", "Córdoba", "Cundinamarca", 
+  "Guainía", "Guaviare", "Huila", "La Guajira", "Magdalena", "Meta", "Nariño", 
+  "Norte de Santander", "Putumayo", "Quindío", "Risaralda", "San Andrés y Providencia", 
+  "Santander", "Sucre", "Tolima", "Valle del Cauca", "Vaupés", "Vichada"
+];
+
 export const COLOMBIAN_CITIES = [
   // Major cities
   { code: "BOG", name: "Bogotá D.C.", department: "Cundinamarca" },
