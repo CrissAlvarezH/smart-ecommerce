@@ -38,6 +38,7 @@ interface StoreCartPageClientProps {
     name: string;
     slug: string;
   };
+  initialShippingCost?: string;
 }
 
 type OptimisticAction = 
@@ -45,9 +46,13 @@ type OptimisticAction =
   | { type: 'remove'; itemId: string }
   | { type: 'clear' };
 
-export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageClientProps) {
+export function StoreCartPageClient({ initialCartItems, store, initialShippingCost = "0.00" }: StoreCartPageClientProps) {
   const { refreshCartCount, updateCartCount } = useStoreCart(store.slug);
-  const [shippingCost, setShippingCost] = useState<string>("0.00");
+  const [shippingCost, setShippingCost] = useState<string>(initialShippingCost);
+  
+  const handleShippingUpdate = (cost: string) => {
+    setShippingCost(cost);
+  };
   const [cartItems, setOptimisticCartItems] = useOptimistic(
     initialCartItems,
     (state: CartItemType[], action: OptimisticAction) => {
@@ -249,7 +254,7 @@ export function StoreCartPageClient({ initialCartItems, store }: StoreCartPageCl
           <ShippingSelector
             storeId={store.id}
             storeSlug={store.slug}
-            onShippingUpdate={setShippingCost}
+            onShippingUpdate={handleShippingUpdate}
           />
 
           {/* Order Summary */}

@@ -128,8 +128,8 @@ export function ShippingSelector({
       const options = result.data?.shippingOptions || [];
       setShippingOptions(options);
       
-      // Auto-select the cheapest option when rates are loaded
-      if (options.length > 0 && !selectedRateId) {
+      // Automatically select the cheapest shipping option without showing UI
+      if (options.length > 0) {
         let cheapestRate: any = null;
         let cheapestPrice = Infinity;
         
@@ -144,48 +144,47 @@ export function ShippingSelector({
         });
         
         if (cheapestRate) {
-          handleShippingSelection(cheapestRate.rateId);
+          // Automatically apply the cheapest shipping rate
+          setSelectedRateId(cheapestRate.rateId);
+          const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
+          
+          if (selectedAddress) {
+            // Update the order summary immediately
+            if (onShippingUpdate) {
+              onShippingUpdate(cheapestRate.calculatedCost);
+            }
+            
+            // Update the backend silently
+            updateShipping({
+              storeSlug,
+              shippingRateId: cheapestRate.rateId,
+              shippingCost: cheapestRate.calculatedCost,
+              shippingAddress: selectedAddress.address,
+              shippingCity: selectedAddress.city,
+              shippingState: selectedAddress.state,
+              shippingCountry: "Colombia",
+              shippingPostalCode: selectedAddress.postalCode,
+            });
+            
+            // Show subtle success message
+            toast.success(`Shipping: $${parseFloat(cheapestRate.calculatedCost).toLocaleString('es-CO')} COP`);
+          }
         }
       }
     },
     onError: (error) => {
-      toast.error(error.serverError || "Failed to load shipping options");
+      toast.error(error.serverError || "Failed to calculate shipping rates");
     }
   });
 
   const { execute: updateShipping, isExecuting: updatingShipping } = useAction(updateCartShippingAction, {
     onSuccess: (result) => {
-      toast.success("Shipping method updated");
+      // Silent success - no toast notification needed for automatic updates
     },
     onError: (error) => {
       toast.error(error.serverError || "Failed to update shipping method");
     }
   });
-
-  const handleShippingSelection = (rateId: string) => {
-    setSelectedRateId(rateId);
-    const selectedRate = findSelectedRate(rateId);
-    const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
-    
-    if (selectedRate && selectedAddress) {
-      // Update the UI immediately
-      if (onShippingUpdate) {
-        onShippingUpdate(selectedRate.calculatedCost);
-      }
-      
-      // Then update the backend
-      updateShipping({
-        storeSlug,
-        shippingRateId: rateId,
-        shippingCost: selectedRate.calculatedCost,
-        shippingAddress: selectedAddress.address,
-        shippingCity: selectedAddress.city,
-        shippingState: selectedAddress.state,
-        shippingCountry: "Colombia",
-        shippingPostalCode: selectedAddress.postalCode,
-      });
-    }
-  };
 
   const findSelectedRate = (rateId: string) => {
     for (const option of shippingOptions) {
@@ -544,62 +543,12 @@ export function ShippingSelector({
           </>
         )}
 
-        {/* Shipping Options */}
-        {selectedAddressId && shippingOptions.length > 0 && (
-          <>
-            <Separator />
-            <div>
-              <h3 className="font-semibold mb-4">Shipping Methods</h3>
-              
-              {loadingRates ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                  Loading shipping options...
-                </div>
-              ) : (
-                <RadioGroup value={selectedRateId} onValueChange={handleShippingSelection}>
-                  <div className="space-y-3">
-                    {shippingOptions.flatMap(option => 
-                      option.rates.map((rate: any) => (
-                        <label
-                          key={rate.rateId}
-                          htmlFor={rate.rateId}
-                          className={`flex items-center gap-3 p-4 rounded-lg border cursor-pointer transition-all ${
-                            selectedRateId === rate.rateId 
-                              ? 'border-blue-500 bg-blue-50 shadow-sm' 
-                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                          }`}
-                        >
-                          <RadioGroupItem value={rate.rateId} id={rate.rateId} />
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <div>
-                                <div className="font-medium">{rate.name}</div>
-                                {rate.description && (
-                                  <div className="text-sm text-gray-600">{rate.description}</div>
-                                )}
-                                <div className="text-sm text-gray-500">
-                                  Delivery: {rate.estimatedDays === 0 ? "Same day" : 
-                                           rate.estimatedDays === 1 ? "1 business day" : 
-                                           `${rate.estimatedDays} business days`}
-                                </div>
-                              </div>
-                              <div className="text-right">
-                                <div className="font-bold text-lg">
-                                  ${parseFloat(rate.calculatedCost).toLocaleString('es-CO')}
-                                </div>
-                                <div className="text-sm text-gray-500">COP</div>
-                              </div>
-                            </div>
-                          </div>
-                        </label>
-                      ))
-                    )}
-                  </div>
-                </RadioGroup>
-              )}
-            </div>
-          </>
+        {/* Hidden shipping calculation - no UI display */}
+        {loadingRates && selectedAddressId && (
+          <div className="flex items-center justify-center py-4 text-sm text-gray-500">
+            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+            Calculating shipping rates...
+          </div>
         )}
 
         {updatingShipping && (

@@ -5,6 +5,7 @@ import { ArrowLeft, ShoppingBag } from "lucide-react";
 import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 import { getStoreBySlugAction, getStoreCartItemsAction } from "../../actions";
+import { getCartWithShippingAction } from "./actions";
 import { StoreCartPageClient } from "./cart-client";
 
 interface StoreCartPageProps {
@@ -32,12 +33,20 @@ export default async function StoreCartPage({ params }: StoreCartPageProps) {
   const sessionId = cookieStore.get(`cart_session_${slug}`)?.value;
   
   let cartItems: any[] = [];
+  let initialShippingCost = "0.00";
   
   if (sessionId) {
     try {
+      // Get cart items
       const result = await getStoreCartItemsAction({ storeSlug: slug, sessionId });
       if (result.data) {
         cartItems = result.data.cartItems || [];
+      }
+      
+      // Get existing shipping information
+      const shippingResult = await getCartWithShippingAction({ storeSlug: slug });
+      if (shippingResult.data?.cart?.shippingCost) {
+        initialShippingCost = shippingResult.data.cart.shippingCost;
       }
     } catch (error) {
       console.error("Error fetching cart:", error);
@@ -62,5 +71,5 @@ export default async function StoreCartPage({ params }: StoreCartPageProps) {
     );
   }
 
-  return <StoreCartPageClient initialCartItems={cartItems} store={store} />;
+  return <StoreCartPageClient initialCartItems={cartItems} store={store} initialShippingCost={initialShippingCost} />;
 }
