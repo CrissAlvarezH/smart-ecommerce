@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Loader2, MapPin, Truck, Plus, Edit3, Trash2, ChevronDown, Check } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { getAvailableShippingRatesAction, updateCartShippingAction } from "@/app/stores/[slug]/client/cart/actions";
@@ -313,58 +314,69 @@ export function ShippingSelector({
           </div>
 
           {addresses.length > 0 && !showAddressForm && (
-            <RadioGroup 
-              value={selectedAddressId} 
-              onValueChange={setSelectedAddressId}
-              className="space-y-3"
-            >
-              {addresses.map((address) => (
-                <div
-                  key={address.id}
-                  className={`relative border rounded-lg p-4 ${
-                    selectedAddressId === address.id
-                      ? 'border-blue-500 bg-blue-50'
-                      : 'border-gray-200'
-                  }`}
-                >
-                  <div className="flex items-start gap-3">
-                    <RadioGroupItem value={address.id!} className="mt-1" />
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4 text-gray-500" />
-                        <span className="font-medium">{address.city}, {address.state}</span>
+            <TooltipProvider>
+              <RadioGroup 
+                value={selectedAddressId} 
+                onValueChange={setSelectedAddressId}
+                className="space-y-2"
+              >
+                {addresses.map((address) => (
+                  <div
+                    key={address.id}
+                    className={`relative border rounded-lg p-3 ${
+                      selectedAddressId === address.id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <RadioGroupItem value={address.id!} className="flex-shrink-0" />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <MapPin className="h-3 w-3 text-gray-500 flex-shrink-0" />
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <span className="font-medium text-sm truncate cursor-default">
+                                {address.city}, {address.state}
+                              </span>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>{address.city}, {address.state}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </div>
+                        <div className="text-xs text-gray-600 truncate" title={address.address}>
+                          {address.address}
+                        </div>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {COUNTRY_CODES.find(c => c.code === address.countryCode)?.prefix || ''} {address.phone}
+                        </div>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{address.address}</p>
-                      {address.additionalInfo && (
-                        <p className="text-sm text-gray-500">{address.additionalInfo}</p>
-                      )}
-                      <p className="text-sm text-gray-500">
-                        Phone: {COUNTRY_CODES.find(c => c.code === address.countryCode)?.prefix || ''} {address.phone} | Postal: {address.postalCode}
-                      </p>
-                    </div>
-                    <div className="flex gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEditAddress(address)}
-                      >
-                        <Edit3 className="h-4 w-4" />
-                      </Button>
-                      {addresses.length > 1 && (
+                      <div className="flex gap-1 flex-shrink-0">
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleDeleteAddress(address.id!)}
-                          className="text-red-600 hover:text-red-700"
+                          onClick={() => handleEditAddress(address)}
+                          className="h-8 w-8 p-0"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Edit3 className="h-3 w-3" />
                         </Button>
-                      )}
+                        {addresses.length > 1 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteAddress(address.id!)}
+                            className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
-              ))}
-            </RadioGroup>
+                ))}
+              </RadioGroup>
+            </TooltipProvider>
           )}
         </div>
 
