@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { unauthenticatedAction } from "@/lib/server-actions";
 import { cartService } from "@/services/cart";
+import { storeService } from "@/services/stores";
 import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 
@@ -22,6 +23,12 @@ export const addToCartAction = unauthenticatedAction
   .action(async ({ parsedInput }) => {
     const { productId, quantity, storeSlug } = parsedInput;
     console.log("🛒 Add to cart action called with:", { productId, quantity, storeSlug });
+    
+    // Get store ID from slug
+    const store = await storeService.getStoreBySlug(storeSlug);
+    if (!store) {
+      throw new Error("Store not found");
+    }
     
     const cookieStore = await cookies();
     
@@ -43,7 +50,7 @@ export const addToCartAction = unauthenticatedAction
     }
 
     console.log("📦 Getting or creating cart for session:", sessionId);
-    const cart = await cartService.getOrCreateCart(undefined, sessionId);
+    const cart = await cartService.getOrCreateCart(undefined, sessionId, store.id);
     console.log("✅ Cart retrieved/created:", cart.id);
     
     console.log("🔧 Adding item to cart:", { cartId: cart.id, productId, quantity });
