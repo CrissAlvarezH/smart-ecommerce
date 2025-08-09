@@ -4,6 +4,7 @@ import { z } from "zod";
 import { authenticatedAction, unauthenticatedAction } from "@/lib/server-actions";
 import { cartService } from "@/services/cart";
 import { cookies } from "next/headers";
+import { revalidatePath } from "next/cache";
 import { getFileUrl } from "@/lib/files";
 import * as cartRepository from "@/repositories/cart";
 import { calculateShippingForRates } from "@/services/shipping-calculator";
@@ -171,12 +172,20 @@ export const updateCartItemAction = unauthenticatedAction
       await cartService.removeFromCart(cart.id, parsedInput.cartItemId);
       const updatedItems = await cartService.getCartWithItems(cart.id);
       const itemsWithSignedUrls = await generateSignedUrlsForCartItems(updatedItems);
+      
+      // Revalidate the cart page to show updated data
+      revalidatePath(`/stores/${parsedInput.storeSlug}/client/cart`);
+      
       return { success: true, cartItems: itemsWithSignedUrls };
     }
     
     await cartService.updateCartItemQuantity(cart.id, parsedInput.cartItemId, parsedInput.quantity);
     const updatedItems = await cartService.getCartWithItems(cart.id);
     const itemsWithSignedUrls = await generateSignedUrlsForCartItems(updatedItems);
+    
+    // Revalidate the cart page to show updated data
+    revalidatePath(`/stores/${parsedInput.storeSlug}/client/cart`);
+    
     return { success: true, cartItems: itemsWithSignedUrls };
   });
 
@@ -198,6 +207,10 @@ export const removeFromCartAction = unauthenticatedAction
     
     const updatedItems = await cartService.getCartWithItems(cart.id);
     const itemsWithSignedUrls = await generateSignedUrlsForCartItems(updatedItems);
+    
+    // Revalidate the cart page to show updated data
+    revalidatePath(`/stores/${parsedInput.storeSlug}/client/cart`);
+    
     return { success: true, cartItems: itemsWithSignedUrls };
   });
 
@@ -215,6 +228,9 @@ export const clearCartAction = unauthenticatedAction
 
     const cart = await cartService.getOrCreateCart(undefined, sessionId);
     await cartService.clearCart(cart.id);
+    
+    // Revalidate the cart page to show updated data
+    revalidatePath(`/stores/${parsedInput.storeSlug}/client/cart`);
     
     return { success: true };
   });
