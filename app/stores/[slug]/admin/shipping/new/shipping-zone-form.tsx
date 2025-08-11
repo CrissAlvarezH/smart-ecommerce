@@ -99,6 +99,17 @@ export default function ShippingZoneForm({ storeId, storeSlug, initialData }: Sh
     setSelectedCities(selectedCities.filter(c => c !== city));
   };
 
+  const handleSelectAllDepartments = () => {
+    if (selectedDepartments.length === COLOMBIAN_DEPARTMENTS.length) {
+      // Deselect all
+      setSelectedDepartments([]);
+      setSelectedCities([]); // Clear cities when deselecting all departments
+    } else {
+      // Select all
+      setSelectedDepartments([...COLOMBIAN_DEPARTMENTS]);
+    }
+  };
+
   const handleSelectAllCities = () => {
     if (selectedCities.length === availableCities.length) {
       // Deselect all
@@ -142,7 +153,17 @@ export default function ShippingZoneForm({ storeId, storeSlug, initialData }: Sh
       </div>
 
       <div className="space-y-2">
-        <Label>Departments *</Label>
+        <div className="flex items-center justify-between">
+          <Label>Departments * ({COLOMBIAN_DEPARTMENTS.length} total)</Label>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={handleSelectAllDepartments}
+          >
+            {selectedDepartments.length === COLOMBIAN_DEPARTMENTS.length ? "Deselect All" : "Select All"}
+          </Button>
+        </div>
         <div className="relative">
           <Input
             value={departmentSearch}
