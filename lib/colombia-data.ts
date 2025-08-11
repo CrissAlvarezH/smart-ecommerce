@@ -38,6 +38,29 @@ export type ColombianCity = typeof COLOMBIAN_STATES_CITIES[ColombianDepartment][
 
 export const COLOMBIAN_DEPARTMENTS = Object.keys(COLOMBIAN_STATES_CITIES) as ColombianDepartment[];
 
+// Main cities (capital/most populated city of each department) according to DANE 2022 projections
+export const MAIN_COLOMBIAN_CITIES = [
+  "Bogotá", "Medellín", "Cali", "Barranquilla", "Cartagena", "Cúcuta", "Bucaramanga", 
+  "Villavicencio", "Santa Marta", "Valledupar", "Ibagué", "Montería", "Pereira", "Manizales", 
+  "Pasto", "Neiva", "Popayán", "Armenia", "Sincelejo", "Riohacha", "Tunja", "Yopal", 
+  "Florencia", "Quibdó", "Arauca", "Mocoa", "San Andrés", "San José del Guaviare", 
+  "Leticia", "Inírida", "Mitú", "Puerto Carreño"
+] as const;
+
 export function getCitiesByDepartment(department: ColombianDepartment): readonly string[] {
   return COLOMBIAN_STATES_CITIES[department] || [];
+}
+
+export function getMainCitiesFromSelectedDepartments(selectedDepartments: string[]): string[] {
+  // Get all cities from selected departments
+  const allCitiesFromDepartments = selectedDepartments.flatMap(dept => 
+    getCitiesByDepartment(dept as ColombianDepartment)
+  );
+  
+  // Filter main cities that exist in the selected departments
+  const mainCitiesInSelection = MAIN_COLOMBIAN_CITIES.filter(city => 
+    allCitiesFromDepartments.includes(city)
+  );
+  
+  return mainCitiesInSelection;
 }

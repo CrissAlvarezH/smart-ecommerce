@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { COLOMBIAN_STATES_CITIES, COLOMBIAN_DEPARTMENTS, getCitiesByDepartment, type ColombianDepartment } from "@/lib/colombia-data";
+import { COLOMBIAN_STATES_CITIES, COLOMBIAN_DEPARTMENTS, getCitiesByDepartment, getMainCitiesFromSelectedDepartments, type ColombianDepartment } from "@/lib/colombia-data";
 import { X } from "lucide-react";
 import {
   Select,
@@ -120,6 +120,12 @@ export default function ShippingZoneForm({ storeId, storeSlug, initialData }: Sh
     }
   };
 
+  const handleSelectMainCities = () => {
+    // Get main cities from selected departments based on population ranking
+    const mainCities = getMainCitiesFromSelectedDepartments(selectedDepartments);
+    setSelectedCities(mainCities);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -210,14 +216,24 @@ export default function ShippingZoneForm({ storeId, storeSlug, initialData }: Sh
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label>Cities * ({availableCities.length} available)</Label>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={handleSelectAllCities}
-            >
-              {selectedCities.length === availableCities.length ? "Deselect All" : "Select All"}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleSelectMainCities}
+              >
+                Select Main Cities
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleSelectAllCities}
+              >
+                {selectedCities.length === availableCities.length ? "Deselect All" : "Select All"}
+              </Button>
+            </div>
           </div>
           <div className="relative">
             <Input
