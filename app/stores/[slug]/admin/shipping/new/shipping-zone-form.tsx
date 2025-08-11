@@ -92,6 +92,7 @@ export default function ShippingZoneForm({ storeId, storeSlug, initialData }: Sh
   const handleAddCity = (city: string) => {
     setSelectedCities([...selectedCities, city]);
     setCitySearch("");
+    setShowCityDropdown(false);
   };
 
   const handleRemoveCity = (city: string) => {
@@ -146,7 +147,11 @@ export default function ShippingZoneForm({ storeId, storeSlug, initialData }: Sh
           <Input
             value={departmentSearch}
             onChange={(e) => setDepartmentSearch(e.target.value)}
-            onFocus={() => setShowDepartmentDropdown(true)}
+            onFocus={() => {
+              setShowDepartmentDropdown(true);
+              setShowCityDropdown(false);
+            }}
+            onBlur={() => setTimeout(() => setShowDepartmentDropdown(false), 200)}
             placeholder="Search and select departments..."
           />
           {showDepartmentDropdown && filteredDepartments.length > 0 && (
@@ -197,7 +202,11 @@ export default function ShippingZoneForm({ storeId, storeSlug, initialData }: Sh
             <Input
               value={citySearch}
               onChange={(e) => setCitySearch(e.target.value)}
-              onFocus={() => setShowCityDropdown(true)}
+              onFocus={() => {
+                setShowCityDropdown(true);
+                setShowDepartmentDropdown(false);
+              }}
+              onBlur={() => setTimeout(() => setShowCityDropdown(false), 200)}
               placeholder="Search cities from selected departments..."
             />
             {showCityDropdown && filteredCities.length > 0 && (
