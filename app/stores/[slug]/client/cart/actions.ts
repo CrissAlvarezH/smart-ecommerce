@@ -282,7 +282,7 @@ export const getAvailableShippingRatesAction = unauthenticatedAction
 export const updateCartShippingAction = unauthenticatedAction
   .inputSchema(z.object({
     storeSlug: z.string(),
-    shippingRateId: z.string(),
+    shippingZoneId: z.string(),
     shippingCost: z.string(),
     shippingAddress: z.string().optional(),
     shippingCity: z.string().optional(),
@@ -301,7 +301,7 @@ export const updateCartShippingAction = unauthenticatedAction
     const cart = await cartService.getOrCreateCart(undefined, sessionId);
     
     const updatedCart = await cartRepository.updateCartShipping(cart.id, {
-      shippingRateId: parsedInput.shippingRateId,
+      shippingZoneId: parsedInput.shippingZoneId,
       shippingCost: parsedInput.shippingCost,
       shippingAddress: parsedInput.shippingAddress || null,
       shippingCity: parsedInput.shippingCity || null,

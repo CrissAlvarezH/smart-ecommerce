@@ -1,4 +1,4 @@
-import { pgTable, text, integer, decimal, timestamp, boolean, uuid, unique } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, decimal, timestamp, boolean, uuid, unique, jsonb } from "drizzle-orm/pg-core";
 import { users } from "./users";
 
 export const stores = pgTable("stores", {
@@ -111,7 +111,7 @@ export const carts = pgTable("carts", {
   userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }),
   sessionId: text("session_id"),
   storeId: uuid("store_id").notNull().references(() => stores.id),
-  shippingRateId: uuid("shipping_rate_id").references(() => shippingRates.id),
+  shippingZoneId: uuid("shipping_zone_id").references(() => shippingZones.id),
   shippingCost: decimal("shipping_cost", { precision: 10, scale: 2 }).default("0.00"),
   shippingAddress: text("shipping_address"),
   shippingCity: text("shipping_city"),
@@ -160,38 +160,9 @@ export const shippingZones = pgTable("shipping_zones", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   storeId: uuid("store_id").notNull().references(() => stores.id),
-  countries: text("countries").array(),
-  states: text("states").array(),
-  postalCodes: text("postal_codes").array(),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-export const shippingRates = pgTable("shipping_rates", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  description: text("description"),
-  zoneId: uuid("zone_id").notNull().references(() => shippingZones.id, { onDelete: "cascade" }),
-  type: text("type").notNull(), // "flat_rate", "weight_based", "price_based", "free"
-  price: decimal("price", { precision: 10, scale: 2 }),
-  minWeight: decimal("min_weight", { precision: 8, scale: 2 }),
-  maxWeight: decimal("max_weight", { precision: 8, scale: 2 }),
-  minPrice: decimal("min_price", { precision: 10, scale: 2 }),
-  maxPrice: decimal("max_price", { precision: 10, scale: 2 }),
-  estimatedDays: integer("estimated_days"),
-  isActive: boolean("is_active").notNull().default(true),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
-  updatedAt: timestamp("updated_at").notNull().defaultNow(),
-});
-
-export const shippingMethods = pgTable("shipping_methods", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  name: text("name").notNull(),
-  carrier: text("carrier"),
-  code: text("code"),
-  trackingUrlTemplate: text("tracking_url_template"),
-  storeId: uuid("store_id").notNull().references(() => stores.id),
+  departments: jsonb("departments").notNull().$type<string[]>(), // Array of Colombian department names
+  cities: jsonb("cities").notNull().$type<string[]>(), // Array of city names
+  price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
@@ -205,10 +176,6 @@ export type InsertCollectionDiscount = typeof collectionDiscounts.$inferInsert;
 export type SelectCollectionDiscount = typeof collectionDiscounts.$inferSelect;
 export type InsertShippingZone = typeof shippingZones.$inferInsert;
 export type SelectShippingZone = typeof shippingZones.$inferSelect;
-export type InsertShippingRate = typeof shippingRates.$inferInsert;
-export type SelectShippingRate = typeof shippingRates.$inferSelect;
-export type InsertShippingMethod = typeof shippingMethods.$inferInsert;
-export type SelectShippingMethod = typeof shippingMethods.$inferSelect;
 export type InsertCart = typeof carts.$inferInsert;
 export type SelectCart = typeof carts.$inferSelect;
 export type InsertCartItem = typeof cartItems.$inferInsert;

@@ -158,7 +158,7 @@ export function ShippingSelector({
             // Update the backend silently
             updateShipping({
               storeSlug,
-              shippingRateId: cheapestRate.rateId,
+              shippingZoneId: cheapestRate.rateId,
               shippingCost: cheapestRate.calculatedCost,
               shippingAddress: selectedAddress.address,
               shippingCity: selectedAddress.city,

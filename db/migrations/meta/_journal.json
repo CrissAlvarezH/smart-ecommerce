@@ -155,6 +155,13 @@
       "when": 1754585852729,
       "tag": "0021_material_old_lace",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1754883327911,
+      "tag": "0022_light_moira_mactaggert",
+      "breakpoints": true
     }
   ]
 }

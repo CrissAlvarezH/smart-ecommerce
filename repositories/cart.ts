@@ -1,5 +1,5 @@
 import { db } from "@/db";
-import { carts, cartItems, products, productImages, shippingRates, shippingZones } from "@/db/schemas";
+import { carts, cartItems, products, productImages, shippingZones } from "@/db/schemas";
 import { eq, and, desc } from "drizzle-orm";
 import { applyDiscountsToProducts } from "./products";
 
@@ -272,7 +272,7 @@ export async function mergeGuestCartToUser(guestSessionId: string, userId: strin
 }
 
 export async function updateCartShipping(cartId: string, data: {
-  shippingRateId?: string | null;
+  shippingZoneId?: string | null;
   shippingCost?: string | null;
   shippingAddress?: string | null;
   shippingCity?: string | null;
@@ -296,12 +296,10 @@ export async function getCartWithShippingDetails(cartId: string) {
   const cart = await db
     .select({
       cart: carts,
-      shippingRate: shippingRates,
       shippingZone: shippingZones,
     })
     .from(carts)
-    .leftJoin(shippingRates, eq(carts.shippingRateId, shippingRates.id))
-    .leftJoin(shippingZones, eq(shippingRates.zoneId, shippingZones.id))
+    .leftJoin(shippingZones, eq(carts.shippingZoneId, shippingZones.id))
     .where(eq(carts.id, cartId))
     .limit(1);
 
@@ -311,37 +309,33 @@ export async function getCartWithShippingDetails(cartId: string) {
 export async function getAvailableShippingRates(storeId: string, address?: {
   country?: string;
   state?: string;
-  postalCode?: string;
+  city?: string;
 }) {
-  // For now, get all active shipping zones and rates for the store
-  // In a more advanced implementation, you would filter by address
+  // Get all active shipping zones for the store
   const zones = await db
-    .select({
-      zone: shippingZones,
-      rates: shippingRates,
-    })
+    .select()
     .from(shippingZones)
-    .innerJoin(shippingRates, and(
-      eq(shippingZones.id, shippingRates.zoneId),
-      eq(shippingRates.isActive, true)
-    ))
     .where(and(
       eq(shippingZones.storeId, storeId),
       eq(shippingZones.isActive, true)
     ))
-    .orderBy(shippingRates.price);
+    .orderBy(shippingZones.price);
 
-  // Group rates by zone
-  const groupedRates = zones.reduce((acc, { zone, rates }) => {
-    if (!acc[zone.id]) {
-      acc[zone.id] = {
-        zone,
-        rates: []
-      };
-    }
-    acc[zone.id].rates.push(rates);
-    return acc;
-  }, {} as Record<string, { zone: typeof zone, rates: typeof rates[] }>);
+  // If address is provided, filter zones that include the city
+  if (address?.state && address?.city) {
+    return zones.filter(zone => {
+      const departments = zone.departments as string[];
+      const cities = zone.cities as string[];
+      return departments.includes(address.state!) && cities.includes(address.city!);
+    });
+  }
 
-  return Object.values(groupedRates);
+  // Return zones as shipping options
+  return zones.map(zone => ({
+    id: zone.id,
+    name: zone.name,
+    price: zone.price,
+    departments: zone.departments as string[],
+    cities: zone.cities as string[]
+  }));
 }
