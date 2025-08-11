@@ -50,9 +50,11 @@ export default function EditShippingZoneForm({ storeId, storeSlug, initialData }
   });
 
   // Get available cities based on selected departments
-  const availableCities = selectedDepartments.flatMap(dept => 
-    getCitiesByDepartment(dept as ColombianDepartment)
-  );
+  const availableCities = Array.from(new Set(
+    selectedDepartments.flatMap(dept => 
+      getCitiesByDepartment(dept as ColombianDepartment)
+    )
+  ));
 
   // Filter departments based on search
   const filteredDepartments = COLOMBIAN_DEPARTMENTS.filter(dept =>
@@ -193,9 +195,9 @@ export default function EditShippingZoneForm({ storeId, storeSlug, initialData }
             />
             {showCityDropdown && filteredCities.length > 0 && (
               <ScrollArea className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg h-60">
-                {filteredCities.map((city) => (
+                {filteredCities.map((city, index) => (
                   <button
-                    key={city}
+                    key={`${city}-${index}`}
                     type="button"
                     className="w-full px-3 py-2 text-left hover:bg-gray-100"
                     onClick={() => handleAddCity(city)}
@@ -207,8 +209,8 @@ export default function EditShippingZoneForm({ storeId, storeSlug, initialData }
             )}
           </div>
           <div className="flex flex-wrap gap-2 mt-2 max-h-40 overflow-y-auto">
-            {selectedCities.map((city) => (
-              <Badge key={city} variant="outline" className="gap-1">
+            {selectedCities.map((city, index) => (
+              <Badge key={`selected-${city}-${index}`} variant="outline" className="gap-1">
                 {city}
                 <button
                   type="button"
