@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -99,58 +99,7 @@ export function ShippingSelector({
     phone: ""
   });
 
-  // Load addresses from localStorage
-  useEffect(() => {
-    const savedAddresses = localStorage.getItem(`addresses_${storeSlug}`);
-    console.log('🏠 Loading addresses from localStorage:', {
-      key: `addresses_${storeSlug}`,
-      savedAddresses: savedAddresses,
-      hasAddresses: !!savedAddresses
-    });
-    
-    if (savedAddresses) {
-      const parsed = JSON.parse(savedAddresses);
-      setAddresses(parsed);
-      if (parsed.length > 0 && !selectedAddressId) {
-        setSelectedAddressId(parsed[0].id);
-        console.log('✅ Auto-selected first address:', parsed[0].id);
-      }
-    } else {
-      console.log('❌ No addresses found, creating test address for debugging');
-      
-      // FOR DEBUGGING: Create a test address automatically
-      const testAddress: Address = {
-        id: 'test-address-1',
-        state: 'Córdoba',
-        city: 'Montería',
-        address: 'Test Address 123',
-        postalCode: '230001',
-        countryCode: 'CO',
-        phone: '3001234567'
-      };
-      
-      setAddresses([testAddress]);
-      setSelectedAddressId(testAddress.id);
-      saveAddresses([testAddress]);
-      
-      // Trigger shipping calculation
-      setTimeout(() => {
-        loadShippingRates(testAddress);
-      }, 100);
-    }
-  }, [storeSlug]);
-
-  // Save addresses to localStorage
-  const saveAddresses = (newAddresses: Address[]) => {
-    setAddresses(newAddresses);
-    localStorage.setItem(`addresses_${storeSlug}`, JSON.stringify(newAddresses));
-  };
-
-  // Get cities for selected state
-  const getCitiesForState = (state: string) => {
-    return COLOMBIAN_STATES_CITIES[state as keyof typeof COLOMBIAN_STATES_CITIES] || [];
-  };
-
+  // Move useAction hooks here so they're available in useEffects
   const { execute: getShippingRates, isExecuting: loadingRates } = useAction(getAvailableShippingRatesAction, {
     onSuccess: (result) => {
       const options = result.data?.shippingOptions || [];
@@ -182,28 +131,50 @@ export function ShippingSelector({
             console.warn('⚠️ onShippingUpdate callback is undefined');
           }
           
-          // Only update backend if we have a selected address
-          const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
-          
-          console.log('📍 Selected address check:', {
-            selectedAddressId,
-            addresses: addresses.length,
-            selectedAddress: !!selectedAddress
-          });
-          
-          if (selectedAddress) {
-            // Update the backend silently
-            updateShipping({
-              storeSlug,
-              shippingZoneId: cheapestZone.zoneId,
-              shippingCost: cheapestZone.price,
-              shippingAddress: selectedAddress.address,
-              shippingCity: selectedAddress.city,
-              shippingState: selectedAddress.state,
-              shippingCountry: "Colombia",
-              shippingPostalCode: selectedAddress.postalCode,
+          // Get the most current addresses state - use a timeout to ensure state is updated
+          setTimeout(() => {
+            const currentAddresses = JSON.parse(localStorage.getItem(`addresses_${storeSlug}`) || '[]');
+            
+            // Use the temporary selected ID if available, otherwise try selectedAddressId or first address
+            const targetAddressId = (window as any).__tempSelectedAddressId || selectedAddressId;
+            const selectedAddress = currentAddresses.find((addr: any) => addr.id === targetAddressId) || currentAddresses[0];
+            
+            console.log('📍 Selected address check (delayed):', {
+              selectedAddressId,
+              targetAddressId,
+              currentAddresses: currentAddresses.length,
+              selectedAddress: !!selectedAddress,
+              firstAddress: currentAddresses[0]?.id
             });
-          }
+            
+            if (selectedAddress) {
+              console.log('🚢 Updating shipping in backend:', {
+                storeSlug,
+                shippingZoneId: cheapestZone.zoneId,
+                shippingCost: cheapestZone.price,
+                shippingAddress: selectedAddress.address,
+                shippingCity: selectedAddress.city,
+                shippingState: selectedAddress.state,
+              });
+              
+              // Update the backend silently
+              updateShipping({
+                storeSlug,
+                shippingZoneId: cheapestZone.zoneId,
+                shippingCost: cheapestZone.price,
+                shippingAddress: selectedAddress.address,
+                shippingCity: selectedAddress.city,
+                shippingState: selectedAddress.state,
+                shippingCountry: "Colombia",
+                shippingPostalCode: selectedAddress.postalCode,
+              });
+              
+              // Clear the temporary selected address ID
+              delete (window as any).__tempSelectedAddressId;
+            } else {
+              console.error('❌ Cannot update shipping: no selected address found in localStorage');
+            }
+          }, 200);
           
           // Show subtle success message
           toast.success(`Shipping: $${parseFloat(cheapestZone.price).toLocaleString('es-CO')} COP`);
@@ -214,7 +185,7 @@ export function ShippingSelector({
       toast.error(error.serverError || "Failed to calculate shipping rates");
     }
   });
-
+  
   const { execute: updateShipping, isExecuting: updatingShipping } = useAction(updateCartShippingAction, {
     onSuccess: (result) => {
       // Silent success - no toast notification needed for automatic updates
@@ -223,6 +194,80 @@ export function ShippingSelector({
       toast.error(error.serverError || "Failed to update shipping method");
     }
   });
+
+  // Save addresses to localStorage - defined here so it's available in useEffect
+  const saveAddresses = useCallback((newAddresses: Address[]) => {
+    setAddresses(newAddresses);
+    localStorage.setItem(`addresses_${storeSlug}`, JSON.stringify(newAddresses));
+  }, [storeSlug]);
+
+  // Load addresses from localStorage
+  useEffect(() => {
+    const savedAddresses = localStorage.getItem(`addresses_${storeSlug}`);
+    console.log('🏠 Loading addresses from localStorage:', {
+      key: `addresses_${storeSlug}`,
+      savedAddresses: savedAddresses,
+      hasAddresses: !!savedAddresses
+    });
+    
+    if (savedAddresses) {
+      const parsed = JSON.parse(savedAddresses);
+      setAddresses(parsed);
+      if (parsed.length > 0 && !selectedAddressId) {
+        setSelectedAddressId(parsed[0].id);
+        console.log('✅ Auto-selected first address:', parsed[0].id);
+      }
+    } else {
+      console.log('❌ No addresses found, creating default address');
+      
+      // Create a default Colombian address so shipping can be calculated
+      const defaultAddress: Address = {
+        id: 'default-address',
+        state: 'Córdoba',
+        city: 'Montería', 
+        address: 'Dirección por defecto',
+        postalCode: '230001',
+        countryCode: 'CO',
+        phone: '3001234567'
+      };
+      
+      console.log('✅ Created default address:', defaultAddress);
+      
+      setAddresses([defaultAddress]);
+      setSelectedAddressId(defaultAddress.id);
+      saveAddresses([defaultAddress]);
+      
+      // Trigger shipping calculation after a short delay to avoid the loop
+      console.log('✅ Default address created, triggering shipping calculation');
+      setTimeout(() => {
+        // Store the current selected address ID for the callback
+        const currentSelectedId = defaultAddress.id;
+        
+        // Temporarily store the selected address ID in a way the callback can access
+        (window as any).__tempSelectedAddressId = currentSelectedId;
+        
+        getShippingRates({
+          storeId,
+          storeSlug,
+          address: {
+            country: "Colombia",
+            state: defaultAddress.state,
+            city: defaultAddress.city,
+            postalCode: defaultAddress.postalCode
+          }
+        });
+      }, 100);
+    }
+  }, [storeSlug, selectedAddressId, storeId, getShippingRates, saveAddresses]);
+
+  // saveAddresses function moved to top of component
+
+  // Get cities for selected state
+  const getCitiesForState = (state: string) => {
+    return COLOMBIAN_STATES_CITIES[state as keyof typeof COLOMBIAN_STATES_CITIES] || [];
+  };
+
+  // Removed duplicate useAction hooks - they are now defined at the top
 
   const findSelectedRate = (rateId: string) => {
     for (const option of shippingOptions) {
@@ -264,7 +309,8 @@ export function ShippingSelector({
     loadShippingRates(newAddress);
   };
 
-  const loadShippingRates = (address: Address) => {
+  const loadShippingRates = useCallback((address: Address) => {
+    console.log('📡 Loading shipping rates for address:', address);
     getShippingRates({
       storeId,
       storeSlug,
@@ -275,7 +321,9 @@ export function ShippingSelector({
         postalCode: address.postalCode
       }
     });
-  };
+  }, [getShippingRates, storeId, storeSlug]);
+
+  // Removed the problematic useEffect that was causing the infinite loop
 
   const handleEditAddress = (address: Address) => {
     setFormAddress({ ...address });

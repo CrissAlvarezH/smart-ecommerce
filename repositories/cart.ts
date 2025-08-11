@@ -347,3 +347,45 @@ export async function getAvailableShippingRates(storeId: string, address?: {
     cities: zone.cities as string[]
   }));
 }
+
+export async function getCartBySessionAndStore(sessionId: string, storeId: string) {
+  const cart = await db
+    .select()
+    .from(carts)
+    .where(and(
+      eq(carts.sessionId, sessionId),
+      eq(carts.storeId, storeId)
+    ))
+    .limit(1);
+
+  if (cart.length === 0) {
+    return null;
+  }
+
+  // Get cart with items
+  const items = await getCartWithItems(cart[0].id);
+  
+  return {
+    ...cart[0],
+    items,
+  };
+}
+
+// Export as cartRepository object for consistency with orders service
+export const cartRepository = {
+  getOrCreateCart,
+  getCartWithItems,
+  addToCart,
+  updateCartItemQuantity,
+  removeFromCart,
+  clearCart,
+  getCartTotal,
+  getCartItemCount,
+  isProductInCart,
+  getCartBySession,
+  mergeGuestCartToUser,
+  updateCartShipping,
+  getCartWithShippingDetails,
+  getAvailableShippingRates,
+  getCartBySessionAndStore,
+};

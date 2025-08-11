@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { headers } from "next/headers";
 import { env } from "@/env";
 import { processPurchaseService } from "@/services/credits";
+import { ordersService } from "@/services/orders.service";
 import crypto from "crypto";
 
 interface WompiWebhookEvent {
@@ -90,20 +91,32 @@ export async function POST(request: NextRequest) {
       case "transaction.updated": {
         const transaction = event.data.transaction;
         
-        if (transaction.status === "APPROVED") {
-          // Parse metadata from reference (format: "userId:packageId")
-          const [userId, packageId] = transaction.reference.split(":");
-          
-          if (userId && packageId) {
-            await processPurchaseService(
-              parseInt(userId),
-              transaction.id,
-              parseInt(packageId)
-            );
-            console.log(`Credits purchased for user ${userId}, transaction: ${transaction.id}`);
+        // Check if this is an order transaction (starts with "ORDER-")
+        if (transaction.reference.startsWith("ORDER-")) {
+          // Handle ecommerce order webhook
+          try {
+            await ordersService.handleWebhook(event as any);
+            console.log(`Ecommerce order webhook processed for transaction: ${transaction.id}`);
+          } catch (error) {
+            console.error(`Failed to process ecommerce webhook for transaction ${transaction.id}:`, error);
           }
-        } else if (transaction.status === "DECLINED" || transaction.status === "ERROR") {
-          console.log(`Payment failed for transaction ${transaction.id}, status: ${transaction.status}`);
+        } else {
+          // Handle credits transaction (existing logic)
+          if (transaction.status === "APPROVED") {
+            // Parse metadata from reference (format: "userId:packageId")
+            const [userId, packageId] = transaction.reference.split(":");
+            
+            if (userId && packageId) {
+              await processPurchaseService(
+                parseInt(userId),
+                transaction.id,
+                parseInt(packageId)
+              );
+              console.log(`Credits purchased for user ${userId}, transaction: ${transaction.id}`);
+            }
+          } else if (transaction.status === "DECLINED" || transaction.status === "ERROR") {
+            console.log(`Payment failed for transaction ${transaction.id}, status: ${transaction.status}`);
+          }
         }
         break;
       }

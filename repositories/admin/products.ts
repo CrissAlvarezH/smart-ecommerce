@@ -304,3 +304,19 @@ export async function getProductCollections(productId: string) {
     .from(productCollections)
     .where(eq(productCollections.productId, productId));
 }
+
+// Export as adminProductsRepository for consistency
+export const adminProductsRepository = {
+  createProduct,
+  updateProduct,
+  deleteProduct,
+  getProducts,
+  getProductsCount,
+  getProductById,
+  getProductBySlug,
+  addProductImage,
+  updateProductImage,
+  deleteProductImage,
+  getProductImages,
+  getProductCollections,
+};

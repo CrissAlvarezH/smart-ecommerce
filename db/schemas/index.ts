@@ -30,3 +30,9 @@ export {
   type InsertCartItem,
   type SelectCartItem
 } from "./ecommerce";
+export { 
+  orders, 
+  orderItems, 
+  orderStatusHistory, 
+  paymentTransactions 
+} from "./orders";

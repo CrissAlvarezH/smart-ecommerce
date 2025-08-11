@@ -289,9 +289,11 @@ export function StoreCartPageClient({ initialCartItems, store, initialShippingCo
                 * Prices include VAT (19%)
               </div>
 
-              <Button size="lg" className="w-full mt-6" disabled={isLoading || shipping === 0}>
-                {shipping === 0 ? "Select shipping method" : "Proceed to Checkout"}
-              </Button>
+              <Link href={`/stores/${store.slug}/client/checkout`}>
+                <Button size="lg" className="w-full mt-6" disabled={isLoading || shipping === 0}>
+                  {shipping === 0 ? "Select shipping method" : "Proceed to Checkout"}
+                </Button>
+              </Link>
 
               <div className="text-sm text-gray-500 text-center mt-4">
                 Free shipping on orders over $150,000

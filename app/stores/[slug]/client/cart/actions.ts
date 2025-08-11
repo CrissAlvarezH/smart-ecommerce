@@ -317,13 +317,26 @@ export const getCartWithShippingAction = unauthenticatedAction
       throw new Error("No cart session found");
     }
 
-    const cart = await cartService.getOrCreateCart(undefined, sessionId);
-    const cartWithShipping = await cartRepository.getCartWithShippingDetails(cart.id);
-    const cartItems = await cartService.getCartWithItems(cart.id);
+    // First try to get existing cart by session only
+    const existingCart = await cartService.getCartBySession(sessionId);
+    if (!existingCart) {
+      throw new Error("Cart not found");
+    }
+
+    const cartWithShipping = await cartRepository.getCartWithShippingDetails(existingCart.id);
+    const cartItems = await cartService.getCartWithItems(existingCart.id);
     const itemsWithSignedUrls = await generateSignedUrlsForCartItems(cartItems);
 
+    console.log("🛒 getCartWithShippingAction debug:", {
+      cartId: existingCart.id,
+      shippingZoneId: cartWithShipping?.cart?.shippingZoneId,
+      shippingCost: cartWithShipping?.cart?.shippingCost,
+      shippingCity: cartWithShipping?.cart?.shippingCity,
+      shippingState: cartWithShipping?.cart?.shippingState,
+    });
+
     return { 
-      cart: cartWithShipping?.cart || cart, 
+      cart: cartWithShipping?.cart || existingCart, 
       shippingRate: cartWithShipping?.shippingRate || null,
       shippingZone: cartWithShipping?.shippingZone || null,
       cartItems: itemsWithSignedUrls 

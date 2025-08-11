@@ -69,4 +69,11 @@ export const storeRepository = {
     
     return !!existing;
   },
+
+  async getStoreBySlug(slug: string): Promise<SelectStore | null> {
+    return this.findBySlug(slug);
+  },
 };
+
+// Export as storesRepository for consistency
+export const storesRepository = storeRepository;
