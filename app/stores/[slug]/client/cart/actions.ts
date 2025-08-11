@@ -7,7 +7,6 @@ import { cookies } from "next/headers";
 import { revalidatePath } from "next/cache";
 import { getFileUrl } from "@/lib/files";
 import * as cartRepository from "@/repositories/cart";
-import { calculateShippingForRates } from "@/services/shipping-calculator";
 import * as productRepository from "@/repositories/products";
 
 // Helper function to generate signed URLs for cart item images
@@ -242,6 +241,7 @@ export const getAvailableShippingRatesAction = unauthenticatedAction
     address: z.object({
       country: z.string().optional(),
       state: z.string().optional(),
+      city: z.string().optional(),
       postalCode: z.string().optional(),
     }).optional(),
   }))
@@ -253,30 +253,22 @@ export const getAvailableShippingRatesAction = unauthenticatedAction
       throw new Error("No cart session found");
     }
 
-    // Get cart items for calculation
-    const cart = await cartService.getOrCreateCart(undefined, sessionId);
-    const cartItems = await cartService.getCartWithItems(cart.id);
-
-    // Get available shipping rates
-    const shippingOptions = await cartRepository.getAvailableShippingRates(
+    // Get available shipping zones
+    const shippingZones = await cartRepository.getAvailableShippingRates(
       parsedInput.storeId,
       parsedInput.address
     );
 
-    // Calculate shipping costs for each rate
-    const calculatedOptions = shippingOptions.map(({ zone, rates }) => {
-      const calculatedRates = calculateShippingForRates(rates, {
-        cartItems: cartItems as any,
-        address: parsedInput.address
-      });
+    // Transform zones into shipping options with flat rates
+    const shippingOptions = shippingZones.map(zone => ({
+      zoneId: zone.id,
+      zoneName: zone.name,
+      price: zone.price || "0",
+      departments: zone.departments,
+      cities: zone.cities
+    }));
 
-      return {
-        zone,
-        rates: calculatedRates
-      };
-    });
-
-    return { shippingOptions: calculatedOptions };
+    return { shippingOptions };
   });
 
 export const updateCartShippingAction = unauthenticatedAction

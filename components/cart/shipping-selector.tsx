@@ -16,7 +16,7 @@ import { Loader2, MapPin, Truck, Plus, Edit3, Trash2, ChevronDown, Check } from 
 import { useAction } from "next-safe-action/hooks";
 import { getAvailableShippingRatesAction, updateCartShippingAction } from "@/app/stores/[slug]/client/cart/actions";
 import { toast } from "sonner";
-import { COLOMBIAN_CITIES, COLOMBIAN_DEPARTMENTS } from "@/lib/colombian-shipping";
+import { COLOMBIAN_DEPARTMENTS, COLOMBIAN_STATES_CITIES } from "@/lib/colombia-data";
 
 // Country codes with phone prefixes
 const COUNTRY_CODES = [
@@ -102,14 +102,41 @@ export function ShippingSelector({
   // Load addresses from localStorage
   useEffect(() => {
     const savedAddresses = localStorage.getItem(`addresses_${storeSlug}`);
+    console.log('🏠 Loading addresses from localStorage:', {
+      key: `addresses_${storeSlug}`,
+      savedAddresses: savedAddresses,
+      hasAddresses: !!savedAddresses
+    });
+    
     if (savedAddresses) {
       const parsed = JSON.parse(savedAddresses);
       setAddresses(parsed);
       if (parsed.length > 0 && !selectedAddressId) {
         setSelectedAddressId(parsed[0].id);
+        console.log('✅ Auto-selected first address:', parsed[0].id);
       }
     } else {
-      setShowAddressForm(true); // Show form if no addresses exist
+      console.log('❌ No addresses found, creating test address for debugging');
+      
+      // FOR DEBUGGING: Create a test address automatically
+      const testAddress: Address = {
+        id: 'test-address-1',
+        state: 'Córdoba',
+        city: 'Montería',
+        address: 'Test Address 123',
+        postalCode: '230001',
+        countryCode: 'CO',
+        phone: '3001234567'
+      };
+      
+      setAddresses([testAddress]);
+      setSelectedAddressId(testAddress.id);
+      saveAddresses([testAddress]);
+      
+      // Trigger shipping calculation
+      setTimeout(() => {
+        loadShippingRates(testAddress);
+      }, 100);
     }
   }, [storeSlug]);
 
@@ -121,7 +148,7 @@ export function ShippingSelector({
 
   // Get cities for selected state
   const getCitiesForState = (state: string) => {
-    return COLOMBIAN_CITIES.filter(city => city.department === state);
+    return COLOMBIAN_STATES_CITIES[state as keyof typeof COLOMBIAN_STATES_CITIES] || [];
   };
 
   const { execute: getShippingRates, isExecuting: loadingRates } = useAction(getAvailableShippingRatesAction, {
@@ -131,45 +158,55 @@ export function ShippingSelector({
       
       // Automatically select the cheapest shipping option without showing UI
       if (options.length > 0) {
-        let cheapestRate: any = null;
+        let cheapestZone: any = null;
         let cheapestPrice = Infinity;
         
-        options.forEach((option: any) => {
-          option.rates.forEach((rate: any) => {
-            const price = parseFloat(rate.calculatedCost);
-            if (price < cheapestPrice) {
-              cheapestPrice = price;
-              cheapestRate = rate;
-            }
-          });
+        options.forEach((zone: any) => {
+          const price = parseFloat(zone.price || "0");
+          if (price < cheapestPrice) {
+            cheapestPrice = price;
+            cheapestZone = zone;
+          }
         });
         
-        if (cheapestRate) {
-          // Automatically apply the cheapest shipping rate
-          setSelectedRateId(cheapestRate.rateId);
+        if (cheapestZone) {
+          // Automatically apply the cheapest shipping zone
+          console.log('🎯 Found cheapest zone:', cheapestZone);
+          setSelectedRateId(cheapestZone.zoneId);
+          
+          // Update the order summary immediately (no need to wait for address)
+          console.log('💰 Shipping selector updating price:', cheapestZone.price);
+          if (onShippingUpdate) {
+            onShippingUpdate(cheapestZone.price);
+          } else {
+            console.warn('⚠️ onShippingUpdate callback is undefined');
+          }
+          
+          // Only update backend if we have a selected address
           const selectedAddress = addresses.find(addr => addr.id === selectedAddressId);
           
+          console.log('📍 Selected address check:', {
+            selectedAddressId,
+            addresses: addresses.length,
+            selectedAddress: !!selectedAddress
+          });
+          
           if (selectedAddress) {
-            // Update the order summary immediately
-            if (onShippingUpdate) {
-              onShippingUpdate(cheapestRate.calculatedCost);
-            }
-            
             // Update the backend silently
             updateShipping({
               storeSlug,
-              shippingZoneId: cheapestRate.rateId,
-              shippingCost: cheapestRate.calculatedCost,
+              shippingZoneId: cheapestZone.zoneId,
+              shippingCost: cheapestZone.price,
               shippingAddress: selectedAddress.address,
               shippingCity: selectedAddress.city,
               shippingState: selectedAddress.state,
               shippingCountry: "Colombia",
               shippingPostalCode: selectedAddress.postalCode,
             });
-            
-            // Show subtle success message
-            toast.success(`Shipping: $${parseFloat(cheapestRate.calculatedCost).toLocaleString('es-CO')} COP`);
           }
+          
+          // Show subtle success message
+          toast.success(`Shipping: $${parseFloat(cheapestZone.price).toLocaleString('es-CO')} COP`);
         }
       }
     },
@@ -234,7 +271,8 @@ export function ShippingSelector({
       address: {
         country: "Colombia",
         state: address.state,
-        postalCode: address.city // Using city as identifier for Colombian shipping
+        city: address.city,
+        postalCode: address.postalCode
       }
     });
   };
@@ -427,8 +465,8 @@ export function ShippingSelector({
                     </SelectTrigger>
                     <SelectContent>
                       {getCitiesForState(formAddress.state).map((city) => (
-                        <SelectItem key={city.code} value={city.name}>
-                          {city.name}
+                        <SelectItem key={city} value={city}>
+                          {city}
                         </SelectItem>
                       ))}
                     </SelectContent>

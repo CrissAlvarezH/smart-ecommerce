@@ -51,7 +51,10 @@ export function StoreCartPageClient({ initialCartItems, store, initialShippingCo
   const [shippingCost, setShippingCost] = useState<string>(initialShippingCost);
   
   const handleShippingUpdate = (cost: string) => {
+    console.log('🚢 Cart updating shipping cost:', cost);
+    console.log('🚢 Previous shipping cost:', shippingCost);
     setShippingCost(cost);
+    console.log('🚢 New shipping cost should be:', cost);
   };
   const [cartItems, setOptimisticCartItems] = useOptimistic(
     initialCartItems,

@@ -2,6 +2,7 @@ import { db } from "@/db";
 import { carts, cartItems, products, productImages, shippingZones } from "@/db/schemas";
 import { eq, and, desc } from "drizzle-orm";
 import { applyDiscountsToProducts } from "./products";
+import { findNormalizedMatch } from "@/lib/text-utils";
 
 export async function getOrCreateCart(userId?: string, sessionId?: string, storeId?: string) {
   if (!userId && !sessionId) {
@@ -326,7 +327,14 @@ export async function getAvailableShippingRates(storeId: string, address?: {
     return zones.filter(zone => {
       const departments = zone.departments as string[];
       const cities = zone.cities as string[];
-      return departments.includes(address.state!) && cities.includes(address.city!);
+      
+      // Try exact match first, fallback to normalized match for encoding issues
+      const stateMatch = departments.includes(address.state!) || 
+                        findNormalizedMatch(address.state!, departments);
+      const cityMatch = cities.includes(address.city!) || 
+                       findNormalizedMatch(address.city!, cities);
+      
+      return stateMatch && cityMatch;
     });
   }
 
