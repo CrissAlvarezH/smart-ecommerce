@@ -1,9 +1,11 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, XCircle, Clock, AlertCircle } from "lucide-react";
 import { formatPrice } from "@/lib/format-price";
 import { ordersService } from "@/services/orders.service";
+import { cartRepository } from "@/repositories/cart";
 import Link from "next/link";
 
 interface PaymentConfirmationPageProps {
@@ -22,6 +24,28 @@ export default async function PaymentConfirmationPage({ params }: PaymentConfirm
 
     if (!order) {
       notFound();
+    }
+
+    // Clear cart session ONLY if payment was successful
+    if (order.paymentStatus === "paid") {
+      const cookieStore = await cookies();
+      const cartSessionCookie = cookieStore.get(`cart_session_${slug}`);
+      
+      if (cartSessionCookie?.value) {
+        // Get the cart to clear its items from database
+        const cart = await cartRepository.getCartBySession(cartSessionCookie.value);
+        if (cart) {
+          await cartRepository.clearCart(cart.id);
+        }
+        
+        // Clear the session cookie
+        cookieStore.set(`cart_session_${slug}`, "", { 
+          maxAge: 0,
+          path: "/" 
+        });
+        
+        console.log(`✅ Cart cleared for successful order ${orderId}`);
+      }
     }
 
     // Determine payment status and UI

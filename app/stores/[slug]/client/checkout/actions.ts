@@ -73,9 +73,9 @@ export const createOrderAction = unauthenticatedAction
       notes: parsedInput.notes,
     });
 
-    // Clear cart session
-    cookieStore.set(`cart_session_${parsedInput.storeSlug}`, "", { maxAge: 0 });
-
+    // DO NOT clear cart session here - only clear after successful payment
+    // This allows users to go back if payment fails or they change their mind
+    
     return {
       orderId: orderData.order.id,
       order: orderData.order,
