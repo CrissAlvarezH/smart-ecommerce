@@ -47,15 +47,22 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
   const cart = shippingResult.data?.cart;
   const shippingCost = cart?.shippingCost || "0.00";
   const shippingZoneId = cart?.shippingZoneId;
-  const shippingCity = cart?.shippingCity;
-  const shippingDepartment = cart?.shippingState; // Note: using shippingState as it's the field name in the schema
+  
+  // Extract complete shipping address information
+  const shippingAddress = {
+    street: cart?.shippingAddress || "",
+    city: cart?.shippingCity || "",
+    department: cart?.shippingState || "", // Note: using shippingState as it's the field name in the schema
+    postalCode: cart?.shippingPostalCode || "",
+    country: cart?.shippingCountry || "Colombia",
+    additionalInfo: "", // This might need to be extracted from the shipping address if it's stored as JSON
+  };
 
   console.log("🚢 Checkout shipping debug:", { 
     cart, 
     shippingCost, 
     shippingZoneId, 
-    shippingCity, 
-    shippingDepartment 
+    shippingAddress 
   });
 
   if (!shippingZoneId) {
@@ -92,8 +99,7 @@ export default async function CheckoutPage({ params }: CheckoutPageProps) {
       subtotal={subtotal}
       shippingCost={shipping}
       total={total}
-      shippingCity={shippingCity || ""}
-      shippingDepartment={shippingDepartment || ""}
+      shippingAddress={shippingAddress}
       user={user}
     />
   );

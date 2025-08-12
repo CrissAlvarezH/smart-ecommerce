@@ -33,8 +33,14 @@ interface CheckoutClientProps {
   subtotal: number;
   shippingCost: number;
   total: number;
-  shippingCity: string;
-  shippingDepartment: string;
+  shippingAddress: {
+    street: string;
+    city: string;
+    department: string;
+    postalCode: string;
+    country: string;
+    additionalInfo: string;
+  };
   user?: {
     id: string;
     email: string;
@@ -48,8 +54,7 @@ export function CheckoutClient({
   subtotal, 
   shippingCost, 
   total,
-  shippingCity,
-  shippingDepartment,
+  shippingAddress,
   user 
 }: CheckoutClientProps) {
   const router = useRouter();
@@ -59,17 +64,17 @@ export function CheckoutClient({
   const [paymentMethod, setPaymentMethod] = useState<"CARD" | "NEQUI" | "PSE">("CARD");
   const [pseBanks, setPseBanks] = useState<any[]>([]);
   
-  // Form data
+  // Form data - pre-populate shipping address from cart
   const [formData, setFormData] = useState({
     customerEmail: user?.email || "",
     customerName: user?.name || "",
     customerPhone: "",
     customerDocument: "",
-    street: "",
-    city: shippingCity,
-    department: shippingDepartment,
-    postalCode: "",
-    additionalInfo: "",
+    street: shippingAddress.street,
+    city: shippingAddress.city,
+    department: shippingAddress.department,
+    postalCode: shippingAddress.postalCode,
+    additionalInfo: shippingAddress.additionalInfo,
     sameAsShipping: true,
     billingStreet: "",
     billingCity: "",
