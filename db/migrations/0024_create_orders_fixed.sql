@@ -1,8 +1,8 @@
--- Create orders table
+-- Create orders table with correct types
 CREATE TABLE IF NOT EXISTS "orders" (
 	"id" text PRIMARY KEY NOT NULL,
-	"store_id" text NOT NULL,
-	"user_id" text,
+	"store_id" uuid NOT NULL,
+	"user_id" integer,
 	"session_id" text,
 	"status" text DEFAULT 'pending' NOT NULL,
 	"payment_status" text DEFAULT 'pending' NOT NULL,
@@ -33,11 +33,11 @@ CREATE TABLE IF NOT EXISTS "orders" (
 	"cancelled_at" timestamp
 );
 
--- Create order_items table
+-- Create order_items table with correct types
 CREATE TABLE IF NOT EXISTS "order_items" (
 	"id" text PRIMARY KEY NOT NULL,
 	"order_id" text NOT NULL,
-	"product_id" text NOT NULL,
+	"product_id" uuid NOT NULL,
 	"product_name" text NOT NULL,
 	"product_slug" text NOT NULL,
 	"product_image" text,
@@ -81,7 +81,7 @@ CREATE TABLE IF NOT EXISTS "payment_transactions" (
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );
 
--- Add foreign key constraints
+-- Add foreign key constraints with correct types
 DO $$ BEGIN
  ALTER TABLE "orders" ADD CONSTRAINT "orders_store_id_stores_id_fk" FOREIGN KEY ("store_id") REFERENCES "public"."stores"("id") ON DELETE cascade ON UPDATE no action;
 EXCEPTION

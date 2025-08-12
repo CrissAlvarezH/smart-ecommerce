@@ -386,11 +386,8 @@ class WompiService {
    * Get PSE banks list
    */
   async getPSEBanks() {
-    const response = await fetch(`${this.baseUrl}/pse/financial_institutions`, {
+    const response = await fetch(`${this.baseUrl}/pse/financial_institutions?public_key=${this.publicKey}`, {
       method: "GET",
-      headers: {
-        "Authorization": `Bearer ${this.publicKey}`,
-      },
     });
 
     if (!response.ok) {

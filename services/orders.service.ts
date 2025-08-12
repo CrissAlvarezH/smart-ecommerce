@@ -46,9 +46,17 @@ export interface ProcessPaymentParams {
 
 class OrdersService {
   async createOrderFromCart(params: CreateOrderFromCartParams) {
-    // Get cart with items
-    const cart = await cartRepository.getCartWithItems(params.cartId);
-    if (!cart || cart.items.length === 0) {
+    // Get cart info with shipping details
+    const cartWithShipping = await cartRepository.getCartWithShippingDetails(params.cartId);
+    if (!cartWithShipping?.cart) {
+      throw new Error("Cart not found");
+    }
+    
+    const cart = cartWithShipping.cart;
+    
+    // Get cart items directly (getCartWithItems returns an array)
+    const cartItems = await cartRepository.getCartWithItems(params.cartId);
+    if (!cartItems || cartItems.length === 0) {
       throw new Error("Cart is empty or not found");
     }
 
@@ -56,10 +64,10 @@ class OrdersService {
     let subtotal = 0;
     const orderItemsData = [];
 
-    for (const cartItem of cart.items) {
-      const product = await adminProductsRepository.getProductById(cartItem.productId);
+    for (const cartItem of cartItems) {
+      const product = await adminProductsRepository.getProductById(cartItem.product.id);
       if (!product) {
-        throw new Error(`Product ${cartItem.productId} not found`);
+        throw new Error(`Product ${cartItem.product.id} not found`);
       }
 
       const itemSubtotal = parseFloat(product.price) * cartItem.quantity;

@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, decimal, json, varchar, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, decimal, json, varchar, integer, uuid } from "drizzle-orm/pg-core";
 import { createId } from "@paralleldrive/cuid2";
 import { stores, products } from "./ecommerce";
 import { users } from "./users";
@@ -7,10 +7,10 @@ export const orders = pgTable("orders", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => createId()),
-  storeId: text("store_id")
+  storeId: uuid("store_id")
     .notNull()
     .references(() => stores.id, { onDelete: "cascade" }),
-  userId: text("user_id")
+  userId: integer("user_id")
     .references(() => users.id, { onDelete: "set null" }),
   sessionId: text("session_id"),
   
@@ -79,7 +79,7 @@ export const orderItems = pgTable("order_items", {
   orderId: text("order_id")
     .notNull()
     .references(() => orders.id, { onDelete: "cascade" }),
-  productId: text("product_id")
+  productId: uuid("product_id")
     .notNull()
     .references(() => products.id, { onDelete: "restrict" }),
   
