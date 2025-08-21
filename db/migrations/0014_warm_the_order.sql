@@ -1,1 +1,0 @@
-ALTER TABLE "carts" ALTER COLUMN "user_id" SET DATA TYPE integer;

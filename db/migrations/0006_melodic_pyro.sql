@@ -1,1 +1,0 @@
-ALTER TABLE "users" ALTER COLUMN "picture_hash" DROP NOT NULL;
